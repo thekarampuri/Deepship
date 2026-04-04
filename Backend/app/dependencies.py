@@ -24,6 +24,7 @@ class UserContext:
     id: str
     email: str
     role: str  # ADMIN | MANAGER | DEVELOPER | VIEWER
+    organization_id: str | None = None
     team_ids: list[str] = field(default_factory=list)
     project_ids: list[str] = field(default_factory=list)
     module_ids: list[str] = field(default_factory=list)
@@ -32,13 +33,18 @@ class UserContext:
 async def _load_user_scope(pool: asyncpg.Pool, user_id: str) -> UserContext:
     """Fetch user record and access scope from the database."""
     row = await pool.fetchrow(
-        "SELECT id, email, role FROM users WHERE id = $1 AND is_active = TRUE",
+        "SELECT id, email, role, organization_id FROM users WHERE id = $1 AND is_active = TRUE",
         user_id,
     )
     if not row:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found or inactive")
 
-    ctx = UserContext(id=str(row["id"]), email=row["email"], role=row["role"])
+    ctx = UserContext(
+        id=str(row["id"]),
+        email=row["email"],
+        role=row["role"],
+        organization_id=str(row["organization_id"]) if row["organization_id"] else None,
+    )
 
     # Team memberships
     team_rows = await pool.fetch(

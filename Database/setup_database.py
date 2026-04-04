@@ -67,6 +67,23 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$ BEGIN
+    CREATE TYPE join_request_status AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- ==========================================================================
+-- ORGANIZATIONS
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS organizations (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name        VARCHAR(200) NOT NULL,
+    slug        VARCHAR(200) NOT NULL UNIQUE,
+    description TEXT,
+    created_by  UUID,                   -- will reference users(id) via ALTER after users table
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
 -- ==========================================================================
 -- USERS
 -- ==========================================================================
@@ -76,10 +93,19 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash   VARCHAR(255) NOT NULL,
     full_name       VARCHAR(150) NOT NULL,
     role            user_role    NOT NULL DEFAULT 'DEVELOPER',
+    organization_id UUID         REFERENCES organizations(id) ON DELETE SET NULL,
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+-- Add FK from organizations.created_by -> users after users table exists
+DO $$ BEGIN
+    ALTER TABLE organizations
+        ADD CONSTRAINT fk_organizations_created_by
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ==========================================================================
 -- TEAMS
@@ -102,11 +128,12 @@ CREATE TABLE IF NOT EXISTS team_members (
 -- PROJECTS
 -- ==========================================================================
 CREATE TABLE IF NOT EXISTS projects (
-    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    team_id     UUID         NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    name        VARCHAR(150) NOT NULL,
-    description TEXT,
-    created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    team_id         UUID         NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    organization_id UUID         REFERENCES organizations(id) ON DELETE SET NULL,
+    name            VARCHAR(150) NOT NULL,
+    description     TEXT,
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     UNIQUE (team_id, name)
 );
 
@@ -256,6 +283,24 @@ CREATE TABLE IF NOT EXISTS issue_events (
     PRIMARY KEY (issue_id, log_id, log_ts),
     FOREIGN KEY (log_id, log_ts) REFERENCES logs(id, timestamp) ON DELETE CASCADE
 );
+
+-- ==========================================================================
+-- JOIN REQUESTS  (Developers request to join projects)
+-- ==========================================================================
+CREATE TABLE IF NOT EXISTS join_requests (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id         UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    project_id      UUID                NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    organization_id UUID                REFERENCES organizations(id) ON DELETE SET NULL,
+    status          join_request_status NOT NULL DEFAULT 'PENDING',
+    requested_at    TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
+    resolved_at     TIMESTAMPTZ,
+    resolved_by     UUID                REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_join_requests_user_id    ON join_requests (user_id);
+CREATE INDEX IF NOT EXISTS idx_join_requests_project_id ON join_requests (project_id);
+CREATE INDEX IF NOT EXISTS idx_join_requests_status     ON join_requests (status);
 """
 
 
