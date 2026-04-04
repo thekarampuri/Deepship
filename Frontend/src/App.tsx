@@ -12,9 +12,9 @@ import { useAuth } from './context/AuthContext';
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 import AdminDashboard from './components/Admin/AdminDashboard';
-import OrganizationsPage from './components/Admin/OrganizationsPage';
 import AdminProjectsPage from './components/Admin/AdminProjectsPage';
-import DevelopersPage from './components/Admin/DevelopersPage';
+import ManageOrgPage from './components/Admin/ManageOrgPage';
+import AdminSettingsPage from './components/Admin/AdminSettingsPage';
 
 // ── Manager ───────────────────────────────────────────────────────────────────
 import ManagerDashboard from './components/Manager/ManagerDashboard';
@@ -82,10 +82,10 @@ function App() {
         }
       />
       <Route
-        path="/admin/organizations"
+        path="/admin/manage-org"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <OrganizationsPage />
+            <ManageOrgPage />
           </ProtectedRoute>
         }
       />
@@ -98,18 +98,10 @@ function App() {
         }
       />
       <Route
-        path="/admin/developers"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <DevelopersPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/admin/settings"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
+            <AdminSettingsPage />
           </ProtectedRoute>
         }
       />

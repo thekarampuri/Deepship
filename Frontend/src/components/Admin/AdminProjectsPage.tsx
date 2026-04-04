@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
+import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { Project } from '../../services/api';
 
 const AdminProjectsPage: React.FC = () => {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [orgFilter, setOrgFilter] = useState('');
 
   useEffect(() => {
-    api.getProjects().then(setProjects).catch((e: Error) => setError(e.message)).finally(() => setLoading(false));
-  }, []);
+    if (!user?.organization_id) return;
+    api.getOrgProjects(user.organization_id).then(setProjects).catch((e: Error) => setError(e.message)).finally(() => setLoading(false));
+  }, [user?.organization_id]);
 
   if (loading) {
     return (
@@ -30,18 +32,10 @@ const AdminProjectsPage: React.FC = () => {
     );
   }
 
-  // Unique org names for filter dropdown
-  const orgNames = Array.from(
-    new Set(projects.map((p) => p.organization_name).filter(Boolean) as string[])
-  ).sort();
-
-  const filtered = projects.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.organization_name ?? '').toLowerCase().includes(search.toLowerCase());
-    const matchesOrg = orgFilter ? p.organization_name === orgFilter : true;
-    return matchesSearch && matchesOrg;
-  });
+  const filtered = projects.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.description ?? '').toLowerCase().includes(search.toLowerCase()),
+  );
 
   const avgDevs =
     projects.length > 0
@@ -110,27 +104,13 @@ const AdminProjectsPage: React.FC = () => {
 
         {/* Filter Bar */}
         <div className="flex items-center gap-4 mb-6">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-lg border border-white/5">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Organization:</span>
-            <select
-              className="bg-transparent border-none text-xs font-medium text-slate-200 focus:ring-0 p-0 cursor-pointer"
-              value={orgFilter}
-              onChange={(e) => setOrgFilter(e.target.value)}
-            >
-              <option value="">All Organizations</option>
-              {orgNames.map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
-          </div>
-
-          {(search || orgFilter) && (
+          {search && (
             <button
-              onClick={() => { setSearch(''); setOrgFilter(''); }}
-              className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-primary transition-colors ml-auto"
+              onClick={() => setSearch('')}
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-primary transition-colors"
             >
               <span className="material-symbols-outlined text-sm">filter_list_off</span>
-              Clear Filters
+              Clear Search
             </button>
           )}
 
@@ -147,7 +127,7 @@ const AdminProjectsPage: React.FC = () => {
             </div>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">No projects match your filters</p>
             <button
-              onClick={() => { setSearch(''); setOrgFilter(''); }}
+              onClick={() => setSearch('')}
               className="text-xs text-primary hover:underline underline-offset-4"
             >
               Clear filters
@@ -160,7 +140,6 @@ const AdminProjectsPage: React.FC = () => {
               <thead>
                 <tr className="bg-surface-container-lowest/50">
                   <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Project Name</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Organization</th>
                   <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Developers</th>
                   <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Created</th>
                   <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Status</th>
@@ -185,17 +164,6 @@ const AdminProjectsPage: React.FC = () => {
                           </span>
                         )}
                       </div>
-                    </td>
-
-                    <td className="px-6 py-4">
-                      {project.organization_name ? (
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-sm text-slate-500">corporate_fare</span>
-                          <span className="text-xs font-medium text-slate-200">{project.organization_name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-600 italic">—</span>
-                      )}
                     </td>
 
                     <td className="px-6 py-4">

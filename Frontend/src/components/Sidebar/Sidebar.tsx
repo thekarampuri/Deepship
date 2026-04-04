@@ -12,9 +12,8 @@ interface NavItem {
 const roleNavItems: Record<UserRole, NavItem[]> = {
   ADMIN: [
     { name: 'Dashboard', icon: 'dashboard', path: '/admin/dashboard' },
-    { name: 'Organizations', icon: 'corporate_fare', path: '/admin/organizations' },
+    { name: 'Manage Org', icon: 'domain_verification', path: '/admin/manage-org' },
     { name: 'All Projects', icon: 'folder', path: '/admin/projects' },
-    { name: 'All Developers', icon: 'group', path: '/admin/developers' },
     { name: 'Settings', icon: 'settings', path: '/admin/settings' },
   ],
   MANAGER: [

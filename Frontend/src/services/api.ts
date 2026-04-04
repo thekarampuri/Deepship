@@ -1,6 +1,5 @@
 /**
  * Central API service — all backend calls go through here.
- * Base URL: http://103.127.146.14
  */
 
 const API_BASE = 'http://103.127.146.14';
@@ -91,13 +90,25 @@ export interface JoinRequest {
   user_id: string;
   user_name: string;
   user_email: string;
-  project_id: string;
-  project_name: string;
+  user_role?: string;
+  project_id?: string;
+  project_name?: string;
   organization_id?: string;
+  organization_name?: string;
+  request_type: 'ORG' | 'PROJECT';
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requested_at: string;
   resolved_at?: string;
   resolved_by?: string;
+}
+
+export interface OrgMember {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 // ─── Core fetch helper ────────────────────────────────────────────────────────
@@ -138,6 +149,12 @@ export const getOrganization = (orgId: string) =>
 export const getOrgProjects = (orgId: string) =>
   apiFetch<Project[]>(`/api/v1/organizations/${orgId}/projects`);
 
+export const getOrgMembers = (orgId: string) =>
+  apiFetch<OrgMember[]>(`/api/v1/organizations/${orgId}/members`);
+
+export const getOrgPendingRequests = (orgId: string) =>
+  apiFetch<JoinRequest[]>(`/api/v1/organizations/${orgId}/pending-requests`);
+
 export const getOrgDevelopers = (orgId: string) =>
   apiFetch<Member[]>(`/api/v1/organizations/${orgId}/developers`);
 
@@ -154,6 +171,9 @@ export const createProject = (data: { name: string; description?: string }) =>
     method: 'POST',
     body: JSON.stringify(data),
   });
+
+export const deleteProject = (projectId: string) =>
+  apiFetch<void>(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
 
 export const getProjectDevelopers = (projectId: string) =>
   apiFetch<Member[]>(`/api/v1/projects/${projectId}/developers`);
@@ -193,8 +213,13 @@ export const getProjectLogs = (
 
 // ─── Join Requests ────────────────────────────────────────────────────────────
 
-export const getJoinRequests = () =>
-  apiFetch<JoinRequest[]>('/api/v1/join-requests');
+export const getJoinRequests = (params?: { request_type?: string; status?: string }) => {
+  const qs = new URLSearchParams();
+  if (params?.request_type) qs.set('request_type', params.request_type);
+  if (params?.status) qs.set('status', params.status);
+  const query = qs.toString();
+  return apiFetch<JoinRequest[]>(`/api/v1/join-requests${query ? '?' + query : ''}`);
+};
 
 export const createJoinRequest = (projectId: string) =>
   apiFetch<JoinRequest>('/api/v1/join-requests', {
@@ -215,5 +240,8 @@ export const resolveJoinRequest = (
 
 export const getMembers = (role?: string) => {
   const params = role ? `?role=${role}` : '';
-  return apiFetch<Member[]>(`/api/v1/admin/members${params}`);
+  return apiFetch<Member[]>(`/api/v1/members${params}`);
 };
+
+export const deactivateUser = (userId: string) =>
+  apiFetch<void>(`/api/v1/users/${userId}`, { method: 'DELETE' });
