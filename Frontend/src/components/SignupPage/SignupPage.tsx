@@ -92,7 +92,9 @@ const SignupPage = () => {
         organization_id: selectedRole === 'MANAGER' ? orgId : undefined,
       });
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      if (selectedRole !== 'MANAGER') {
+        setTimeout(() => navigate('/login'), 2000);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Signup failed');
     } finally {
@@ -101,20 +103,45 @@ const SignupPage = () => {
   };
 
   if (success) {
+    const isManager = selectedRole === 'MANAGER';
     return (
       <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex items-center justify-center forensic-grid">
         <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center p-4 rounded-xl bg-secondary/10 mb-6">
-            <span className="material-symbols-outlined text-secondary text-5xl">check_circle</span>
+          <div className={`inline-flex items-center justify-center p-4 rounded-xl mb-6 ${isManager ? 'bg-amber-400/10' : 'bg-secondary/10'}`}>
+            <span className={`material-symbols-outlined text-5xl ${isManager ? 'text-amber-400' : 'text-secondary'}`}>
+              {isManager ? 'hourglass_top' : 'check_circle'}
+            </span>
           </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-3">Account Created</h2>
-          <p className="text-on-surface-variant text-sm mb-2">Your account has been registered successfully.</p>
-          <p className="text-on-surface-variant/60 text-xs">Redirecting to login...</p>
-          <div className="mt-6">
-            <div className="w-32 h-1 bg-surface-container-highest rounded-full mx-auto overflow-hidden">
-              <div className="h-full bg-secondary rounded-full animate-[expandWidth_2s_ease-in-out_forwards]" style={{ animation: 'expandWidth 2s ease-in-out forwards' }} />
+          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-3">
+            {isManager ? 'Request Submitted' : 'Account Created'}
+          </h2>
+          <p className="text-on-surface-variant text-sm mb-2">
+            {isManager
+              ? 'Your request to join the organization has been sent to the admin for approval.'
+              : 'Your account has been registered successfully.'}
+          </p>
+          <p className="text-on-surface-variant/60 text-xs">
+            {isManager
+              ? 'You will be able to log in once the admin approves your request.'
+              : 'Redirecting to login...'}
+          </p>
+          {isManager ? (
+            <div className="mt-6">
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary/15 text-primary text-sm font-bold rounded-lg hover:bg-primary/25 transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">arrow_back</span>
+                Back to Login
+              </Link>
             </div>
-          </div>
+          ) : (
+            <div className="mt-6">
+              <div className="w-32 h-1 bg-surface-container-highest rounded-full mx-auto overflow-hidden">
+                <div className="h-full bg-secondary rounded-full animate-[expandWidth_2s_ease-in-out_forwards]" style={{ animation: 'expandWidth 2s ease-in-out forwards' }} />
+              </div>
+            </div>
+          )}
         </div>
         <style>{`@keyframes expandWidth { from { width: 0%; } to { width: 100%; } }`}</style>
       </div>
@@ -306,7 +333,7 @@ const SignupPage = () => {
                     <p className="mt-1.5 text-[10px] text-error">{orgsError}</p>
                   )}
                   {!orgsError && (
-                    <p className="mt-1.5 text-[10px] text-slate-500">You will be assigned as a project manager in this organization.</p>
+                    <p className="mt-1.5 text-[10px] text-slate-500">A join request will be sent to the organization admin for approval.</p>
                   )}
                 </div>
               )}

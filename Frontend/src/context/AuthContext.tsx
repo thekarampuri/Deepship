@@ -97,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        // Surface backend errors directly (e.g. "pending approval", "rejected")
         throw new Error(err.detail || 'Invalid credentials');
       }
 
@@ -114,18 +115,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userData);
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('auth_user', JSON.stringify(userData));
-    } catch {
-      // Fallback to mock data when backend is unreachable
-      const mockEntry = MOCK_USERS[email];
-      if (mockEntry && mockEntry.password === password) {
-        const mockToken = 'mock-jwt-token-' + Date.now();
-        setToken(mockToken);
-        setUser(mockEntry.user);
-        localStorage.setItem('auth_token', mockToken);
-        localStorage.setItem('auth_user', JSON.stringify(mockEntry.user));
-        return;
+    } catch (err) {
+      // Only fallback to mock if backend is unreachable (TypeError = network error)
+      // If the backend returned an actual error (e.g. 403 pending approval), propagate it
+      if (err instanceof TypeError) {
+        // Network error — backend unreachable, try mock
+        const mockEntry = MOCK_USERS[email];
+        if (mockEntry && mockEntry.password === password) {
+          const mockToken = 'mock-jwt-token-' + Date.now();
+          setToken(mockToken);
+          setUser(mockEntry.user);
+          localStorage.setItem('auth_token', mockToken);
+          localStorage.setItem('auth_user', JSON.stringify(mockEntry.user));
+          return;
+        }
+        throw new Error('Invalid email or password');
       }
-      throw new Error('Invalid email or password');
+      // Backend returned an error — propagate it as-is
+      throw err;
     }
   }, []);
 

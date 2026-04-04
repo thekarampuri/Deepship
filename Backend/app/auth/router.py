@@ -229,9 +229,8 @@ async def login(body: LoginRequest):
     if not row["is_active"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account deactivated")
 
-    # For MANAGER: check if approved before allowing full access
+    # For MANAGER: block login until admin approves
     if row["role"] == "MANAGER" and not row["organization_id"]:
-        # They signed up but haven't been approved yet
         jr = await pool.fetchrow(
             """SELECT status FROM join_requests
                WHERE user_id = $1
@@ -243,8 +242,16 @@ async def login(body: LoginRequest):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your request to join the organization was rejected. Contact the admin.",
             )
-        # If PENDING, we still let them login but /me will show status=PENDING
-        # The frontend can show "Waiting for approval" based on /auth/me response
+        if jr and jr["status"] == "PENDING":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your request to join the organization is pending approval. Please wait for the admin to approve.",
+            )
+        if not jr:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No join request found. Please sign up again and select an organization.",
+            )
 
     user_id = str(row["id"])
     return TokenResponse(
