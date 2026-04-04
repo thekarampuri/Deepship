@@ -1,4 +1,4 @@
-"""Organization endpoints: list, detail, projects, and developers."""
+"""Organization endpoints: list, detail, members, pending requests."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ router = APIRouter()
 
 @router.get("/organizations")
 async def list_organizations():
-    """List all organizations (public for developers to browse)."""
+    """List all organizations (public — for MANAGER signup to browse)."""
     pool = get_pool()
     rows = await pool.fetch(
         """SELECT o.id, o.name, o.slug, o.description, o.created_at,
@@ -42,7 +42,7 @@ async def list_organizations():
 
 @router.get("/organizations/{org_id}")
 async def get_organization(org_id: str):
-    """Get organization details with project count."""
+    """Get organization details."""
     pool = get_pool()
     row = await pool.fetchrow(
         """SELECT o.id, o.name, o.slug, o.description, o.created_by, o.created_at,
@@ -70,12 +70,81 @@ async def get_organization(org_id: str):
     }
 
 
+@router.get("/organizations/{org_id}/members")
+async def list_organization_members(
+    org_id: str,
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    """List all members of the organization (ADMIN/MANAGER only)."""
+    if user.role not in ("ADMIN", "MANAGER"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    if user.organization_id != org_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your organization")
+
+    pool = get_pool()
+    rows = await pool.fetch(
+        """SELECT u.id, u.email, u.full_name, u.role, u.is_active, u.created_at
+           FROM users u
+           WHERE u.organization_id = $1
+           ORDER BY u.role, u.full_name""",
+        org_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "email": r["email"],
+            "full_name": r["full_name"],
+            "role": r["role"],
+            "is_active": r["is_active"],
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
+@router.get("/organizations/{org_id}/pending-requests")
+async def list_pending_requests(
+    org_id: str,
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    """List pending join requests for this organization (ADMIN only).
+
+    These are MANAGERs who signed up and chose this org but haven't been approved yet.
+    """
+    if user.role != "ADMIN":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only admin can view pending requests")
+    if user.organization_id != org_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not your organization")
+
+    pool = get_pool()
+    rows = await pool.fetch(
+        """SELECT jr.id, jr.user_id, jr.request_type, jr.status, jr.requested_at,
+                  u.full_name, u.email, u.role AS user_role
+           FROM join_requests jr
+           JOIN users u ON u.id = jr.user_id
+           WHERE jr.organization_id = $1 AND jr.status = 'PENDING'
+           ORDER BY jr.requested_at ASC""",
+        org_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "user_id": str(r["user_id"]),
+            "full_name": r["full_name"],
+            "email": r["email"],
+            "user_role": r["user_role"],
+            "request_type": r["request_type"],
+            "status": r["status"],
+            "requested_at": r["requested_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
 @router.get("/organizations/{org_id}/projects")
 async def list_organization_projects(org_id: str):
     """List projects in an organization."""
     pool = get_pool()
-
-    # Verify org exists
     org = await pool.fetchrow("SELECT id FROM organizations WHERE id = $1", org_id)
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
@@ -97,36 +166,6 @@ async def list_organization_projects(org_id: str):
             "description": r["description"],
             "created_at": r["created_at"].isoformat(),
             "developer_count": r["developer_count"],
-        }
-        for r in rows
-    ]
-
-
-@router.get("/organizations/{org_id}/developers")
-async def list_organization_developers(org_id: str):
-    """List developers associated with an organization's projects."""
-    pool = get_pool()
-
-    org = await pool.fetchrow("SELECT id FROM organizations WHERE id = $1", org_id)
-    if not org:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
-
-    rows = await pool.fetch(
-        """SELECT DISTINCT u.id, u.email, u.full_name, u.role, u.created_at
-           FROM users u
-           JOIN project_members pm ON pm.user_id = u.id
-           JOIN projects p ON p.id = pm.project_id
-           WHERE p.organization_id = $1 AND u.is_active = TRUE
-           ORDER BY u.full_name""",
-        org_id,
-    )
-    return [
-        {
-            "id": str(r["id"]),
-            "email": r["email"],
-            "full_name": r["full_name"],
-            "role": r["role"],
-            "created_at": r["created_at"].isoformat(),
         }
         for r in rows
     ]

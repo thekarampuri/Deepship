@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class LoginRequest(BaseModel):
@@ -25,8 +25,8 @@ class SignupRequest(BaseModel):
     password: str
     full_name: str
     role: str  # ADMIN, MANAGER, DEVELOPER
-    organization_name: str | None = None  # Required for ADMIN (creates new org)
-    organization_id: str | None = None  # Required for MANAGER (joins existing org)
+    organization_name: str | None = None   # Required for ADMIN (creates new org)
+    organization_id: str | None = None     # Required for MANAGER (sends join request)
 
 
 class UserResponse(BaseModel):
@@ -37,3 +37,4 @@ class UserResponse(BaseModel):
     organization_id: str | None = None
     organization_name: str | None = None
     is_active: bool
+    approval_status: str | None = None     # PENDING / APPROVED / REJECTED (for MANAGER)

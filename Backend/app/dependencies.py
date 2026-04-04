@@ -100,6 +100,22 @@ def require_role(*roles: str):
     return _check
 
 
+def require_approved_role(*roles: str):
+    """Like require_role but also checks that MANAGERs have been approved (have an organization_id)."""
+
+    async def _check(user: Annotated[UserContext, Depends(get_current_user)]) -> UserContext:
+        if user.role not in roles:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+        if user.role == "MANAGER" and not user.organization_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your request to join the organization is still pending approval",
+            )
+        return user
+
+    return _check
+
+
 # ---------------------------------------------------------------------------
 # API-key validation (for SDK ingestion)
 # ---------------------------------------------------------------------------

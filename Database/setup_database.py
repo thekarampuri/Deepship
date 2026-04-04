@@ -285,13 +285,14 @@ CREATE TABLE IF NOT EXISTS issue_events (
 );
 
 -- ==========================================================================
--- JOIN REQUESTS  (Developers request to join projects)
+-- JOIN REQUESTS  (Manager requests to join org, Developer requests to join project)
 -- ==========================================================================
 CREATE TABLE IF NOT EXISTS join_requests (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id         UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    project_id      UUID                NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    project_id      UUID                REFERENCES projects(id) ON DELETE CASCADE,
     organization_id UUID                REFERENCES organizations(id) ON DELETE SET NULL,
+    request_type    VARCHAR(20)         NOT NULL DEFAULT 'ORG',   -- 'ORG' or 'PROJECT'
     status          join_request_status NOT NULL DEFAULT 'PENDING',
     requested_at    TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
     resolved_at     TIMESTAMPTZ,

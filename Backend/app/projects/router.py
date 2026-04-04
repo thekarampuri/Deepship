@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.database import get_pool
-from app.dependencies import UserContext, get_current_user
+from app.dependencies import UserContext, get_current_user, require_approved_role
 
 router = APIRouter()
 
@@ -115,20 +115,9 @@ async def _get_or_create_team(pool, organization_id: str, user_id: str) -> str:
 @router.post("/projects", status_code=status.HTTP_201_CREATED)
 async def create_project(
     body: CreateProject,
-    user: Annotated[UserContext, Depends(get_current_user)],
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
 ):
-    """Create a project (MANAGER only, within their organization)."""
-    if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can create projects",
-        )
-
-    if not user.organization_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You must belong to an organization to create projects",
-        )
+    """Create a project (approved MANAGER or ADMIN, within their organization)."""
 
     pool = get_pool()
 
@@ -314,14 +303,9 @@ async def list_project_developers(
 async def assign_developer(
     project_id: str,
     body: AssignDeveloper,
-    user: Annotated[UserContext, Depends(get_current_user)],
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
 ):
-    """Assign a developer to a project (MANAGER only)."""
-    if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can assign developers",
-        )
+    """Assign a developer to a project (approved MANAGER or ADMIN)."""
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)
@@ -357,14 +341,9 @@ async def assign_developer(
 async def remove_developer(
     project_id: str,
     user_id: str,
-    user: Annotated[UserContext, Depends(get_current_user)],
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
 ):
-    """Remove a developer from a project (MANAGER only)."""
-    if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can remove developers",
-        )
+    """Remove a developer from a project (approved MANAGER or ADMIN)."""
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)
@@ -422,17 +401,12 @@ async def list_project_api_keys(
 async def generate_api_key(
     project_id: str,
     body: GenerateApiKey,
-    user: Annotated[UserContext, Depends(get_current_user)],
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
 ):
-    """Generate an API key for a project (MANAGER only).
+    """Generate an API key for a project (approved MANAGER or ADMIN).
 
     Returns the plain key once. Only the hash is stored.
     """
-    if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can generate API keys",
-        )
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)

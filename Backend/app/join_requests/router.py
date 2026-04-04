@@ -1,11 +1,18 @@
-"""Join request endpoints: create, list, and approve/reject."""
+"""Join request endpoints: list and approve/reject.
+
+Flow:
+  - MANAGER signs up and selects an organization => join request (type=ORG) is auto-created
+  - ADMIN sees pending ORG requests on their dashboard
+  - ADMIN approves => MANAGER gets organization_id set, can now create projects
+  - ADMIN rejects => MANAGER sees "Approval denied" on login
+"""
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from app.database import get_pool
@@ -15,12 +22,8 @@ router = APIRouter()
 
 
 # ---------------------------------------------------------------------------
-# Request / Response schemas
+# Schemas
 # ---------------------------------------------------------------------------
-
-class CreateJoinRequest(BaseModel):
-    project_id: str
-
 
 class UpdateJoinRequest(BaseModel):
     status: str  # "APPROVED" or "REJECTED"
@@ -30,112 +33,72 @@ class UpdateJoinRequest(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@router.post("/join-requests", status_code=status.HTTP_201_CREATED)
-async def create_join_request(
-    body: CreateJoinRequest,
-    user: Annotated[UserContext, Depends(get_current_user)],
-):
-    """Developer requests to join a project."""
-    if user.role != "DEVELOPER":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only developers can create join requests",
-        )
-
-    pool = get_pool()
-
-    # Verify project exists
-    project = await pool.fetchrow(
-        "SELECT id, organization_id FROM projects WHERE id = $1", body.project_id
-    )
-    if not project:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
-
-    # Check if already a member
-    existing_member = await pool.fetchrow(
-        "SELECT 1 FROM project_members WHERE project_id = $1 AND user_id = $2",
-        body.project_id,
-        user.id,
-    )
-    if existing_member:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already a member of this project")
-
-    # Check for pending request
-    pending = await pool.fetchrow(
-        "SELECT id FROM join_requests WHERE user_id = $1 AND project_id = $2 AND status = 'PENDING'",
-        user.id,
-        body.project_id,
-    )
-    if pending:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="A pending request already exists")
-
-    row = await pool.fetchrow(
-        """INSERT INTO join_requests (user_id, project_id, organization_id)
-           VALUES ($1, $2, $3)
-           RETURNING id, status, requested_at""",
-        user.id,
-        body.project_id,
-        str(project["organization_id"]) if project["organization_id"] else None,
-    )
-    return {
-        "id": str(row["id"]),
-        "user_id": user.id,
-        "project_id": body.project_id,
-        "status": row["status"],
-        "requested_at": row["requested_at"].isoformat(),
-    }
-
-
 @router.get("/join-requests")
 async def list_join_requests(
     user: Annotated[UserContext, Depends(get_current_user)],
+    request_type: str | None = Query(default=None, description="Filter by ORG or PROJECT"),
+    req_status: str | None = Query(default=None, alias="status", description="Filter by PENDING, APPROVED, REJECTED"),
 ):
     """List join requests.
 
-    - MANAGER sees requests for projects in their organization.
-    - DEVELOPER sees their own requests.
-    - ADMIN sees all requests.
+    - ADMIN: sees ORG join requests for their organization
+    - MANAGER: sees PROJECT join requests for their org's projects
+    - DEVELOPER: sees their own requests
     """
     pool = get_pool()
 
+    conditions = []
+    params: list = []
+    idx = 1
+
     if user.role == "ADMIN":
-        rows = await pool.fetch(
-            """SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
-                      jr.status, jr.requested_at, jr.resolved_at, jr.resolved_by,
-                      u.full_name AS user_name, u.email AS user_email,
-                      p.name AS project_name
-               FROM join_requests jr
-               JOIN users u ON u.id = jr.user_id
-               JOIN projects p ON p.id = jr.project_id
-               ORDER BY jr.requested_at DESC"""
-        )
+        # ADMIN sees requests to join THEIR organization
+        if not user.organization_id:
+            return []
+        conditions.append(f"jr.organization_id = ${idx}")
+        params.append(user.organization_id)
+        idx += 1
     elif user.role == "MANAGER":
-        rows = await pool.fetch(
-            """SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
-                      jr.status, jr.requested_at, jr.resolved_at, jr.resolved_by,
-                      u.full_name AS user_name, u.email AS user_email,
-                      p.name AS project_name
-               FROM join_requests jr
-               JOIN users u ON u.id = jr.user_id
-               JOIN projects p ON p.id = jr.project_id
-               WHERE p.organization_id = $1
-               ORDER BY jr.requested_at DESC""",
-            user.organization_id,
-        )
+        # MANAGER sees project join requests for projects in their org
+        if not user.organization_id:
+            return []
+        conditions.append(f"jr.organization_id = ${idx}")
+        params.append(user.organization_id)
+        idx += 1
+        # Managers only see PROJECT-type requests (not ORG requests — that's admin's job)
+        conditions.append("jr.request_type = 'PROJECT'")
     else:
-        # DEVELOPER sees own requests
-        rows = await pool.fetch(
-            """SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
-                      jr.status, jr.requested_at, jr.resolved_at, jr.resolved_by,
-                      u.full_name AS user_name, u.email AS user_email,
-                      p.name AS project_name
-               FROM join_requests jr
-               JOIN users u ON u.id = jr.user_id
-               JOIN projects p ON p.id = jr.project_id
-               WHERE jr.user_id = $1
-               ORDER BY jr.requested_at DESC""",
-            user.id,
-        )
+        # DEVELOPER sees their own requests
+        conditions.append(f"jr.user_id = ${idx}")
+        params.append(user.id)
+        idx += 1
+
+    if request_type:
+        conditions.append(f"jr.request_type = ${idx}")
+        params.append(request_type)
+        idx += 1
+
+    if req_status:
+        conditions.append(f"jr.status = ${idx}::join_request_status")
+        params.append(req_status)
+        idx += 1
+
+    where = " AND ".join(conditions) if conditions else "TRUE"
+
+    rows = await pool.fetch(
+        f"""SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
+                   jr.request_type, jr.status, jr.requested_at, jr.resolved_at, jr.resolved_by,
+                   u.full_name AS user_name, u.email AS user_email, u.role AS user_role,
+                   p.name AS project_name,
+                   o.name AS organization_name
+            FROM join_requests jr
+            JOIN users u ON u.id = jr.user_id
+            LEFT JOIN projects p ON p.id = jr.project_id
+            LEFT JOIN organizations o ON o.id = jr.organization_id
+            WHERE {where}
+            ORDER BY jr.requested_at DESC""",
+        *params,
+    )
 
     return [
         {
@@ -143,9 +106,12 @@ async def list_join_requests(
             "user_id": str(r["user_id"]),
             "user_name": r["user_name"],
             "user_email": r["user_email"],
-            "project_id": str(r["project_id"]),
+            "user_role": r["user_role"],
+            "project_id": str(r["project_id"]) if r["project_id"] else None,
             "project_name": r["project_name"],
             "organization_id": str(r["organization_id"]) if r["organization_id"] else None,
+            "organization_name": r["organization_name"],
+            "request_type": r["request_type"],
             "status": r["status"],
             "requested_at": r["requested_at"].isoformat(),
             "resolved_at": r["resolved_at"].isoformat() if r["resolved_at"] else None,
@@ -161,13 +127,11 @@ async def update_join_request(
     body: UpdateJoinRequest,
     user: Annotated[UserContext, Depends(get_current_user)],
 ):
-    """Approve or reject a join request (MANAGER only)."""
-    if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can approve/reject join requests",
-        )
+    """Approve or reject a join request.
 
+    - ORG requests: only the ADMIN of that organization can approve/reject
+    - PROJECT requests: MANAGER or ADMIN of that organization can approve/reject
+    """
     if body.status not in ("APPROVED", "REJECTED"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -178,9 +142,9 @@ async def update_join_request(
 
     # Fetch the join request
     jr = await pool.fetchrow(
-        """SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id, jr.status
+        """SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
+                  jr.request_type, jr.status
            FROM join_requests jr
-           JOIN projects p ON p.id = jr.project_id
            WHERE jr.id = $1""",
         request_id,
     )
@@ -193,16 +157,35 @@ async def update_join_request(
             detail=f"Request already {jr['status'].lower()}",
         )
 
-    # If MANAGER, verify they belong to the same organization as the project
-    if user.role == "MANAGER" and str(jr["organization_id"]) != user.organization_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only manage requests for projects in your organization",
-        )
+    # ── Permission checks ──────────────────────────────────────────────
+    if jr["request_type"] == "ORG":
+        # Only ADMIN of that organization can approve ORG join requests
+        if user.role != "ADMIN":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the organization admin can approve/reject organization join requests",
+            )
+        if user.organization_id != str(jr["organization_id"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This request is for a different organization",
+            )
+    else:
+        # PROJECT join requests — MANAGER or ADMIN of same org
+        if user.role not in ("MANAGER", "ADMIN"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only managers and admins can approve/reject project join requests",
+            )
+        if user.organization_id != str(jr["organization_id"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only manage requests for projects in your organization",
+            )
 
     now = datetime.now(timezone.utc)
 
-    # Update join request
+    # Update join request status
     await pool.execute(
         """UPDATE join_requests
            SET status = $1::join_request_status, resolved_at = $2, resolved_by = $3
@@ -213,18 +196,28 @@ async def update_join_request(
         request_id,
     )
 
-    # If approved, add user to project_members
+    # ── On approval: perform the actual action ─────────────────────────
     if body.status == "APPROVED":
-        await pool.execute(
-            """INSERT INTO project_members (project_id, user_id)
-               VALUES ($1, $2)
-               ON CONFLICT DO NOTHING""",
-            str(jr["project_id"]),
-            str(jr["user_id"]),
-        )
+        if jr["request_type"] == "ORG":
+            # Set the MANAGER's organization_id (they can now create projects)
+            await pool.execute(
+                "UPDATE users SET organization_id = $1, updated_at = NOW() WHERE id = $2",
+                str(jr["organization_id"]),
+                str(jr["user_id"]),
+            )
+        else:
+            # Add developer to project_members
+            await pool.execute(
+                """INSERT INTO project_members (project_id, user_id)
+                   VALUES ($1, $2)
+                   ON CONFLICT DO NOTHING""",
+                str(jr["project_id"]),
+                str(jr["user_id"]),
+            )
 
     return {
         "id": str(jr["id"]),
+        "request_type": jr["request_type"],
         "status": body.status,
         "resolved_at": now.isoformat(),
         "resolved_by": user.id,

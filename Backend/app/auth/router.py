@@ -34,13 +34,18 @@ def _slugify(name: str) -> str:
     return slug.strip("-")
 
 
+# ── SIGNUP ─────────────────────────────────────────────────────────────────
+
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def signup(body: SignupRequest):
     pool = get_pool()
 
     # Validate role
     if body.role not in ("ADMIN", "MANAGER", "DEVELOPER"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role must be ADMIN, MANAGER, or DEVELOPER")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role must be ADMIN, MANAGER, or DEVELOPER",
+        )
 
     # Check if email already exists
     existing = await pool.fetchrow("SELECT id FROM users WHERE email = $1", body.email)
@@ -48,17 +53,29 @@ async def signup(body: SignupRequest):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     password_hash = hash_password(body.password)
-    organization_id = None
 
+    # ── ADMIN signup ───────────────────────────────────────────────────
     if body.role == "ADMIN":
-        # ADMIN must provide an organization name to create a new org
         if not body.organization_name:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="organization_name is required for ADMIN signup",
             )
+
+        # An ADMIN can only own ONE organization (check by email domain is loose,
+        # so we simply enforce: no existing org created_by this email)
+        # Since user doesn't exist yet, we just create.
         slug = _slugify(body.organization_name)
-        # Create organization first (created_by set after user creation)
+
+        # Check if slug already taken
+        slug_exists = await pool.fetchrow("SELECT 1 FROM organizations WHERE slug = $1", slug)
+        if slug_exists:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="An organization with a similar name already exists",
+            )
+
+        # Create organization (created_by set after user creation)
         org_row = await pool.fetchrow(
             """INSERT INTO organizations (name, slug, description)
                VALUES ($1, $2, $3)
@@ -69,7 +86,7 @@ async def signup(body: SignupRequest):
         )
         organization_id = str(org_row["id"])
 
-        # Create the user
+        # Create the ADMIN user linked to this org
         user_row = await pool.fetchrow(
             """INSERT INTO users (email, password_hash, full_name, role, organization_id)
                VALUES ($1, $2, $3, $4::user_role, $5)
@@ -82,42 +99,60 @@ async def signup(body: SignupRequest):
         )
         user_id = str(user_row["id"])
 
-        # Update organization's created_by
+        # Set created_by on the organization
         await pool.execute(
             "UPDATE organizations SET created_by = $1 WHERE id = $2",
             user_id,
             organization_id,
         )
 
+        return TokenResponse(
+            access_token=create_access_token(user_id, body.role),
+            refresh_token=create_refresh_token(user_id),
+        )
+
+    # ── MANAGER signup ─────────────────────────────────────────────────
     elif body.role == "MANAGER":
-        # MANAGER must join an existing organization
         if not body.organization_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="organization_id is required for MANAGER signup",
+                detail="organization_id is required for MANAGER signup (pick an organization to join)",
             )
-        # Verify organization exists
+
+        # Verify org exists
         org_row = await pool.fetchrow(
             "SELECT id FROM organizations WHERE id = $1", body.organization_id
         )
         if not org_row:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
 
-        organization_id = body.organization_id
+        # Create user WITHOUT organization_id yet (pending approval)
         user_row = await pool.fetchrow(
             """INSERT INTO users (email, password_hash, full_name, role, organization_id)
-               VALUES ($1, $2, $3, $4::user_role, $5)
+               VALUES ($1, $2, $3, $4::user_role, NULL)
                RETURNING id""",
             body.email,
             password_hash,
             body.full_name,
             body.role,
-            organization_id,
         )
         user_id = str(user_row["id"])
 
+        # Create a join request to the organization (project_id is NULL for ORG requests)
+        await pool.execute(
+            """INSERT INTO join_requests (user_id, project_id, organization_id, request_type, status)
+               VALUES ($1, NULL, $2, 'ORG', 'PENDING')""",
+            user_id,
+            body.organization_id,
+        )
+
+        return TokenResponse(
+            access_token=create_access_token(user_id, body.role),
+            refresh_token=create_refresh_token(user_id),
+        )
+
+    # ── DEVELOPER signup ───────────────────────────────────────────────
     else:
-        # DEVELOPER: no org required
         user_row = await pool.fetchrow(
             """INSERT INTO users (email, password_hash, full_name, role)
                VALUES ($1, $2, $3, $4::user_role)
@@ -129,11 +164,13 @@ async def signup(body: SignupRequest):
         )
         user_id = str(user_row["id"])
 
-    return TokenResponse(
-        access_token=create_access_token(user_id, body.role),
-        refresh_token=create_refresh_token(user_id),
-    )
+        return TokenResponse(
+            access_token=create_access_token(user_id, body.role),
+            refresh_token=create_refresh_token(user_id),
+        )
 
+
+# ── GET CURRENT USER ───────────────────────────────────────────────────────
 
 @router.get("/me", response_model=UserResponse)
 async def me(user: Annotated[UserContext, Depends(get_current_user)]):
@@ -146,6 +183,25 @@ async def me(user: Annotated[UserContext, Depends(get_current_user)]):
            WHERE u.id = $1""",
         user.id,
     )
+
+    # For MANAGER: check approval status
+    approval_status = None
+    if row["role"] == "MANAGER":
+        if row["organization_id"]:
+            approval_status = "APPROVED"
+        else:
+            # Check if there's a pending/rejected join request
+            jr = await pool.fetchrow(
+                """SELECT status FROM join_requests
+                   WHERE user_id = $1
+                   ORDER BY requested_at DESC LIMIT 1""",
+                user.id,
+            )
+            if jr:
+                approval_status = jr["status"]  # PENDING or REJECTED
+            else:
+                approval_status = "NO_REQUEST"
+
     return UserResponse(
         id=str(row["id"]),
         email=row["email"],
@@ -154,14 +210,17 @@ async def me(user: Annotated[UserContext, Depends(get_current_user)]):
         organization_id=str(row["organization_id"]) if row["organization_id"] else None,
         organization_name=row["organization_name"],
         is_active=row["is_active"],
+        approval_status=approval_status,
     )
 
+
+# ── LOGIN ──────────────────────────────────────────────────────────────────
 
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest):
     pool = get_pool()
     row = await pool.fetchrow(
-        "SELECT id, password_hash, role, is_active FROM users WHERE email = $1",
+        "SELECT id, password_hash, role, is_active, organization_id FROM users WHERE email = $1",
         body.email,
     )
     if not row or not verify_password(body.password, row["password_hash"]):
@@ -170,12 +229,31 @@ async def login(body: LoginRequest):
     if not row["is_active"]:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account deactivated")
 
+    # For MANAGER: check if approved before allowing full access
+    if row["role"] == "MANAGER" and not row["organization_id"]:
+        # They signed up but haven't been approved yet
+        jr = await pool.fetchrow(
+            """SELECT status FROM join_requests
+               WHERE user_id = $1
+               ORDER BY requested_at DESC LIMIT 1""",
+            str(row["id"]),
+        )
+        if jr and jr["status"] == "REJECTED":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your request to join the organization was rejected. Contact the admin.",
+            )
+        # If PENDING, we still let them login but /me will show status=PENDING
+        # The frontend can show "Waiting for approval" based on /auth/me response
+
     user_id = str(row["id"])
     return TokenResponse(
         access_token=create_access_token(user_id, row["role"]),
         refresh_token=create_refresh_token(user_id),
     )
 
+
+# ── REFRESH ────────────────────────────────────────────────────────────────
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(body: RefreshRequest):
