@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   return (
@@ -16,18 +17,18 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="space-y-1 flex-1">
           {/* Dashboard Active */}
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-[#c0c1ff] bg-[#222a3d] font-semibold border-l-2 border-[#c0c1ff] scale-[0.98] active:scale-95" href="#">
+          <Link className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-[#c0c1ff] bg-[#222a3d] font-semibold border-l-2 border-[#c0c1ff] scale-[0.98] active:scale-95" to="/dashboard">
             <span className="material-symbols-outlined">dashboard</span>
             <span className="font-sans text-sm tracking-tight">Dashboard</span>
-          </a>
+          </Link>
           <a className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-400 hover:text-slate-100 hover:bg-[#131b2e] scale-[0.98] active:scale-95" href="#">
             <span className="material-symbols-outlined">database</span>
             <span className="font-sans text-sm tracking-tight text-slate-400">Log Explorer</span>
           </a>
-          <a className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-400 hover:text-slate-100 hover:bg-[#131b2e] scale-[0.98] active:scale-95" href="#">
+          <Link className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-400 hover:text-slate-100 hover:bg-[#131b2e] scale-[0.98] active:scale-95" to="/issues">
             <span className="material-symbols-outlined">error</span>
             <span className="font-sans text-sm tracking-tight text-slate-400">Issues</span>
-          </a>
+          </Link>
           <a className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-400 hover:text-slate-100 hover:bg-[#131b2e] scale-[0.98] active:scale-95" href="#">
             <span className="material-symbols-outlined">folder</span>
             <span className="font-sans text-sm tracking-tight text-slate-400">Projects</span>
@@ -45,8 +46,8 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center gap-3 px-3 py-4 mt-2">
             <img alt="Organization Logo" className="w-8 h-8 rounded-lg bg-surface-container-highest object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm5mUFjaXuqhHMk4G3bvzouXS7e_Zf8Z-Q3MFaAIPwAatC8fNfm4METcvED6wa8UK9ONXhKTQ1efUFozBZJUGjdKIaK1ox8vyT6wjlv4vDO7ycYCosu5Orr8GP7oG8blv-iOJt304ckgxxZmsd8oYbI3jZ3NkA3RJA7tOLo1Zp6p_px4jEIdxMzuUEMvSafnNp6JdBHrY92Sa__oYPpBWEHhSeywl49aRKR9ha2oUx0vkbZbA1KS87rb7ijpoA2sUQI6SVv1uw1W8"/>
             <div>
-              <p class="text-xs font-bold text-white leading-none">Acme Corp.</p>
-              <p class="text-[10px] text-slate-500">Enterprise Admin</p>
+              <p className="text-xs font-bold text-white leading-none">Acme Corp.</p>
+              <p className="text-[10px] text-slate-500">Enterprise Admin</p>
             </div>
           </div>
         </div>

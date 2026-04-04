@@ -7,6 +7,7 @@ import CTASection from './components/LandingPage/CTASection';
 import Footer from './components/LandingPage/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import Dashboard from './components/Dashboard/Dashboard';
+import IssuesPage from './components/Issues/IssuesPage';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/loginpage" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/issues" element={<IssuesPage />} />
     </Routes>
   );
 }

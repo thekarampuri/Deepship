@@ -37,6 +37,17 @@
   .severity-bar-error { border-left: 2px solid #ffb4ab; }
   .severity-bar-warn { border-left: 2px solid #ffb95f; }
   .severity-bar-info { border-left: 2px solid #4edea3; }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #060e20;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #464555;
+    border-radius: 10px;
+  }
 }
 
 ::-webkit-scrollbar { width: 6px; }
