@@ -19,11 +19,10 @@ const AdminSettingsPage: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const loadData = async () => {
-    if (!orgId) return;
     try {
       const [proj, mem] = await Promise.all([
-        api.getOrgProjects(orgId),
-        api.getOrgMembers(orgId),
+        api.getProjects(),
+        api.getOrgMembers(),
       ]);
       setProjects(proj);
       setMembers(mem);
@@ -34,7 +33,7 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, [orgId]);
+  useEffect(() => { loadData(); }, []);
 
   const handleDeleteProject = async (projectId: string) => {
     setActionLoading(projectId);

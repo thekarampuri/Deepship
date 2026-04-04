@@ -15,11 +15,10 @@ const ManageOrgPage: React.FC = () => {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const loadData = async () => {
-    if (!orgId) return;
     try {
       const [requests, membersList] = await Promise.all([
-        api.getOrgPendingRequests(orgId),
-        api.getOrgMembers(orgId),
+        api.getOrgPendingRequests(),
+        api.getOrgMembers(),
       ]);
       setPendingRequests(requests);
       setMembers(membersList);
@@ -30,7 +29,7 @@ const ManageOrgPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, [orgId]);
+  useEffect(() => { loadData(); }, []);
 
   const handleResolve = async (requestId: string, status: 'APPROVED' | 'REJECTED') => {
     setActionLoading(requestId);
@@ -39,7 +38,7 @@ const ManageOrgPage: React.FC = () => {
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       if (status === 'APPROVED') {
         // Refresh members list
-        const updated = await api.getOrgMembers(orgId);
+        const updated = await api.getOrgMembers();
         setMembers(updated);
       }
     } catch (e: unknown) {

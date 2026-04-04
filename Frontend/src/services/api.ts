@@ -149,11 +149,13 @@ export const getOrganization = (orgId: string) =>
 export const getOrgProjects = (orgId: string) =>
   apiFetch<Project[]>(`/api/v1/organizations/${orgId}/projects`);
 
-export const getOrgMembers = (orgId: string) =>
-  apiFetch<OrgMember[]>(`/api/v1/organizations/${orgId}/members`);
+// Uses /admin/org-members — does not rely on the organizations sub-router
+export const getOrgMembers = (_orgId?: string) =>
+  apiFetch<OrgMember[]>('/api/v1/org-members');
 
-export const getOrgPendingRequests = (orgId: string) =>
-  apiFetch<JoinRequest[]>(`/api/v1/organizations/${orgId}/pending-requests`);
+// Uses the existing join-requests endpoint — ADMIN gets ORG-type requests for their org
+export const getOrgPendingRequests = (_orgId?: string) =>
+  apiFetch<JoinRequest[]>('/api/v1/join-requests?request_type=ORG&status=PENDING');
 
 export const getOrgDevelopers = (orgId: string) =>
   apiFetch<Member[]>(`/api/v1/organizations/${orgId}/developers`);

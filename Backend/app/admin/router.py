@@ -96,6 +96,32 @@ async def list_members(
     ]
 
 
+@router.get("/org-members")
+async def list_org_members(user: AdminUser):
+    """Return all members of the calling admin's organization."""
+    pool = get_pool()
+    if not user.organization_id:
+        return []
+    rows = await pool.fetch(
+        """SELECT u.id, u.email, u.full_name, u.role, u.is_active, u.created_at
+           FROM users u
+           WHERE u.organization_id = $1
+           ORDER BY u.role, u.full_name""",
+        user.organization_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "email": r["email"],
+            "full_name": r["full_name"],
+            "role": r["role"],
+            "is_active": r["is_active"],
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_user(user_id: UUID, user: AdminUser):
     ok = await service.deactivate_user(get_pool(), user_id)
