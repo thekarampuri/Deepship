@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sentinel-sdk"
+version = "1.0.0"
+description = "Lightweight, non-blocking Python SDK for Sentinel log ingestion"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.25",
+]
+
+[project.optional-dependencies]
+django = []
+fastapi = ["starlette"]
+flask = ["flask"]
+dev = [
+    "pytest>=7.0",
+    "pytest-httpx>=0.30",
+]
+
+[tool.setuptools.packages.find]
+include = ["sentinel_sdk*"]
