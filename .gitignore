@@ -58,6 +58,10 @@ dist/
 /nginx-1.26.3/
 nginx.zip
 
+# Claude
+.c
+.claude
+
 # Misc
 *.bak
 *.tmp
