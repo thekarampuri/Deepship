@@ -8,6 +8,9 @@ import Footer from './components/LandingPage/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import Dashboard from './components/Dashboard/Dashboard';
 import IssuesPage from './components/Issues/IssuesPage';
+import LogExplorer from './components/LogExplorer/LogExplorer';
+import ProjectsPage from './components/Projects/ProjectsPage';
+import TeamsPage from './components/Teams/TeamsPage';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -32,6 +35,9 @@ function App() {
       <Route path="/loginpage" element={<LoginPage />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/issues" element={<IssuesPage />} />
+      <Route path="/logs" element={<LogExplorer />} />
+      <Route path="/projects" element={<ProjectsPage />} />
+      <Route path="/teams" element={<TeamsPage />} />
     </Routes>
   );
 }
