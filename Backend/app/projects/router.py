@@ -270,6 +270,26 @@ async def get_project(
     }
 
 
+@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_project(
+    project_id: str,
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
+):
+    """Delete a project and its members (ADMIN or approved MANAGER of same org)."""
+    pool = get_pool()
+    project = await _get_project_or_404(pool, project_id)
+
+    if user.role == "MANAGER" and str(project["organization_id"]) != user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
+
+    # Remove member assignments first (FK constraint)
+    await pool.execute("DELETE FROM project_members WHERE project_id = $1", project_id)
+    await pool.execute("DELETE FROM projects WHERE id = $1", project_id)
+
+
 @router.get("/projects/{project_id}/developers")
 async def list_project_developers(
     project_id: str,
