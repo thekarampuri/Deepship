@@ -14,18 +14,17 @@ const AdminDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!orgId) return;
-    Promise.all([
+    if (!orgId) { setLoading(false); return; }
+    Promise.allSettled([
       api.getOrgProjects(orgId),
-      api.getOrgMembers(orgId),
-      api.getOrgPendingRequests(orgId),
+      api.getOrgMembers(),
+      api.getOrgPendingRequests(),
     ])
-      .then(([projectsData, membersData, requestsData]) => {
-        setProjects(projectsData);
-        setMembers(membersData);
-        setPendingRequests(requestsData);
+      .then(([projResult, memResult, reqResult]) => {
+        if (projResult.status === 'fulfilled') setProjects(projResult.value);
+        if (memResult.status === 'fulfilled') setMembers(memResult.value);
+        if (reqResult.status === 'fulfilled') setPendingRequests(reqResult.value);
       })
-      .catch(console.error)
       .finally(() => setLoading(false));
   }, [orgId]);
 

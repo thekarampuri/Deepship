@@ -20,12 +20,14 @@ const AdminSettingsPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [proj, mem] = await Promise.all([
-        api.getProjects(),
+      const [proj, mem] = await Promise.allSettled([
+        orgId ? api.getOrgProjects(orgId) : Promise.resolve([]),
         api.getOrgMembers(),
       ]);
-      setProjects(proj);
-      setMembers(mem);
+      if (proj.status === 'fulfilled') setProjects(proj.value);
+      else console.warn('Failed to load projects:', proj.reason);
+      if (mem.status === 'fulfilled') setMembers(mem.value);
+      else console.warn('Failed to load members:', mem.reason);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load data');
     } finally {
@@ -33,7 +35,7 @@ const AdminSettingsPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [orgId]);
 
   const handleDeleteProject = async (projectId: string) => {
     setActionLoading(projectId);

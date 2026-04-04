@@ -16,12 +16,15 @@ const ManageOrgPage: React.FC = () => {
 
   const loadData = async () => {
     try {
-      const [requests, membersList] = await Promise.all([
+      // Load independently so one failure doesn't block the other
+      const [requests, membersList] = await Promise.allSettled([
         api.getOrgPendingRequests(),
         api.getOrgMembers(),
       ]);
-      setPendingRequests(requests);
-      setMembers(membersList);
+      if (requests.status === 'fulfilled') setPendingRequests(requests.value);
+      else console.warn('Failed to load pending requests:', requests.reason);
+      if (membersList.status === 'fulfilled') setMembers(membersList.value);
+      else console.warn('Failed to load members:', membersList.reason);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load data');
     } finally {
