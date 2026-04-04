@@ -34,7 +34,7 @@ def get_connection():
         port=int(os.getenv("ORCHID_DB_PORT", "5432")),
         dbname=os.getenv("ORCHID_DB_NAME", "orchid"),
         user=os.getenv("ORCHID_DB_USER", "postgres"),
-        password=os.getenv("ORCHID_DB_PASSWORD", "postgres"),
+        password=os.getenv("ORCHID_DB_PASSWORD", "Akhil@123"),
     )
 
 
