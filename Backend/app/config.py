@@ -8,8 +8,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
-    # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/orchid"
+    # Database (individual fields to avoid URL-encoding issues with special chars)
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "orchid"
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
     DB_POOL_MIN: int = 5
     DB_POOL_MAX: int = 20
 

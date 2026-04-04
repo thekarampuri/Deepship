@@ -13,7 +13,11 @@ async def init_pool() -> asyncpg.Pool:
     """Create and return the global connection pool."""
     global _pool
     _pool = await asyncpg.create_pool(
-        dsn=settings.DATABASE_URL,
+        host=settings.DB_HOST,
+        port=settings.DB_PORT,
+        database=settings.DB_NAME,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD,
         min_size=settings.DB_POOL_MIN,
         max_size=settings.DB_POOL_MAX,
     )
