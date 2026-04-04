@@ -22,7 +22,8 @@ router = APIRouter()
 class CreateProject(BaseModel):
     name: str
     description: str | None = None
-    team_id: str  # still required by the projects table FK
+    # team_id is now optional — the backend finds/creates one automatically
+    team_id: str | None = None
 
 
 class AssignDeveloper(BaseModel):
@@ -47,6 +48,66 @@ async def _get_project_or_404(pool, project_id: str):
     return row
 
 
+async def _get_or_create_team(pool, organization_id: str, user_id: str) -> str:
+    """Find an existing team for the org's manager, or create a default one."""
+    # Look for a team the current user belongs to
+    row = await pool.fetchrow(
+        "SELECT team_id FROM team_members WHERE user_id = $1 LIMIT 1",
+        user_id,
+    )
+    if row:
+        return str(row["team_id"])
+
+    # Look for any team associated with users in this org
+    row = await pool.fetchrow(
+        """SELECT tm.team_id
+           FROM team_members tm
+           JOIN users u ON u.id = tm.user_id
+           WHERE u.organization_id = $1
+           LIMIT 1""",
+        organization_id,
+    )
+    if row:
+        # Add this user to the found team and return it
+        team_id = str(row["team_id"])
+        await pool.execute(
+            "INSERT INTO team_members (team_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            team_id, user_id,
+        )
+        return team_id
+
+    # No team found — create a default team for this org
+    org_row = await pool.fetchrow(
+        "SELECT name FROM organizations WHERE id = $1", organization_id
+    )
+    team_name = f"{org_row['name']} Team" if org_row else "Default Team"
+
+    # team names must be unique — append a suffix if needed
+    suffix = 0
+    base_name = team_name
+    while True:
+        candidate = base_name if suffix == 0 else f"{base_name} {suffix}"
+        exists = await pool.fetchrow("SELECT 1 FROM teams WHERE name = $1", candidate)
+        if not exists:
+            team_name = candidate
+            break
+        suffix += 1
+
+    team_row = await pool.fetchrow(
+        "INSERT INTO teams (name, description) VALUES ($1, $2) RETURNING id",
+        team_name,
+        "Auto-created default team",
+    )
+    team_id = str(team_row["id"])
+
+    # Add creator to the team
+    await pool.execute(
+        "INSERT INTO team_members (team_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+        team_id, user_id,
+    )
+    return team_id
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -58,20 +119,33 @@ async def create_project(
 ):
     """Create a project (MANAGER only, within their organization)."""
     if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only managers and admins can create projects")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only managers and admins can create projects",
+        )
+
+    if not user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You must belong to an organization to create projects",
+        )
 
     pool = get_pool()
 
-    # Verify team exists
-    team = await pool.fetchrow("SELECT id FROM teams WHERE id = $1", body.team_id)
-    if not team:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+    # Resolve team_id
+    if body.team_id:
+        team = await pool.fetchrow("SELECT id FROM teams WHERE id = $1", body.team_id)
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+        team_id = body.team_id
+    else:
+        team_id = await _get_or_create_team(pool, user.organization_id, user.id)
 
     row = await pool.fetchrow(
         """INSERT INTO projects (team_id, organization_id, name, description)
            VALUES ($1, $2, $3, $4)
            RETURNING id, name, description, created_at""",
-        body.team_id,
+        team_id,
         user.organization_id,
         body.name,
         body.description,
@@ -81,7 +155,7 @@ async def create_project(
         "name": row["name"],
         "description": row["description"],
         "organization_id": user.organization_id,
-        "team_id": body.team_id,
+        "team_id": team_id,
         "created_at": row["created_at"].isoformat(),
     }
 
@@ -180,6 +254,12 @@ async def get_project(
         project_id,
     )
 
+    # API keys count
+    api_key_count = await pool.fetchval(
+        "SELECT COUNT(*) FROM api_keys WHERE project_id = $1 AND is_active = TRUE",
+        project_id,
+    )
+
     return {
         "id": str(project["id"]),
         "name": project["name"],
@@ -197,6 +277,7 @@ async def get_project(
             "fatal_count": log_summary["fatal_count"],
             "latest_log_at": log_summary["latest_log_at"].isoformat() if log_summary["latest_log_at"] else None,
         },
+        "api_key_count": api_key_count,
     }
 
 
@@ -237,23 +318,26 @@ async def assign_developer(
 ):
     """Assign a developer to a project (MANAGER only)."""
     if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only managers and admins can assign developers")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only managers and admins can assign developers",
+        )
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)
 
-    # MANAGER must own the project's org
     if user.role == "MANAGER" and str(project["organization_id"]) != user.organization_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project does not belong to your organization")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
 
-    # Verify user exists and is a developer
     dev = await pool.fetchrow(
         "SELECT id, role FROM users WHERE id = $1 AND is_active = TRUE", body.user_id
     )
     if not dev:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Insert membership
     try:
         await pool.execute(
             "INSERT INTO project_members (project_id, user_id) VALUES ($1, $2)",
@@ -261,7 +345,10 @@ async def assign_developer(
             body.user_id,
         )
     except Exception:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Developer already assigned to this project")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Developer already assigned to this project",
+        )
 
     return {"project_id": project_id, "user_id": body.user_id, "status": "assigned"}
 
@@ -274,13 +361,19 @@ async def remove_developer(
 ):
     """Remove a developer from a project (MANAGER only)."""
     if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only managers and admins can remove developers")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only managers and admins can remove developers",
+        )
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)
 
     if user.role == "MANAGER" and str(project["organization_id"]) != user.organization_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project does not belong to your organization")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
 
     result = await pool.execute(
         "DELETE FROM project_members WHERE project_id = $1 AND user_id = $2",
@@ -288,9 +381,41 @@ async def remove_developer(
         user_id,
     )
     if result == "DELETE 0":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Developer not found in this project")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Developer not found in this project",
+        )
 
     return {"project_id": project_id, "user_id": user_id, "status": "removed"}
+
+
+@router.get("/projects/{project_id}/api-keys")
+async def list_project_api_keys(
+    project_id: str,
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    """List API keys for a project (keys are masked — plain key shown only once on creation)."""
+    pool = get_pool()
+    await _get_project_or_404(pool, project_id)
+
+    rows = await pool.fetch(
+        """SELECT id, label, is_active, created_by, created_at
+           FROM api_keys
+           WHERE project_id = $1
+           ORDER BY created_at DESC""",
+        project_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "label": r["label"],
+            "key_masked": "••••••••••••••••••••••••••••••••",
+            "is_active": r["is_active"],
+            "created_by": str(r["created_by"]) if r["created_by"] else None,
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
 
 
 @router.post("/projects/{project_id}/api-keys", status_code=status.HTTP_201_CREATED)
@@ -304,16 +429,21 @@ async def generate_api_key(
     Returns the plain key once. Only the hash is stored.
     """
     if user.role not in ("MANAGER", "ADMIN"):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only managers and admins can generate API keys")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only managers and admins can generate API keys",
+        )
 
     pool = get_pool()
     project = await _get_project_or_404(pool, project_id)
 
     if user.role == "MANAGER" and str(project["organization_id"]) != user.organization_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Project does not belong to your organization")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
 
-    # Generate a random API key
-    plain_key = secrets.token_hex(32)  # 64-char hex string
+    plain_key = "th_" + secrets.token_hex(32)
     key_hash = hashlib.sha256(plain_key.encode()).hexdigest()
 
     row = await pool.fetchrow(
@@ -329,7 +459,7 @@ async def generate_api_key(
     return {
         "id": str(row["id"]),
         "project_id": project_id,
-        "api_key": plain_key,  # shown once, never stored
+        "api_key": plain_key,
         "label": body.label,
         "created_at": row["created_at"].isoformat(),
         "message": "Store this API key securely. It will not be shown again.",
@@ -341,38 +471,40 @@ async def get_project_logs(
     project_id: str,
     user: Annotated[UserContext, Depends(get_current_user)],
     level: str | None = None,
-    limit: int = 50,
+    search: str | None = None,
+    limit: int = 100,
     offset: int = 0,
 ):
-    """Get logs for a project."""
+    """Get logs for a project with optional level filter and search."""
     pool = get_pool()
     await _get_project_or_404(pool, project_id)
 
-    if level:
-        rows = await pool.fetch(
-            """SELECT id, module, level, message, timestamp, service, environment,
-                      error_type, stack_trace, ingested_at
-               FROM logs
-               WHERE project_id = $1 AND level = $2::log_level
-               ORDER BY timestamp DESC
-               LIMIT $3 OFFSET $4""",
-            project_id,
-            level,
-            limit,
-            offset,
-        )
-    else:
-        rows = await pool.fetch(
-            """SELECT id, module, level, message, timestamp, service, environment,
-                      error_type, stack_trace, ingested_at
-               FROM logs
-               WHERE project_id = $1
-               ORDER BY timestamp DESC
-               LIMIT $2 OFFSET $3""",
-            project_id,
-            limit,
-            offset,
-        )
+    conditions = ["project_id = $1"]
+    params: list = [project_id]
+    idx = 2
+
+    if level and level != "ALL":
+        conditions.append(f"level = ${idx}::log_level")
+        params.append(level)
+        idx += 1
+
+    if search:
+        conditions.append(f"(message ILIKE ${idx} OR service ILIKE ${idx} OR error_type ILIKE ${idx})")
+        params.append(f"%{search}%")
+        idx += 1
+
+    where_clause = " AND ".join(conditions)
+    params.extend([limit, offset])
+
+    rows = await pool.fetch(
+        f"""SELECT id, module, level, message, timestamp, service, environment,
+                  host, error_type, stack_trace, trace_id, extra, ingested_at
+           FROM logs
+           WHERE {where_clause}
+           ORDER BY timestamp DESC
+           LIMIT ${idx} OFFSET ${idx + 1}""",
+        *params,
+    )
 
     return [
         {
@@ -383,8 +515,11 @@ async def get_project_logs(
             "timestamp": r["timestamp"].isoformat(),
             "service": r["service"],
             "environment": r["environment"],
+            "host": r["host"],
             "error_type": r["error_type"],
             "stack_trace": r["stack_trace"],
+            "trace_id": r["trace_id"],
+            "extra": dict(r["extra"]) if r["extra"] else None,
             "ingested_at": r["ingested_at"].isoformat(),
         }
         for r in rows

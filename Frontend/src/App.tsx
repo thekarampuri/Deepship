@@ -7,13 +7,28 @@ import CTASection from './components/LandingPage/CTASection';
 import Footer from './components/LandingPage/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import SignupPage from './components/SignupPage/SignupPage';
-import AdminDashboard from './components/Admin/AdminDashboard';
-import ManagerDashboard from './components/Manager/ManagerDashboard';
-import ProjectDetail from './components/Manager/ProjectDetail';
-import DeveloperDashboard from './components/Developer/DeveloperDashboard';
-import ProjectLogs from './components/Developer/ProjectLogs';
 import ProtectedRoute from './components/ProtectedRoute';
 import { useAuth } from './context/AuthContext';
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+import AdminDashboard from './components/Admin/AdminDashboard';
+import OrganizationsPage from './components/Admin/OrganizationsPage';
+import AdminProjectsPage from './components/Admin/AdminProjectsPage';
+import DevelopersPage from './components/Admin/DevelopersPage';
+
+// ── Manager ───────────────────────────────────────────────────────────────────
+import ManagerDashboard from './components/Manager/ManagerDashboard';
+import ProjectsListPage from './components/Manager/ProjectsListPage';
+import ProjectDetail from './components/Manager/ProjectDetail';
+import JoinRequestsPage from './components/Manager/JoinRequestsPage';
+
+// ── Developer ─────────────────────────────────────────────────────────────────
+import DeveloperDashboard from './components/Developer/DeveloperDashboard';
+import MyProjectsPage from './components/Developer/MyProjectsPage';
+import BrowsePage from './components/Developer/BrowsePage';
+import ProjectLogs from './components/Developer/ProjectLogs';
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -21,17 +36,17 @@ const LandingPage = () => {
     <div className="min-h-screen bg-surface-dim selection:bg-primary-container selection:text-on-primary-container">
       <Navbar onSignIn={() => navigate('/login')} />
       <main>
-        <Hero onSignUp={() => navigate('/login')} />
+        <Hero onSignUp={() => navigate('/signup')} />
         <StatsBar />
         <FeaturesGrid />
-        <CTASection onSignUp={() => navigate('/login')} />
+        <CTASection onSignUp={() => navigate('/signup')} />
       </main>
       <Footer />
     </div>
   );
 };
 
-// Smart redirect based on user role
+/** Redirect logged-in user to their role-appropriate dashboard. */
 const RoleRedirect = () => {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated || !user) return <Navigate to="/login" replace />;
@@ -40,24 +55,24 @@ const RoleRedirect = () => {
     MANAGER: '/manager/dashboard',
     DEVELOPER: '/developer/dashboard',
   };
-  return <Navigate to={paths[user.role] || '/login'} replace />;
+  return <Navigate to={paths[user.role] ?? '/login'} replace />;
 };
 
 function App() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* ── Public ─────────────────────────────────────────────────────────── */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/loginpage" element={<Navigate to="/login" replace />} />
       <Route path="/signup" element={<SignupPage />} />
 
-      {/* Smart redirects */}
+      {/* ── Generic smart redirects ─────────────────────────────────────────── */}
       <Route path="/dashboard" element={<RoleRedirect />} />
       <Route path="/logs" element={<RoleRedirect />} />
       <Route path="/projects" element={<RoleRedirect />} />
 
-      {/* Admin routes */}
+      {/* ── Admin routes ────────────────────────────────────────────────────── */}
       <Route
         path="/admin/dashboard"
         element={
@@ -70,7 +85,7 @@ function App() {
         path="/admin/organizations"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
+            <OrganizationsPage />
           </ProtectedRoute>
         }
       />
@@ -78,7 +93,7 @@ function App() {
         path="/admin/projects"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
+            <AdminProjectsPage />
           </ProtectedRoute>
         }
       />
@@ -86,7 +101,7 @@ function App() {
         path="/admin/developers"
         element={
           <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
+            <DevelopersPage />
           </ProtectedRoute>
         }
       />
@@ -99,7 +114,7 @@ function App() {
         }
       />
 
-      {/* Manager routes */}
+      {/* ── Manager routes ──────────────────────────────────────────────────── */}
       <Route
         path="/manager/dashboard"
         element={
@@ -112,7 +127,7 @@ function App() {
         path="/manager/projects"
         element={
           <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ManagerDashboard />
+            <ProjectsListPage />
           </ProtectedRoute>
         }
       />
@@ -128,7 +143,7 @@ function App() {
         path="/manager/requests"
         element={
           <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ManagerDashboard />
+            <JoinRequestsPage />
           </ProtectedRoute>
         }
       />
@@ -136,7 +151,7 @@ function App() {
         path="/manager/team"
         element={
           <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ManagerDashboard />
+            <JoinRequestsPage />
           </ProtectedRoute>
         }
       />
@@ -149,7 +164,7 @@ function App() {
         }
       />
 
-      {/* Developer routes */}
+      {/* ── Developer routes ────────────────────────────────────────────────── */}
       <Route
         path="/developer/dashboard"
         element={
@@ -162,7 +177,7 @@ function App() {
         path="/developer/projects"
         element={
           <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperDashboard />
+            <MyProjectsPage />
           </ProtectedRoute>
         }
       />
@@ -178,7 +193,7 @@ function App() {
         path="/developer/browse"
         element={
           <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperDashboard />
+            <BrowsePage />
           </ProtectedRoute>
         }
       />
@@ -186,7 +201,7 @@ function App() {
         path="/developer/logs"
         element={
           <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperDashboard />
+            <MyProjectsPage />
           </ProtectedRoute>
         }
       />
@@ -199,7 +214,7 @@ function App() {
         }
       />
 
-      {/* Catch-all */}
+      {/* ── Catch-all ───────────────────────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

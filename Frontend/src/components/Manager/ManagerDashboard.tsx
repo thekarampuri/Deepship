@@ -1,51 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
-
-const mockProjects = [
-  { id: 'p-1', name: 'Auth Service v3', description: 'Authentication microservice with OAuth2 and SAML support', status: 'active', devs: 5, recentLogs: 1240, lastActivity: '2m ago' },
-  { id: 'p-2', name: 'Payment Gateway', description: 'Stripe and PayPal integration layer for all transactions', status: 'active', devs: 3, recentLogs: 890, lastActivity: '15m ago' },
-  { id: 'p-3', name: 'Search Indexer', description: 'Elasticsearch-based full-text search for product catalog', status: 'warning', devs: 8, recentLogs: 2100, lastActivity: '5m ago' },
-  { id: 'p-4', name: 'User Profile API', description: 'RESTful API for user profile management and preferences', status: 'active', devs: 4, recentLogs: 456, lastActivity: '1h ago' },
-  { id: 'p-5', name: 'Notification Hub', description: 'Push notifications, email, and SMS delivery service', status: 'active', devs: 2, recentLogs: 320, lastActivity: '30m ago' },
-  { id: 'p-6', name: 'Analytics Engine', description: 'Real-time analytics and reporting dashboard backend', status: 'error', devs: 6, recentLogs: 3400, lastActivity: '1m ago' },
-];
-
-const mockRequests = [
-  { id: 'r-1', devName: 'Sophie Weber', devEmail: 'sophie@quantum.dev', project: 'Auth Service v3', requestedAt: '2 hours ago' },
-  { id: 'r-2', devName: 'Omar Hassan', devEmail: 'omar@pixelforge.co', project: 'Payment Gateway', requestedAt: '4 hours ago' },
-  { id: 'r-3', devName: 'Nina Park', devEmail: 'nina@tracehub.io', project: 'Search Indexer', requestedAt: '1 day ago' },
-];
-
-const statusStyles: Record<string, { dot: string; label: string }> = {
-  active: { dot: 'bg-secondary', label: 'Active' },
-  warning: { dot: 'bg-tertiary', label: 'Warning' },
-  error: { dot: 'bg-error', label: 'Issues' },
-};
+import * as api from '../../services/api';
+import type { Project, JoinRequest } from '../../services/api';
 
 const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
-  const [requests, setRequests] = useState(mockRequests);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    Promise.all([api.getProjects(), api.getJoinRequests()])
+      .then(([projectsData, requestsData]) => {
+        setProjects(projectsData);
+        setJoinRequests(requestsData);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const pendingRequests = joinRequests.filter((r) => r.status === 'PENDING');
+
+  const totalDevelopers = projects.reduce((sum, p) => sum + (p.developer_count ?? 0), 0);
 
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowCreateModal(false);
-    setNewProjectName('');
-    setNewProjectDesc('');
+    if (!newProjectName.trim()) return;
+    setCreating(true);
+    api
+      .createProject({ name: newProjectName.trim(), description: newProjectDesc.trim() || undefined })
+      .then((created) => {
+        setProjects((prev) => [created, ...prev]);
+        setShowCreateModal(false);
+        setNewProjectName('');
+        setNewProjectDesc('');
+      })
+      .catch(console.error)
+      .finally(() => setCreating(false));
   };
 
-  const handleApprove = (id: string) => {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
+  const handleResolve = (id: string, status: 'APPROVED' | 'REJECTED') => {
+    api
+      .resolveJoinRequest(id, status)
+      .then(() => {
+        setJoinRequests((prev) =>
+          prev.map((r) => (r.id === id ? { ...r, status } : r)),
+        );
+      })
+      .catch(console.error);
   };
 
-  const handleReject = (id: string) => {
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-  };
+  if (loading) {
+    return (
+      <div className="ml-64 flex items-center justify-center h-screen bg-surface">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen">
@@ -78,7 +98,7 @@ const ManagerDashboard: React.FC = () => {
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">My Projects</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">{mockProjects.length}</span>
+                <span className="text-3xl font-black text-white tracking-tighter">{projects.length}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -90,8 +110,7 @@ const ManagerDashboard: React.FC = () => {
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Developers</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">28</span>
-                <span className="text-secondary text-xs font-bold">+3 this week</span>
+                <span className="text-3xl font-black text-white tracking-tighter">{totalDevelopers}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -103,8 +122,10 @@ const ManagerDashboard: React.FC = () => {
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Requests</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">{requests.length}</span>
-                <span className="text-tertiary text-xs font-bold">Awaiting review</span>
+                <span className="text-3xl font-black text-white tracking-tighter">{pendingRequests.length}</span>
+                {pendingRequests.length > 0 && (
+                  <span className="text-tertiary text-xs font-bold">Awaiting review</span>
+                )}
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -116,8 +137,7 @@ const ManagerDashboard: React.FC = () => {
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Active API Keys</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">14</span>
-                <span className="text-secondary text-xs font-bold">All valid</span>
+                <span className="text-3xl font-black text-white tracking-tighter">0</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -129,81 +149,97 @@ const ManagerDashboard: React.FC = () => {
         {/* Projects Grid */}
         <div className="mb-8">
           <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">My Projects</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockProjects.map((project) => (
-              <div
-                key={project.id}
-                className="bg-surface-container-low p-5 rounded-lg border border-white/5 hover:border-primary/20 transition-all cursor-pointer group"
-                onClick={() => navigate(`/manager/projects/${project.id}`)}
+          {projects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-white/5">
+              <span className="material-symbols-outlined text-5xl text-slate-600">folder_open</span>
+              <p className="text-sm text-slate-500">No projects yet. Create your first project.</p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="mt-2 flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 text-sm font-bold rounded-lg hover:bg-primary/20 transition-colors"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{project.name}</h4>
-                  <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${statusStyles[project.status].dot}`} />
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">{statusStyles[project.status].label}</span>
+                <span className="material-symbols-outlined text-sm">add</span>
+                New Project
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {projects.map((project) => (
+                <div
+                  key={project.id}
+                  className="bg-surface-container-low p-5 rounded-lg border border-white/5 hover:border-primary/20 transition-all cursor-pointer group"
+                  onClick={() => navigate(`/manager/projects/${project.id}`)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{project.name}</h4>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-secondary" />
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Active</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mb-4 line-clamp-2">
+                    {project.description || 'No description provided.'}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-xs">person</span>
+                        {project.developer_count}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-500">
+                      {new Date(project.created_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
+                      Manage
+                    </button>
                   </div>
                 </div>
-                <p className="text-xs text-on-surface-variant mb-4 line-clamp-2">{project.description}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">person</span>
-                      {project.devs}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-xs">receipt_long</span>
-                      {project.recentLogs}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-500">{project.lastActivity}</span>
-                </div>
-                <div className="mt-3 pt-3 border-t border-white/5">
-                  <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
-                    Manage
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Pending Join Requests */}
         <div className="bg-surface-container-low rounded-lg border border-white/5 overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Pending Join Requests</h3>
-            <span className="text-[10px] font-bold text-slate-500 bg-surface-container-highest px-2 py-1 rounded">{requests.length}</span>
+            <span className="text-[10px] font-bold text-slate-500 bg-surface-container-highest px-2 py-1 rounded">{pendingRequests.length}</span>
           </div>
-          {requests.length === 0 ? (
+          {pendingRequests.length === 0 ? (
             <div className="p-8 text-center">
-              <span className="material-symbols-outlined text-4xl text-slate-600 mb-2">inbox</span>
+              <span className="material-symbols-outlined text-4xl text-slate-600 mb-2 block">inbox</span>
               <p className="text-sm text-slate-500">No pending requests</p>
             </div>
           ) : (
             <div className="divide-y divide-white/5">
-              {requests.map((req) => (
+              {pendingRequests.map((req) => (
                 <div key={req.id} className="px-6 py-4 flex items-center justify-between hover:bg-surface-container-high/50 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold">
-                      {req.devName.charAt(0)}
+                      {req.user_name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{req.devName}</p>
-                      <p className="text-[10px] text-slate-500">{req.devEmail}</p>
+                      <p className="text-sm font-semibold text-white">{req.user_name}</p>
+                      <p className="text-[10px] text-slate-500">{req.user_email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-on-surface-variant mr-4">
-                      Wants to join <span className="font-semibold text-white">{req.project}</span>
+                      Wants to join <span className="font-semibold text-white">{req.project_name}</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 mr-4">{req.requestedAt}</span>
+                    <span className="text-[10px] text-slate-500 mr-4">
+                      {new Date(req.requested_at).toLocaleDateString()}
+                    </span>
                     <button
-                      onClick={() => handleApprove(req.id)}
+                      onClick={() => handleResolve(req.id, 'APPROVED')}
                       className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-secondary/10 text-secondary border border-secondary/20 rounded hover:bg-secondary/20 transition-colors"
                     >
                       Approve
                     </button>
                     <button
-                      onClick={() => handleReject(req.id)}
+                      onClick={() => handleResolve(req.id, 'REJECTED')}
                       className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-error/10 text-error border border-error/20 rounded hover:bg-error/20 transition-colors"
                     >
                       Reject
@@ -222,13 +258,18 @@ const ManagerDashboard: React.FC = () => {
           <div className="bg-surface-container-high rounded-xl border border-white/10 p-8 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Create New Project</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
             <form onSubmit={handleCreateProject} className="space-y-5">
               <div>
-                <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Project Name</label>
+                <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                  Project Name
+                </label>
                 <input
                   className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-outline/40"
                   placeholder="My New Project"
@@ -238,7 +279,9 @@ const ManagerDashboard: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Description</label>
+                <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                  Description
+                </label>
                 <textarea
                   className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-outline/40 resize-none"
                   placeholder="Brief description of the project..."
@@ -248,11 +291,19 @@ const ManagerDashboard: React.FC = () => {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="flex-1 py-2.5 text-sm font-bold text-slate-400 border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="flex-1 py-2.5 text-sm font-bold text-slate-400 border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="flex-1 py-2.5 text-sm font-bold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-lg hover:opacity-90 active:scale-95 transition-all">
-                  Create Project
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex-1 py-2.5 text-sm font-bold text-on-primary bg-gradient-to-r from-primary to-primary-container rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? 'Creating…' : 'Create Project'}
                 </button>
               </div>
             </form>

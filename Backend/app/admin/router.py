@@ -49,6 +49,53 @@ async def list_users(
     return await service.list_users(get_pool(), page, per_page)
 
 
+@router.get("/members")
+async def list_members(
+    user: AdminUser,
+    role: str | None = None,
+):
+    """List all active users, optionally filtered by role (ADMIN, MANAGER, DEVELOPER)."""
+    pool = get_pool()
+    if role:
+        rows = await pool.fetch(
+            """SELECT u.id, u.email, u.full_name, u.role, u.is_active, u.created_at,
+                      o.name AS organization_name,
+                      COUNT(DISTINCT pm.project_id) AS project_count
+               FROM users u
+               LEFT JOIN organizations o ON o.id = u.organization_id
+               LEFT JOIN project_members pm ON pm.user_id = u.id
+               WHERE u.role = $1::user_role AND u.is_active = TRUE
+               GROUP BY u.id, o.name
+               ORDER BY u.full_name""",
+            role,
+        )
+    else:
+        rows = await pool.fetch(
+            """SELECT u.id, u.email, u.full_name, u.role, u.is_active, u.created_at,
+                      o.name AS organization_name,
+                      COUNT(DISTINCT pm.project_id) AS project_count
+               FROM users u
+               LEFT JOIN organizations o ON o.id = u.organization_id
+               LEFT JOIN project_members pm ON pm.user_id = u.id
+               WHERE u.is_active = TRUE
+               GROUP BY u.id, o.name
+               ORDER BY u.full_name""",
+        )
+    return [
+        {
+            "id": str(r["id"]),
+            "email": r["email"],
+            "full_name": r["full_name"],
+            "role": r["role"],
+            "is_active": r["is_active"],
+            "organization_name": r["organization_name"],
+            "project_count": r["project_count"],
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def deactivate_user(user_id: UUID, user: AdminUser):
     ok = await service.deactivate_user(get_pool(), user_id)
