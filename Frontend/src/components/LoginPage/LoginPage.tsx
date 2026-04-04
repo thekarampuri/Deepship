@@ -1,4 +1,18 @@
-const LoginPage = ({ onBack }: { onBack: () => void }) => {
+import { useNavigate } from 'react-router-dom';
+
+const LoginPage = () => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate('/');
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate login and navigate to dashboard
+    navigate('/dashboard');
+  };
+
   return (
     <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col forensic-grid">
       <main className="flex-grow flex items-center justify-center px-6 py-12">
@@ -6,13 +20,13 @@ const LoginPage = ({ onBack }: { onBack: () => void }) => {
           {/* Brand Anchor */}
           <div className="text-center mb-10">
             <div 
-              onClick={onBack}
+              onClick={handleBack}
               className="inline-flex items-center justify-center p-3 rounded-xl bg-surface-container-low mb-4 transition-transform hover:scale-110 duration-300 cursor-pointer"
             >
               <span className="material-symbols-outlined text-primary text-4xl">security</span>
             </div>
             <button 
-              onClick={onBack}
+              onClick={handleBack}
               className="block w-full text-center hover:opacity-80 transition-opacity"
             >
               <h1 className="text-3xl font-extrabold tracking-tighter text-primary font-headline">TraceHub</h1>
@@ -22,7 +36,7 @@ const LoginPage = ({ onBack }: { onBack: () => void }) => {
 
           {/* Login Card */}
           <div className="glass-panel rounded-xl p-8 border border-outline-variant/15 shadow-[0px_24px_48px_-12px_rgba(6,14,32,0.5)]">
-            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2" htmlFor="email">
                   Email Address
