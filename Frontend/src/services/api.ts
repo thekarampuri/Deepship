@@ -1,9 +1,9 @@
 /**
  * Central API service — all backend calls go through here.
- * Base URL: http://localhost:8000
+ * Base URL: http://103.127.146.14
  */
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://103.127.146.14';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

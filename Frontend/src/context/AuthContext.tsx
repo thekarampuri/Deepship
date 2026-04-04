@@ -33,7 +33,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://103.127.146.14';
 
 // Mock users for fallback when backend is not running
 const MOCK_USERS: Record<string, { password: string; user: User }> = {
@@ -142,9 +142,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(err.detail || 'Signup failed');
       }
     } catch (err: unknown) {
-      if (err instanceof Error && err.message === 'Signup failed') throw err;
-      // If backend is unreachable, simulate success
-      return;
+      // TypeError means fetch itself failed (network unreachable) → simulate success
+      if (err instanceof TypeError) return;
+      // Any other error came from the backend — always surface it to the caller
+      throw err;
     }
   }, []);
 

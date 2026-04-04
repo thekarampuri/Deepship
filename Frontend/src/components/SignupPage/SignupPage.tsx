@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+
+const API_BASE = 'http://103.127.146.14';
+
 type UserRole = 'ADMIN' | 'MANAGER' | 'DEVELOPER';
+
+interface OrgOption {
+  id: string;
+  name: string;
+}
 
 interface RoleOption {
   role: UserRole;
@@ -39,13 +47,6 @@ const roleOptions: RoleOption[] = [
   },
 ];
 
-const MOCK_ORGANIZATIONS = [
-  { id: 'org-1', name: 'TraceHub Systems' },
-  { id: 'org-2', name: 'Acme Corp' },
-  { id: 'org-3', name: 'NovaTech Industries' },
-  { id: 'org-4', name: 'Quantum Labs' },
-];
-
 const SignupPage = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -59,6 +60,22 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Organizations for the MANAGER dropdown (fetched from backend)
+  const [orgs, setOrgs] = useState<OrgOption[]>([]);
+  const [orgsLoading, setOrgsLoading] = useState(false);
+  const [orgsError, setOrgsError] = useState('');
+
+  useEffect(() => {
+    setOrgsLoading(true);
+    fetch(`${API_BASE}/api/v1/organizations`)
+      .then((r) => r.json())
+      .then((data: { id: string; name: string }[]) => {
+        setOrgs(data.map((o) => ({ id: o.id, name: o.name })));
+      })
+      .catch(() => setOrgsError('Could not load organizations'))
+      .finally(() => setOrgsLoading(false));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,25 +275,39 @@ const SignupPage = () => {
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="material-symbols-outlined text-outline text-sm group-focus-within:text-primary transition-colors">domain</span>
+                      {orgsLoading ? (
+                        <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      ) : (
+                        <span className="material-symbols-outlined text-outline text-sm group-focus-within:text-primary transition-colors">domain</span>
+                      )}
                     </div>
                     <select
-                      className="block w-full pl-10 py-3.5 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none appearance-none cursor-pointer transition-all duration-200"
+                      className="block w-full pl-10 py-3.5 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none appearance-none cursor-pointer transition-all duration-200 disabled:opacity-50"
                       id="orgSelect"
                       required
                       value={orgId}
                       onChange={(e) => setOrgId(e.target.value)}
+                      disabled={orgsLoading}
                     >
-                      <option value="" className="bg-surface-container-lowest">Choose an organization...</option>
-                      {MOCK_ORGANIZATIONS.map((org) => (
-                        <option key={org.id} value={org.id} className="bg-surface-container-lowest">{org.name}</option>
+                      <option value="" className="bg-surface-container-lowest">
+                        {orgsLoading ? 'Loading organizations...' : 'Choose an organization...'}
+                      </option>
+                      {orgs.map((org) => (
+                        <option key={org.id} value={org.id} className="bg-surface-container-lowest">
+                          {org.name}
+                        </option>
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                       <span className="material-symbols-outlined text-outline text-sm">expand_more</span>
                     </div>
                   </div>
-                  <p className="mt-1.5 text-[10px] text-slate-500">You will be assigned as a project manager in this organization.</p>
+                  {orgsError && (
+                    <p className="mt-1.5 text-[10px] text-error">{orgsError}</p>
+                  )}
+                  {!orgsError && (
+                    <p className="mt-1.5 text-[10px] text-slate-500">You will be assigned as a project manager in this organization.</p>
+                  )}
                 </div>
               )}
 
