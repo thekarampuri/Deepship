@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { Organization } from '../../services/api';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.08 } },
+};
 
 const OrganizationsPage: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -46,27 +56,27 @@ const OrganizationsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-white tracking-tight">Organizations</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-sm text-slate-400">Platform Overview</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Organizations</span>
+          <span className="text-on-surface-variant/60">/</span>
+          <span className="text-sm text-on-surface-variant">Platform Overview</span>
           <span className="ml-2 px-2 py-0.5 bg-surface-container-highest text-primary text-[10px] font-black rounded uppercase tracking-widest">
             {organizations.length}
           </span>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-base">search</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-base">search</span>
             <input
-              className="bg-surface-container-lowest border-none rounded-lg py-1.5 pl-10 pr-4 w-64 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-slate-600 text-on-surface"
+              className="bg-surface-container-lowest border-none rounded-lg py-1.5 pl-10 pr-4 w-64 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-on-surface-variant/40 text-on-surface"
               placeholder="Search organizations..."
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="p-2 text-slate-400 hover:text-primary hover:bg-white/5 rounded-md transition-colors">
+          <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-gray-100 rounded-md transition-colors">
             <span className="material-symbols-outlined text-xl">notifications</span>
           </button>
         </div>
@@ -74,10 +84,10 @@ const OrganizationsPage: React.FC = () => {
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-primary/20 transition-all">
+        <motion.div variants={stagger} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Orgs</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Orgs</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-primary tracking-tighter">{organizations.length}</span>
               </div>
@@ -87,9 +97,9 @@ const OrganizationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-secondary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-secondary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Members</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Members</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-secondary tracking-tighter">{totalMembers}</span>
               </div>
@@ -99,9 +109,9 @@ const OrganizationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-tertiary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Projects</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Projects</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-tertiary tracking-tighter">{totalProjects}</span>
               </div>
@@ -114,7 +124,7 @@ const OrganizationsPage: React.FC = () => {
 
         {/* Search result count */}
         {search && (
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+          <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-4">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
           </p>
         )}
@@ -122,10 +132,10 @@ const OrganizationsPage: React.FC = () => {
         {/* Empty State */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-white/5">
-              <span className="material-symbols-outlined text-3xl text-slate-500">corporate_fare</span>
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-gray-200">
+              <span className="material-symbols-outlined text-3xl text-on-surface-variant">corporate_fare</span>
             </div>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">
+            <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">
               {search ? 'No organizations match your search' : 'No organizations found'}
             </p>
             {search && (
@@ -143,7 +153,7 @@ const OrganizationsPage: React.FC = () => {
             {filtered.map((org) => (
               <div
                 key={org.id}
-                className="bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 hover:bg-surface-container-high hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer group"
+                className="bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 hover:bg-surface-container-high hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer group"
               >
                 {/* Top accent bar */}
                 <div className="h-1 w-full bg-gradient-to-r from-primary/60 to-secondary/40" />
@@ -154,11 +164,11 @@ const OrganizationsPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <div className="w-2 h-2 rounded-full bg-secondary flex-shrink-0" />
-                        <h3 className="text-base font-bold text-primary group-hover:text-[#c0c1ff] transition-colors truncate">
+                        <h3 className="text-base font-bold text-primary group-hover:text-primary transition-colors truncate">
                           {org.name}
                         </h3>
                       </div>
-                      <span className="text-slate-500 text-xs font-mono">{org.slug}</span>
+                      <span className="text-on-surface-variant text-xs font-mono">{org.slug}</span>
                     </div>
                     <div className="flex-shrink-0 ml-3">
                       <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[9px] font-black uppercase tracking-widest rounded">
@@ -169,36 +179,36 @@ const OrganizationsPage: React.FC = () => {
 
                   {/* Description */}
                   {org.description && (
-                    <p className="text-xs text-slate-400 mb-4 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-on-surface-variant mb-4 line-clamp-2 leading-relaxed">
                       {org.description}
                     </p>
                   )}
 
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-white/5">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Members</p>
+                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-gray-200">
+                      <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Members</p>
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm text-secondary">group</span>
-                        <span className="text-lg font-black text-white">{org.member_count}</span>
+                        <span className="text-lg font-black text-on-surface">{org.member_count}</span>
                       </div>
                     </div>
-                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-white/5">
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Projects</p>
+                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-gray-200">
+                      <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Projects</p>
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm text-tertiary">folder</span>
-                        <span className="text-lg font-black text-white">{org.project_count}</span>
+                        <span className="text-lg font-black text-on-surface">{org.project_count}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                    <div className="flex items-center gap-1.5 text-slate-500">
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                    <div className="flex items-center gap-1.5 text-on-surface-variant">
                       <span className="material-symbols-outlined text-xs">calendar_today</span>
                       <span className="text-[10px] font-medium">{formatDate(org.created_at)}</span>
                     </div>
-                    <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-[#c0c1ff] hover:underline underline-offset-4 transition-all opacity-0 group-hover:opacity-100">
+                    <button className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-primary hover:underline underline-offset-4 transition-all opacity-0 group-hover:opacity-100">
                       View Details
                     </button>
                   </div>

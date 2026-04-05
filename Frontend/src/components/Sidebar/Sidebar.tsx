@@ -62,15 +62,15 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <nav className="fixed left-0 top-0 h-full flex flex-col py-6 px-4 bg-slate-900/50 backdrop-blur-xl h-screen w-64 border-r border-white/5 shadow-2xl z-[60]">
+    <nav className="fixed left-0 top-0 h-full flex flex-col py-6 px-4 bg-white backdrop-blur-xl h-screen w-64 border-r border-gray-200 shadow-sm z-[60]">
       {/* Brand */}
       <div className="mb-10 px-2 flex items-center gap-3">
         <div className="w-8 h-8 bg-primary rounded flex items-center justify-center">
           <span className="material-symbols-outlined text-on-primary text-base">lens_blur</span>
         </div>
         <div>
-          <h1 className="text-xl font-black tracking-tighter text-[#c0c1ff]">TraceHub</h1>
-          <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Forensic Lens</p>
+          <h1 className="text-xl font-black tracking-tighter text-primary">TraceHub</h1>
+          <p className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Forensic Lens</p>
         </div>
       </div>
 
@@ -81,8 +81,8 @@ const Sidebar: React.FC = () => {
             key={item.name}
             className={`flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out scale-[0.98] active:scale-95 ${
               isActive(item.path)
-                ? 'text-[#c0c1ff] bg-[#222a3d] font-semibold border-l-2 border-[#c0c1ff]'
-                : 'text-slate-400 hover:text-slate-100 hover:bg-[#131b2e]'
+                ? 'text-primary bg-primary/10 font-semibold border-l-2 border-primary'
+                : 'text-on-surface-variant hover:text-on-surface hover:bg-gray-100'
             }`}
             to={item.path}
           >
@@ -98,11 +98,11 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Bottom section */}
-      <div className="mt-auto pt-6 border-t border-white/5 space-y-2">
+      <div className="mt-auto pt-6 border-t border-gray-200 space-y-2">
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-slate-400 hover:text-error hover:bg-error/5 w-full scale-[0.98] active:scale-95"
+          className="flex items-center gap-3 px-3 py-2.5 rounded transition-all duration-200 ease-in-out text-on-surface-variant hover:text-error hover:bg-error/5 w-full scale-[0.98] active:scale-95"
         >
           <span className="material-symbols-outlined">logout</span>
           <span className="font-sans text-sm tracking-tight">Logout</span>
@@ -114,13 +114,13 @@ const Sidebar: React.FC = () => {
             {user?.full_name?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden flex-1">
-            <p className="text-xs font-bold text-white leading-none truncate">{user?.full_name || 'User'}</p>
+            <p className="text-xs font-bold text-on-surface leading-none truncate">{user?.full_name || 'User'}</p>
             <div className="flex items-center gap-2 mt-1">
               <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${roleBadgeStyles[role]}`}>
                 {roleBadgeLabels[role]}
               </span>
               {user?.organization_name && (
-                <span className="text-[10px] text-slate-500 truncate">{user.organization_name}</span>
+                <span className="text-[10px] text-on-surface-variant truncate">{user.organization_name}</span>
               )}
             </div>
           </div>

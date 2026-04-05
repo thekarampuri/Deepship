@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { Project, ProjectDetail } from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const MyProjectsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -80,15 +96,15 @@ const MyProjectsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/developer/dashboard')}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <span className="text-lg font-bold text-white tracking-tight">My Projects</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">My Projects</span>
           <span className="bg-primary/15 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
             {projects.length}
           </span>
@@ -105,59 +121,59 @@ const MyProjectsPage: React.FC = () => {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5">
+        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Assigned</p>
-              <span className="text-3xl font-black text-white tracking-tighter">{projects.length}</span>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Assigned</p>
+              <span className="text-3xl font-black text-on-surface tracking-tighter">{projects.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">folder</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Logs</p>
-              <span className="text-3xl font-black text-white tracking-tighter">{totalLogs.toLocaleString()}</span>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Logs</p>
+              <span className="text-3xl font-black text-on-surface tracking-tighter">{totalLogs.toLocaleString()}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">receipt_long</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Errors</p>
-              <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-white'}`}>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Errors</p>
+              <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-on-surface'}`}>
                 {totalErrors.toLocaleString()}
               </span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">error</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Fatal</p>
-              <span className={`text-3xl font-black tracking-tighter ${totalFatals > 0 ? 'text-error' : 'text-white'}`}>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Fatal</p>
+              <span className={`text-3xl font-black tracking-tighter ${totalFatals > 0 ? 'text-error' : 'text-on-surface'}`}>
                 {totalFatals.toLocaleString()}
               </span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">dangerous</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Search bar */}
         <div className="relative mb-6">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-sm">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">
             search
           </span>
           <input
-            className="w-full max-w-sm bg-surface-container-low border border-white/5 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-slate-600 focus:outline-none"
+            className="w-full max-w-sm bg-surface-container-low border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-on-surface-variant/40 focus:outline-none"
             placeholder="Search by project or organization name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -165,7 +181,7 @@ const MyProjectsPage: React.FC = () => {
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
             >
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
@@ -174,10 +190,10 @@ const MyProjectsPage: React.FC = () => {
 
         {/* Empty state */}
         {!error && projects.length === 0 && (
-          <div className="bg-surface-container-low rounded-xl border border-white/5 p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-slate-600 mb-4 block">folder_open</span>
-            <p className="text-white font-semibold mb-1">No projects assigned yet</p>
-            <p className="text-sm text-slate-500 mb-4">
+          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-16 text-center">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/60 mb-4 block">folder_open</span>
+            <p className="text-on-surface font-semibold mb-1">No projects assigned yet</p>
+            <p className="text-sm text-on-surface-variant mb-4">
               Browse and request to join projects.
             </p>
             <Link
@@ -192,9 +208,9 @@ const MyProjectsPage: React.FC = () => {
 
         {/* No results from search */}
         {projects.length > 0 && filtered.length === 0 && (
-          <div className="bg-surface-container-low rounded-xl border border-white/5 p-12 text-center">
-            <span className="material-symbols-outlined text-4xl text-slate-600 mb-2 block">search_off</span>
-            <p className="text-sm text-slate-500 mb-3">No projects match "{search}"</p>
+          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 text-center">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2 block">search_off</span>
+            <p className="text-sm text-on-surface-variant mb-3">No projects match "{search}"</p>
             <button
               onClick={() => setSearch('')}
               className="text-sm font-bold text-primary hover:text-primary/80 transition-colors"
@@ -206,14 +222,14 @@ const MyProjectsPage: React.FC = () => {
 
         {/* Search result count */}
         {search && filtered.length > 0 && (
-          <p className="text-xs text-slate-500 font-medium mb-4">
+          <p className="text-xs text-on-surface-variant font-medium mb-4">
             {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{search}"
           </p>
         )}
 
         {/* Project Grid */}
         {filtered.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <motion.div {...fadeUp(0.15)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filtered.map((project) => {
               const detail = projectDetails[project.id];
               const summary = detail?.logs_summary;
@@ -226,15 +242,15 @@ const MyProjectsPage: React.FC = () => {
                   onClick={() => navigate(`/developer/projects/${project.id}/logs`)}
                   className={`bg-surface-container-low p-5 rounded-xl border transition-all group flex flex-col cursor-pointer ${
                     hasFatals
-                      ? 'border-l-2 border-l-error border-white/5 hover:border-error/20'
+                      ? 'border-l-2 border-l-error border-gray-200 hover:border-error/20'
                       : hasErrors
-                        ? 'border-l-2 border-l-tertiary border-white/5 hover:border-tertiary/20'
-                        : 'border-white/5 hover:border-primary/20'
+                        ? 'border-l-2 border-l-tertiary border-gray-200 hover:border-tertiary/20'
+                        : 'border-gray-200 hover:border-primary/20'
                   }`}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-1">
-                    <h3 className="text-sm font-bold text-white group-hover:text-primary transition-colors leading-snug truncate flex-1">
+                    <h3 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors leading-snug truncate flex-1">
                       {project.name}
                     </h3>
                     {hasFatals ? (
@@ -252,13 +268,13 @@ const MyProjectsPage: React.FC = () => {
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
                     {project.organization_name ?? 'Unknown Org'}
                   </p>
 
                   {/* Description */}
                   {project.description && (
-                    <p className="text-xs text-slate-400 mb-3 line-clamp-2 leading-relaxed">
+                    <p className="text-xs text-on-surface-variant mb-3 line-clamp-2 leading-relaxed">
                       {project.description}
                     </p>
                   )}
@@ -288,8 +304,8 @@ const MyProjectsPage: React.FC = () => {
                   )}
 
                   {/* Meta row */}
-                  <div className="mt-auto pt-3 border-t border-white/5">
-                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                  <div className="mt-auto pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
                           <span className="material-symbols-outlined text-xs">group</span>
@@ -309,7 +325,7 @@ const MyProjectsPage: React.FC = () => {
                 </div>
               );
             })}
-          </div>
+          </motion.div>
         )}
       </main>
     </div>

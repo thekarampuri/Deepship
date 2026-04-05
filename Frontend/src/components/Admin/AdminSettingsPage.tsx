@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { Project, OrgMember } from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 type Tab = 'projects' | 'managers' | 'developers';
 
@@ -88,11 +104,11 @@ const AdminSettingsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-white tracking-tight">Settings</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-sm text-slate-400">{user?.organization_name ?? 'Organization'}</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Settings</span>
+          <span className="text-on-surface-variant/40">/</span>
+          <span className="text-sm text-on-surface-variant">{user?.organization_name ?? 'Organization'}</span>
         </div>
       </header>
 
@@ -105,7 +121,7 @@ const AdminSettingsPage: React.FC = () => {
         )}
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 mb-8 p-1 bg-surface-container-low rounded-xl border border-white/5 w-fit">
+        <motion.div {...fadeUp(0)} className="flex items-center gap-1 mb-8 p-1 bg-surface-container-low rounded-xl border border-gray-200 w-fit">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -113,54 +129,54 @@ const AdminSettingsPage: React.FC = () => {
               className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 tab === t.key
                   ? 'bg-primary/15 text-primary shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-gray-100'
               }`}
             >
               <span className="material-symbols-outlined text-base">{t.icon}</span>
               {t.label}
               <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
-                tab === t.key ? 'bg-primary/20 text-primary' : 'bg-surface-container-highest text-slate-500'
+                tab === t.key ? 'bg-primary/20 text-primary' : 'bg-surface-container-highest text-on-surface-variant'
               }`}>
                 {t.count}
               </span>
             </button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Projects Tab */}
         {tab === 'projects' && (
-          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Project</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Developers</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Created</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase w-32">Actions</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Project</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Developers</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Created</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase w-32">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {projects.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-slate-500">No projects</td></tr>
+                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-on-surface-variant">No projects</td></tr>
                 ) : (
                   projects.map((project) => (
                     <tr key={project.id} className="group hover:bg-surface-container-high transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <p className="text-sm font-semibold text-white">{project.name}</p>
+                          <p className="text-sm font-semibold text-on-surface">{project.name}</p>
                           {project.description && (
-                            <p className="text-[10px] text-slate-500 line-clamp-1 max-w-xs">{project.description}</p>
+                            <p className="text-[10px] text-on-surface-variant line-clamp-1 max-w-xs">{project.description}</p>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-highest rounded-lg w-fit">
                           <span className="material-symbols-outlined text-xs text-tertiary">code</span>
-                          <span className="text-xs font-bold text-white">{project.developer_count}</span>
+                          <span className="text-xs font-bold text-on-surface">{project.developer_count}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-xs text-slate-400">{formatDate(project.created_at)}</span>
+                        <span className="text-xs text-on-surface-variant">{formatDate(project.created_at)}</span>
                       </td>
                       <td className="px-6 py-4">
                         {confirmDelete === project.id ? (
@@ -174,7 +190,7 @@ const AdminSettingsPage: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setConfirmDelete(null)}
-                              className="text-[10px] font-bold text-slate-400 px-3 py-1.5 rounded hover:bg-white/5 transition-colors"
+                              className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
                             >
                               Cancel
                             </button>
@@ -182,7 +198,7 @@ const AdminSettingsPage: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => setConfirmDelete(project.id)}
-                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-error transition-colors opacity-0 group-hover:opacity-100"
+                            className="flex items-center gap-1 text-xs text-on-surface-variant hover:text-error transition-colors opacity-0 group-hover:opacity-100"
                           >
                             <span className="material-symbols-outlined text-sm">delete</span>
                             Delete
@@ -194,24 +210,24 @@ const AdminSettingsPage: React.FC = () => {
                 )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         )}
 
         {/* Managers Tab */}
         {tab === 'managers' && (
-          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Manager</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Joined</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase w-32">Actions</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Manager</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Joined</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase w-32">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {managers.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-slate-500">No managers</td></tr>
+                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-on-surface-variant">No managers</td></tr>
                 ) : (
                   managers.map((mgr) => (
                     <tr key={mgr.id} className="group hover:bg-surface-container-high transition-colors">
@@ -221,19 +237,19 @@ const AdminSettingsPage: React.FC = () => {
                             {mgr.full_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-white">{mgr.full_name}</p>
-                            <p className="text-[10px] text-slate-500">{mgr.email}</p>
+                            <p className="text-sm font-semibold text-on-surface">{mgr.full_name}</p>
+                            <p className="text-[10px] text-on-surface-variant">{mgr.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${mgr.is_active ? 'bg-secondary' : 'bg-slate-500'}`} />
-                          <span className="text-xs text-slate-300">{mgr.is_active ? 'Active' : 'Inactive'}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${mgr.is_active ? 'bg-secondary' : 'bg-gray-400'}`} />
+                          <span className="text-xs text-on-surface-variant">{mgr.is_active ? 'Active' : 'Inactive'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-xs text-slate-400">{formatDate(mgr.created_at)}</span>
+                        <span className="text-xs text-on-surface-variant">{formatDate(mgr.created_at)}</span>
                       </td>
                       <td className="px-6 py-4">
                         {mgr.is_active && (
@@ -248,7 +264,7 @@ const AdminSettingsPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(null)}
-                                className="text-[10px] font-bold text-slate-400 px-3 py-1.5 rounded hover:bg-white/5 transition-colors"
+                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
                               >
                                 Cancel
                               </button>
@@ -256,7 +272,7 @@ const AdminSettingsPage: React.FC = () => {
                           ) : (
                             <button
                               onClick={() => setConfirmDelete(mgr.id)}
-                              className="flex items-center gap-1 text-xs text-slate-400 hover:text-error transition-colors opacity-0 group-hover:opacity-100"
+                              className="flex items-center gap-1 text-xs text-on-surface-variant hover:text-error transition-colors opacity-0 group-hover:opacity-100"
                             >
                               <span className="material-symbols-outlined text-sm">person_remove</span>
                               Deactivate
@@ -269,24 +285,24 @@ const AdminSettingsPage: React.FC = () => {
                 )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         )}
 
         {/* Developers Tab */}
         {tab === 'developers' && (
-          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Developer</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Joined</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase w-32">Actions</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Developer</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Joined</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase w-32">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {developers.length === 0 ? (
-                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-slate-500">No developers</td></tr>
+                  <tr><td colSpan={4} className="px-6 py-12 text-center text-sm text-on-surface-variant">No developers</td></tr>
                 ) : (
                   developers.map((dev) => (
                     <tr key={dev.id} className="group hover:bg-surface-container-high transition-colors">
@@ -296,19 +312,19 @@ const AdminSettingsPage: React.FC = () => {
                             {dev.full_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-white">{dev.full_name}</p>
-                            <p className="text-[10px] text-slate-500">{dev.email}</p>
+                            <p className="text-sm font-semibold text-on-surface">{dev.full_name}</p>
+                            <p className="text-[10px] text-on-surface-variant">{dev.email}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${dev.is_active ? 'bg-secondary' : 'bg-slate-500'}`} />
-                          <span className="text-xs text-slate-300">{dev.is_active ? 'Active' : 'Inactive'}</span>
+                          <div className={`w-1.5 h-1.5 rounded-full ${dev.is_active ? 'bg-secondary' : 'bg-gray-400'}`} />
+                          <span className="text-xs text-on-surface-variant">{dev.is_active ? 'Active' : 'Inactive'}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-xs text-slate-400">{formatDate(dev.created_at)}</span>
+                        <span className="text-xs text-on-surface-variant">{formatDate(dev.created_at)}</span>
                       </td>
                       <td className="px-6 py-4">
                         {dev.is_active && (
@@ -323,7 +339,7 @@ const AdminSettingsPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(null)}
-                                className="text-[10px] font-bold text-slate-400 px-3 py-1.5 rounded hover:bg-white/5 transition-colors"
+                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
                               >
                                 Cancel
                               </button>
@@ -331,7 +347,7 @@ const AdminSettingsPage: React.FC = () => {
                           ) : (
                             <button
                               onClick={() => setConfirmDelete(dev.id)}
-                              className="flex items-center gap-1 text-xs text-slate-400 hover:text-error transition-colors opacity-0 group-hover:opacity-100"
+                              className="flex items-center gap-1 text-xs text-on-surface-variant hover:text-error transition-colors opacity-0 group-hover:opacity-100"
                             >
                               <span className="material-symbols-outlined text-sm">person_remove</span>
                               Deactivate
@@ -344,7 +360,7 @@ const AdminSettingsPage: React.FC = () => {
                 )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         )}
       </main>
     </div>

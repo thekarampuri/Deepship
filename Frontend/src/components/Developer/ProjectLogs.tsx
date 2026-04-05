@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { Log, LogLevel, ProjectDetail, ApiKey } from '../../services/api';
@@ -7,7 +8,7 @@ import type { Log, LogLevel, ProjectDetail, ApiKey } from '../../services/api';
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const levelStyles: Record<LogLevel, { badge: string; row: string }> = {
-  DEBUG: { badge: 'bg-slate-700/50 text-slate-300', row: '' },
+  DEBUG: { badge: 'bg-gray-200 text-gray-600', row: '' },
   INFO: { badge: 'bg-primary/10 text-primary', row: '' },
   WARN: { badge: 'bg-tertiary/15 text-tertiary', row: 'border-l-2 border-l-tertiary/30' },
   ERROR: { badge: 'bg-error/15 text-error', row: 'border-l-2 border-l-error/30' },
@@ -85,6 +86,23 @@ function deriveRca(log: Log): RcaContent {
       'Identify the outermost application frame in the stack trace and add error handling at that boundary. Log sufficient context (user ID, request payload, environment) to reproduce the issue. Add a regression test once the fix is confirmed.',
   };
 }
+
+// ── Animation helpers ────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -191,24 +209,24 @@ const ProjectLogs: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/developer/projects')}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <span className="text-slate-500 text-sm">Developer</span>
-          <span className="material-symbols-outlined text-slate-600 text-xs">chevron_right</span>
-          <span className="text-slate-500 text-sm">Projects</span>
-          <span className="material-symbols-outlined text-slate-600 text-xs">chevron_right</span>
-          <span className="text-lg font-bold text-white tracking-tight">
+          <span className="text-on-surface-variant text-sm">Developer</span>
+          <span className="material-symbols-outlined text-on-surface-variant/60 text-xs">chevron_right</span>
+          <span className="text-on-surface-variant text-sm">Projects</span>
+          <span className="material-symbols-outlined text-on-surface-variant/60 text-xs">chevron_right</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">
             {projectError ? 'Unknown Project' : projectName}
           </span>
         </div>
         {project && (
-          <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-4 text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">
             <span className="flex items-center gap-1.5">
               <span className="material-symbols-outlined text-xs">receipt_long</span>
               {project.logs_summary.total_logs.toLocaleString()} logs
@@ -234,10 +252,10 @@ const ProjectLogs: React.FC = () => {
 
         {/* API Keys Section */}
         {!apiKeysLoading && apiKeys.length > 0 && (
-          <div className="mb-6">
+          <motion.div {...fadeUp(0)} className="mb-6">
             <button
               onClick={() => setShowApiKeys(!showApiKeys)}
-              className="w-full bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/15 transition-all"
+              className="w-full bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/15 transition-all"
             >
               <div className="px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -245,18 +263,18 @@ const ProjectLogs: React.FC = () => {
                     <span className="material-symbols-outlined text-primary text-lg">vpn_key</span>
                   </div>
                   <div className="text-left">
-                    <p className="text-sm font-bold text-white">
+                    <p className="text-sm font-bold text-on-surface">
                       API Keys
                       <span className="ml-2 text-[10px] font-bold bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
                         {apiKeys.length}
                       </span>
                     </p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">
+                    <p className="text-[10px] text-on-surface-variant mt-0.5">
                       Keys assigned to you for this project
                     </p>
                   </div>
                 </div>
-                <span className="material-symbols-outlined text-slate-400 text-lg">
+                <span className="material-symbols-outlined text-on-surface-variant text-lg">
                   {showApiKeys ? 'expand_less' : 'expand_more'}
                 </span>
               </div>
@@ -267,21 +285,21 @@ const ProjectLogs: React.FC = () => {
                 {apiKeys.map((key) => (
                   <div
                     key={key.id}
-                    className="bg-surface-container-low rounded-xl border border-white/5 p-4"
+                    className="bg-surface-container-low rounded-xl border border-gray-200 p-4"
                   >
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2.5">
                         <span className="material-symbols-outlined text-primary text-base">vpn_key</span>
                         <div>
-                          <p className="text-sm font-bold text-white">{key.label || 'API Key'}</p>
-                          <p className="text-[10px] text-slate-500">
+                          <p className="text-sm font-bold text-on-surface">{key.label || 'API Key'}</p>
+                          <p className="text-[10px] text-on-surface-variant">
                             Created {new Date(key.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-secondary' : 'bg-slate-600'}`} />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-secondary' : 'bg-gray-400'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
                           {key.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </div>
@@ -296,7 +314,7 @@ const ProjectLogs: React.FC = () => {
                             e.stopPropagation();
                             toggleKeyVisibility(key.id);
                           }}
-                          className="px-2.5 py-2.5 text-slate-400 hover:text-white transition-colors rounded-lg bg-surface-container-lowest flex-shrink-0"
+                          className="px-2.5 py-2.5 text-on-surface-variant hover:text-on-surface transition-colors rounded-lg bg-surface-container-lowest flex-shrink-0"
                           title={visibleKeys.has(key.id) ? 'Hide key' : 'Show key'}
                         >
                           <span className="material-symbols-outlined text-sm">
@@ -321,11 +339,11 @@ const ProjectLogs: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Filters */}
-        <div className="bg-surface-container-low rounded-lg p-4 border border-white/5 mb-6 flex items-center gap-4 flex-wrap">
+        <motion.div {...fadeUp(0.05)} className="bg-surface-container-low rounded-lg p-4 border border-gray-200 mb-6 flex items-center gap-4 flex-wrap">
           {/* Level filter pills */}
           <div className="flex gap-1 bg-surface-container-lowest rounded-lg p-1">
             {levels.map((level) => (
@@ -334,8 +352,8 @@ const ProjectLogs: React.FC = () => {
                 onClick={() => setLevelFilter(level)}
                 className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded transition-all ${
                   levelFilter === level
-                    ? 'bg-surface-container-high text-white'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-surface-container-high text-on-surface'
+                    : 'text-on-surface-variant hover:text-on-surface'
                 }`}
               >
                 {level}
@@ -345,21 +363,21 @@ const ProjectLogs: React.FC = () => {
 
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-sm">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">
               search
             </span>
             <input
-              className="w-full bg-surface-container-lowest border-none rounded-lg py-2 pl-9 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-slate-600"
+              className="w-full bg-surface-container-lowest border-none rounded-lg py-2 pl-9 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-on-surface-variant/40"
               placeholder="Search log messages, services..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <span className="text-[10px] font-bold text-slate-500 bg-surface-container-highest px-2 py-1 rounded">
+          <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">
             {logsLoading ? '…' : `${logs.length} logs`}
           </span>
-        </div>
+        </motion.div>
 
         {/* Logs error */}
         {logsError && (
@@ -384,7 +402,7 @@ const ProjectLogs: React.FC = () => {
 
         {/* Logs List */}
         {!logsLoading && !logsError && (
-          <div className="space-y-1.5">
+          <motion.div {...fadeUp(0.1)} className="space-y-1.5">
             {logs.map((log) => {
               const style = levelStyles[log.level] ?? levelStyles['INFO'];
               const isExpanded = expandedLog === log.id;
@@ -395,13 +413,13 @@ const ProjectLogs: React.FC = () => {
                 <div key={log.id}>
                   {/* Log Row */}
                   <div
-                    className={`bg-surface-container-low rounded-lg border border-white/5 hover:border-white/10 transition-all cursor-pointer ${
+                    className={`bg-surface-container-low rounded-lg border border-gray-200 hover:border-gray-300 transition-all cursor-pointer ${
                       isExpanded ? 'border-primary/20' : ''
                     } ${style.row}`}
                     onClick={() => setExpandedLog(isExpanded ? null : log.id)}
                   >
                     <div className="px-5 py-3 flex items-center gap-4">
-                      <span className="font-mono text-[10px] text-slate-500 w-44 flex-shrink-0">
+                      <span className="font-mono text-[10px] text-on-surface-variant w-44 flex-shrink-0">
                         {formatTimestamp(log.timestamp)}
                       </span>
                       <span
@@ -409,9 +427,9 @@ const ProjectLogs: React.FC = () => {
                       >
                         {log.level}
                       </span>
-                      <span className="text-sm text-white flex-1 truncate">{log.message}</span>
+                      <span className="text-sm text-on-surface flex-1 truncate">{log.message}</span>
                       {log.service && (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex-shrink-0">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant flex-shrink-0">
                           {log.service}
                         </span>
                       )}
@@ -423,7 +441,7 @@ const ProjectLogs: React.FC = () => {
                           psychology
                         </span>
                       )}
-                      <span className="material-symbols-outlined text-slate-500 text-sm flex-shrink-0">
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm flex-shrink-0">
                         {isExpanded ? 'expand_less' : 'expand_more'}
                       </span>
                     </div>
@@ -433,10 +451,10 @@ const ProjectLogs: React.FC = () => {
                   {isExpanded && (
                     <div className="mt-1 bg-surface-container-high rounded-lg border border-primary/10 overflow-hidden">
                       {/* Basic Details Grid */}
-                      <div className="p-5 border-b border-white/5">
+                      <div className="p-5 border-b border-gray-200">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                               Trace ID
                             </p>
                             <code className="font-mono text-on-surface-variant">
@@ -444,13 +462,13 @@ const ProjectLogs: React.FC = () => {
                             </code>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                               Service
                             </p>
                             <span className="text-on-surface-variant">{log.service ?? '—'}</span>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                               Level
                             </p>
                             <span
@@ -460,7 +478,7 @@ const ProjectLogs: React.FC = () => {
                             </span>
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                               Timestamp
                             </p>
                             <span className="font-mono text-on-surface-variant">
@@ -471,10 +489,10 @@ const ProjectLogs: React.FC = () => {
 
                         {/* Environment / host row */}
                         {(log.environment || log.host || log.error_type) && (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-4 pt-4 border-t border-white/5">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-4 pt-4 border-t border-gray-200">
                             {log.environment && (
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                                   Environment
                                 </p>
                                 <span className="text-on-surface-variant">{log.environment}</span>
@@ -482,7 +500,7 @@ const ProjectLogs: React.FC = () => {
                             )}
                             {log.host && (
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                                   Host
                                 </p>
                                 <span className="text-on-surface-variant">{log.host}</span>
@@ -490,7 +508,7 @@ const ProjectLogs: React.FC = () => {
                             )}
                             {log.error_type && (
                               <div>
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
                                   Error Type
                                 </p>
                                 <span className="font-mono text-error text-[11px]">
@@ -503,8 +521,8 @@ const ProjectLogs: React.FC = () => {
 
                         {/* Extra Fields */}
                         {log.extra && Object.keys(log.extra).length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-white/5">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                               Extra Fields
                             </p>
                             <div className="flex flex-wrap gap-2">
@@ -513,7 +531,7 @@ const ProjectLogs: React.FC = () => {
                                   key={key}
                                   className="px-2 py-1 bg-surface-container-lowest rounded text-[10px] font-mono text-on-surface-variant"
                                 >
-                                  <span className="text-slate-500">{key}:</span>{' '}
+                                  <span className="text-on-surface-variant">{key}:</span>{' '}
                                   {String(value)}
                                 </span>
                               ))}
@@ -524,8 +542,8 @@ const ProjectLogs: React.FC = () => {
 
                       {/* Stack Trace */}
                       {log.stack_trace && (
-                        <div className="p-5 border-b border-white/5">
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+                        <div className="p-5 border-b border-gray-200">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                             Stack Trace
                           </p>
                           <pre className="bg-surface-container-lowest rounded-lg p-4 font-mono text-xs text-on-surface-variant overflow-x-auto leading-relaxed whitespace-pre-wrap">
@@ -541,7 +559,7 @@ const ProjectLogs: React.FC = () => {
                             <span className="material-symbols-outlined text-primary text-xl">
                               psychology
                             </span>
-                            <span className="text-base font-bold text-white">
+                            <span className="text-base font-bold text-on-surface">
                               Root Cause Analysis
                             </span>
                           </div>
@@ -585,14 +603,14 @@ const ProjectLogs: React.FC = () => {
 
             {/* Empty state */}
             {logs.length === 0 && (
-              <div className="bg-surface-container-low rounded-lg border border-white/5 p-12 text-center">
-                <span className="material-symbols-outlined text-4xl text-slate-600 mb-2 block">
+              <div className="bg-surface-container-low rounded-lg border border-gray-200 p-12 text-center">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2 block">
                   filter_alt_off
                 </span>
-                <p className="text-sm text-slate-500">No logs match the current filters.</p>
+                <p className="text-sm text-on-surface-variant">No logs match the current filters.</p>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </main>
     </div>

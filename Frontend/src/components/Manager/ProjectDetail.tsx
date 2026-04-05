@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { Log, Member, ApiKey, ProjectDetail as ProjectDetailType, DeveloperSearchResult } from '../../services/api';
@@ -12,7 +13,7 @@ type LogLevel = 'ALL' | 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const levelStyles: Record<string, { badge: string }> = {
-  DEBUG: { badge: 'bg-slate-700/50 text-slate-300' },
+  DEBUG: { badge: 'bg-gray-200 text-gray-600' },
   INFO:  { badge: 'bg-primary/10 text-primary' },
   WARN:  { badge: 'bg-[#ffb95f]/15 text-[#ffb95f]' },
   ERROR: { badge: 'bg-[#ffb4ab]/15 text-[#ffb4ab]' },
@@ -239,30 +240,30 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
         <div className="flex justify-end">
           <button
             onClick={openInviteModal}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
           >
             <span className="material-symbols-outlined text-sm">person_add</span>
             Invite Developer
           </button>
         </div>
 
-        <div className="bg-surface-container-low rounded-xl border border-white/5 overflow-hidden">
+        <div className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
           {developers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">group</span>
-              <p className="text-white font-semibold mb-1">No developers yet</p>
-              <p className="text-sm text-slate-500">Search and invite developers to join this project</p>
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3">group</span>
+              <p className="text-on-surface font-semibold mb-1">No developers yet</p>
+              <p className="text-sm text-on-surface-variant">Search and invite developers to join this project</p>
             </div>
           ) : (
             <table className="w-full text-left">
-              <thead className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-surface-container-lowest/50">
+              <thead className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest bg-surface-container-lowest/50">
                 <tr>
                   <th className="px-6 py-4">Developer</th>
                   <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {developers.map((dev) => (
                   <tr key={dev.id} className="hover:bg-surface-container-high/40 transition-colors">
                     <td className="px-6 py-4">
@@ -270,10 +271,10 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
                         <div className="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold text-sm">
                           {dev.full_name.charAt(0).toUpperCase()}
                         </div>
-                        <p className="text-sm font-semibold text-white">{dev.full_name}</p>
+                        <p className="text-sm font-semibold text-on-surface">{dev.full_name}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">{dev.email}</td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant">{dev.email}</td>
                     <td className="px-6 py-4 text-right">
                       <button
                         onClick={() => handleRemove(dev)}
@@ -298,29 +299,29 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
 
       {/* Invite Developer Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-white/10 p-6 w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-surface-container-high rounded-xl border border-gray-300 p-6 w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-white">Invite Developer</h3>
-              <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-white transition-colors">
+              <h3 className="text-base font-bold text-on-surface">Invite Developer</h3>
+              <button onClick={() => setShowInviteModal(false)} className="text-on-surface-variant hover:text-on-surface transition-colors">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            <p className="text-xs text-slate-400 mb-4">
+            <p className="text-xs text-on-surface-variant mb-4">
               Search developers by name or skills. The developer will receive an invitation to accept.
             </p>
 
             {/* Search */}
             <div className="relative mb-4">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">search</span>
               <input
                 type="text"
                 placeholder="Search by name, email, or skill... (press Enter)"
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
-                className="w-full pl-10 pr-20 py-2.5 bg-surface-container-lowest border-0 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                className="w-full pl-10 pr-20 py-2.5 bg-surface-container-lowest border-0 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40"
                 autoFocus
               />
               <button
@@ -339,8 +340,8 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
                 </div>
               ) : availableDevs.length === 0 ? (
                 <div className="text-center py-10">
-                  <span className="material-symbols-outlined text-3xl text-slate-600 mb-2 block">person_search</span>
-                  <p className="text-sm text-slate-500">
+                  <span className="material-symbols-outlined text-3xl text-on-surface-variant/60 mb-2 block">person_search</span>
+                  <p className="text-sm text-on-surface-variant">
                     {searchQuery
                       ? 'No developers found for this search'
                       : searchResults.length > 0
@@ -361,8 +362,8 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
                           {dev.full_name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white">{dev.full_name}</p>
-                          <p className="text-[10px] text-slate-500">{dev.email}</p>
+                          <p className="text-sm font-semibold text-on-surface">{dev.full_name}</p>
+                          <p className="text-[10px] text-on-surface-variant">{dev.email}</p>
                           {dev.skills.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {dev.skills.slice(0, 5).map((skill) => (
@@ -374,7 +375,7 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
                                 </span>
                               ))}
                               {dev.skills.length > 5 && (
-                                <span className="px-1.5 py-0.5 text-[9px] font-medium text-slate-500">
+                                <span className="px-1.5 py-0.5 text-[9px] font-medium text-on-surface-variant">
                                   +{dev.skills.length - 5} more
                                 </span>
                               )}
@@ -490,7 +491,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
           <button
             onClick={() => setShowGenerateModal(true)}
             disabled={developers.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-sm">add</span>
             Generate New Key
@@ -507,33 +508,33 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
         )}
 
         {apiKeys.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-white/5 text-center">
-            <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">vpn_key</span>
-            <p className="text-white font-semibold mb-1">No API keys yet</p>
-            <p className="text-sm text-slate-500">Generate a key and assign it to a developer</p>
+          <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-gray-200 text-center">
+            <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3">vpn_key</span>
+            <p className="text-on-surface font-semibold mb-1">No API keys yet</p>
+            <p className="text-sm text-on-surface-variant">Generate a key and assign it to a developer</p>
           </div>
         ) : (
           <div className="space-y-3">
             {apiKeys.map((key) => (
-              <div key={key.id} className="bg-surface-container-low p-5 rounded-xl border border-white/5">
+              <div key={key.id} className="bg-surface-container-low p-5 rounded-xl border border-gray-200">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-primary">vpn_key</span>
                     <div>
-                      <p className="text-sm font-bold text-white">{key.label || 'Unnamed Key'}</p>
-                      <p className="text-[10px] text-slate-500">Created {formatDate(key.created_at)}</p>
+                      <p className="text-sm font-bold text-on-surface">{key.label || 'Unnamed Key'}</p>
+                      <p className="text-[10px] text-on-surface-variant">Created {formatDate(key.created_at)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {key.assigned_to_name && (
                       <div className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-highest rounded-lg">
                         <span className="material-symbols-outlined text-xs text-primary">person</span>
-                        <span className="text-[10px] font-bold text-slate-300">{key.assigned_to_name}</span>
+                        <span className="text-[10px] font-bold text-on-surface">{key.assigned_to_name}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-[#4edea3]' : 'bg-slate-600'}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-[#4edea3]' : 'bg-on-surface-variant/60'}`} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
                         {key.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
@@ -546,7 +547,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                     </code>
                     <button
                       onClick={() => toggleKeyVisibility(key.id)}
-                      className="px-2.5 py-2.5 text-slate-400 hover:text-white transition-colors rounded-lg bg-surface-container-highest flex-shrink-0"
+                      className="px-2.5 py-2.5 text-on-surface-variant hover:text-on-surface transition-colors rounded-lg bg-surface-container-highest flex-shrink-0"
                       title={visibleKeys.has(key.id) ? 'Hide key' : 'Show key'}
                     >
                       <span className="material-symbols-outlined text-sm">
@@ -555,7 +556,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                     </button>
                     <button
                       onClick={() => handleCopy(key.api_key!, key.id)}
-                      className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-slate-400 hover:text-white rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
+                      className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant hover:text-on-surface rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
                     >
                       <span className="material-symbols-outlined text-sm">
                         {copiedKey === key.id ? 'check' : 'content_copy'}
@@ -572,11 +573,11 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
 
       {/* Generate Key Modal */}
       {showGenerateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-white/10 p-6 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-surface-container-high rounded-xl border border-gray-300 p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-bold text-white">Generate API Key</h3>
-              <button onClick={closeGenerateModal} className="text-slate-400 hover:text-white transition-colors">
+              <h3 className="text-base font-bold text-on-surface">Generate API Key</h3>
+              <button onClick={closeGenerateModal} className="text-on-surface-variant hover:text-on-surface transition-colors">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -600,7 +601,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                     </code>
                     <button
                       onClick={() => handleCopy(generatedKey, 'new')}
-                      className="px-3 py-3 text-[10px] font-bold uppercase tracking-widest bg-primary text-[#0b1326] rounded-lg transition-colors flex items-center gap-1 flex-shrink-0 hover:opacity-90"
+                      className="px-3 py-3 text-[10px] font-bold uppercase tracking-widest bg-primary text-white rounded-lg transition-colors flex items-center gap-1 flex-shrink-0 hover:opacity-90"
                     >
                       <span className="material-symbols-outlined text-sm">
                         {copiedKey === 'new' ? 'check' : 'content_copy'}
@@ -611,7 +612,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                 </div>
                 <button
                   onClick={closeGenerateModal}
-                  className="w-full py-2.5 text-sm font-bold text-on-surface border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors"
+                  className="w-full py-2.5 text-sm font-bold text-on-surface border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
                 >
                   I've saved it — Close
                 </button>
@@ -636,7 +637,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                       </option>
                     ))}
                   </select>
-                  <p className="mt-1.5 text-[10px] text-slate-500">
+                  <p className="mt-1.5 text-[10px] text-on-surface-variant">
                     The developer will see this key in their project dashboard.
                   </p>
                 </div>
@@ -644,14 +645,14 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                 {/* Key Label */}
                 <div>
                   <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-                    Key Label <span className="normal-case tracking-normal text-slate-600">(optional)</span>
+                    Key Label <span className="normal-case tracking-normal text-on-surface-variant/60">(optional)</span>
                   </label>
                   <input
                     type="text"
                     placeholder="e.g. Production, Staging, CI/CD"
                     value={labelInput}
                     onChange={(e) => setLabelInput(e.target.value)}
-                    className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-slate-600"
+                    className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-on-surface-variant/60"
                   />
                 </div>
 
@@ -659,18 +660,18 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                   <button
                     type="button"
                     onClick={closeGenerateModal}
-                    className="flex-1 py-2.5 text-sm font-bold text-slate-400 border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors"
+                    className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleGenerate}
                     disabled={generating || !selectedDevId}
-                    className="flex-1 py-2.5 text-sm font-bold text-[#0b1326] bg-primary rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {generating ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-[#0b1326]/30 border-t-[#0b1326] rounded-full animate-spin" />
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         Generating...
                       </>
                     ) : (
@@ -745,9 +746,9 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
               className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
                 levelFilter === level
                   ? level === 'ALL'
-                    ? 'bg-surface-container-high text-white'
-                    : `${levelStyles[level]?.badge ?? 'bg-surface-container-high text-white'} ring-1 ring-inset ring-white/10`
-                  : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-surface-container-high text-on-surface'
+                    : `${levelStyles[level]?.badge ?? 'bg-surface-container-high text-on-surface'} ring-1 ring-inset ring-gray-300`
+                  : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
               {level}
@@ -757,14 +758,14 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
 
         {/* Search */}
         <div className="relative flex-1 max-w-sm">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base pointer-events-none">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base pointer-events-none">search</span>
           <input
             type="text"
             placeholder="Search logs... (press Enter)"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             onKeyDown={handleSearchKeyDown}
-            className="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-white/5 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
+            className="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-gray-200 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
           />
         </div>
       </div>
@@ -775,10 +776,10 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
           <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       ) : logs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-white/5 text-center">
-          <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">receipt_long</span>
-          <p className="text-white font-semibold mb-1">No logs found</p>
-          <p className="text-sm text-slate-500">Try adjusting the filters</p>
+        <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-gray-200 text-center">
+          <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3">receipt_long</span>
+          <p className="text-on-surface font-semibold mb-1">No logs found</p>
+          <p className="text-sm text-on-surface-variant">Try adjusting the filters</p>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -793,12 +794,12 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                   className={`bg-surface-container-low rounded-xl border transition-all cursor-pointer ${
                     isExpanded
                       ? 'border-primary/20 rounded-b-none'
-                      : 'border-white/5 hover:border-white/10'
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setExpandedId(isExpanded ? null : log.id)}
                 >
                   <div className="px-5 py-3 flex items-center gap-4">
-                    <span className="font-mono text-[10px] text-slate-500 w-36 flex-shrink-0 hidden md:block">
+                    <span className="font-mono text-[10px] text-on-surface-variant w-36 flex-shrink-0 hidden md:block">
                       {formatTimestamp(log.timestamp)}
                     </span>
                     <span
@@ -806,16 +807,16 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                     >
                       {log.level}
                     </span>
-                    <span className="text-sm text-white flex-1 truncate">{log.message}</span>
+                    <span className="text-sm text-on-surface flex-1 truncate">{log.message}</span>
                     {log.service && (
-                      <span className="text-[10px] text-slate-500 flex-shrink-0 hidden lg:block">{log.service}</span>
+                      <span className="text-[10px] text-on-surface-variant flex-shrink-0 hidden lg:block">{log.service}</span>
                     )}
                     {rca && (
                       <span className="material-symbols-outlined text-primary text-sm flex-shrink-0" title="Root Cause Analysis available">
                         psychology
                       </span>
                     )}
-                    <span className="material-symbols-outlined text-slate-500 text-sm flex-shrink-0">
+                    <span className="material-symbols-outlined text-on-surface-variant text-sm flex-shrink-0">
                       {isExpanded ? 'expand_less' : 'expand_more'}
                     </span>
                   </div>
@@ -833,7 +834,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                         { label: 'Timestamp', value: formatTimestamp(log.timestamp), mono: true },
                       ].map(({ label, value, mono, isLevel }) => (
                         <div key={label}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">{label}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{label}</p>
                           {isLevel ? (
                             <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${levelStyles[value]?.badge ?? ''}`}>
                               {value}
@@ -848,7 +849,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                     {/* Extra fields */}
                     {log.extra && Object.keys(log.extra).length > 0 && (
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Extra Fields</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Extra Fields</p>
                         <div className="flex flex-wrap gap-2">
                           {Object.entries(log.extra).map(([k, v]) => (
                             <span
@@ -856,7 +857,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                               className="px-2.5 py-1 bg-surface-container-highest rounded-lg text-[10px] font-mono text-on-surface-variant"
                             >
                               <span className="text-primary">{k}</span>
-                              <span className="text-slate-600">:</span>{' '}
+                              <span className="text-on-surface-variant/60">:</span>{' '}
                               <span>{String(v)}</span>
                             </span>
                           ))}
@@ -867,7 +868,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
                     {/* Stack trace */}
                     {log.stack_trace && (
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Stack Trace</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Stack Trace</p>
                         <pre className="bg-surface-container-lowest rounded-xl p-4 font-mono text-xs text-on-surface-variant overflow-x-auto leading-relaxed whitespace-pre-wrap">
                           {log.stack_trace}
                         </pre>
@@ -908,6 +909,21 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
 };
 
 // ─── Main Component ───────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const ProjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -977,7 +993,7 @@ const ProjectDetail: React.FC = () => {
         <Sidebar />
         <div className="ml-64 flex flex-col items-center justify-center h-screen gap-4">
           <span className="material-symbols-outlined text-5xl text-[#ffb4ab]">error</span>
-          <p className="text-white font-semibold">{projectError || 'Project not found'}</p>
+          <p className="text-on-surface font-semibold">{projectError || 'Project not found'}</p>
           <button
             onClick={() => navigate('/manager/projects')}
             className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
@@ -1001,19 +1017,19 @@ const ProjectDetail: React.FC = () => {
       <Sidebar />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate('/manager/projects')}
-            className="text-slate-400 hover:text-white transition-colors flex-shrink-0"
+            className="text-on-surface-variant hover:text-on-surface transition-colors flex-shrink-0"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <span className="text-lg font-bold text-white tracking-tight truncate">{project.name}</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight truncate">{project.name}</span>
           {project.organization_name && (
             <>
-              <span className="w-1 h-1 rounded-full bg-slate-600 flex-shrink-0" />
-              <span className="text-slate-500 text-sm truncate hidden sm:block">{project.organization_name}</span>
+              <span className="w-1 h-1 rounded-full bg-on-surface-variant/60 flex-shrink-0" />
+              <span className="text-on-surface-variant text-sm truncate hidden sm:block">{project.organization_name}</span>
             </>
           )}
         </div>
@@ -1021,18 +1037,18 @@ const ProjectDetail: React.FC = () => {
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Project info header */}
-        <div className="bg-surface-container-low rounded-xl p-6 border border-white/5 mb-6">
+        <motion.div {...fadeUp(0)} className="bg-surface-container-low rounded-xl p-6 border border-gray-200 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h2 className="text-xl font-bold text-white mb-1.5">{project.name}</h2>
+              <h2 className="text-xl font-bold text-on-surface mb-1.5">{project.name}</h2>
               {project.description && (
                 <p className="text-sm text-on-surface-variant mb-3 leading-relaxed">{project.description}</p>
               )}
-              <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
                 <span>Created {formatDate(project.created_at)}</span>
                 {project.organization_name && (
                   <>
-                    <span className="w-1 h-1 rounded-full bg-slate-700" />
+                    <span className="w-1 h-1 rounded-full bg-on-surface-variant" />
                     <span>{project.organization_name}</span>
                   </>
                 )}
@@ -1043,20 +1059,20 @@ const ProjectDetail: React.FC = () => {
             <div className="flex flex-wrap gap-3">
               <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-highest rounded-xl">
                 <span className="material-symbols-outlined text-sm text-primary">group</span>
-                <span className="text-xs font-bold text-white">{devsLoading ? '…' : developers.length}</span>
-                <span className="text-[10px] text-slate-500">devs</span>
+                <span className="text-xs font-bold text-on-surface">{devsLoading ? '…' : developers.length}</span>
+                <span className="text-[10px] text-on-surface-variant">devs</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-highest rounded-xl">
                 <span className="material-symbols-outlined text-sm text-primary">vpn_key</span>
-                <span className="text-xs font-bold text-white">{keysLoading ? '…' : apiKeys.length}</span>
-                <span className="text-[10px] text-slate-500">keys</span>
+                <span className="text-xs font-bold text-on-surface">{keysLoading ? '…' : apiKeys.length}</span>
+                <span className="text-[10px] text-on-surface-variant">keys</span>
               </div>
               {project.logs_summary && (
                 <>
                   <div className="flex items-center gap-2 px-3 py-2 bg-surface-container-highest rounded-xl">
                     <span className="material-symbols-outlined text-sm text-on-surface-variant">receipt_long</span>
-                    <span className="text-xs font-bold text-white">{project.logs_summary.total_logs.toLocaleString()}</span>
-                    <span className="text-[10px] text-slate-500">logs</span>
+                    <span className="text-xs font-bold text-on-surface">{project.logs_summary.total_logs.toLocaleString()}</span>
+                    <span className="text-[10px] text-on-surface-variant">logs</span>
                   </div>
                   {project.logs_summary.error_count > 0 && (
                     <div className="flex items-center gap-2 px-3 py-2 bg-[#ffb4ab]/10 rounded-xl">
@@ -1069,18 +1085,18 @@ const ProjectDetail: React.FC = () => {
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 bg-surface-container-lowest rounded-xl p-1 w-fit">
+        <motion.div {...fadeUp(0.1)} className="flex gap-1 mb-6 bg-surface-container-lowest rounded-xl p-1 w-fit">
           {tabDefs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 activeTab === tab.id
-                  ? 'bg-surface-container-high text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-surface-container-high text-on-surface shadow-sm'
+                  : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
               <span className="material-symbols-outlined text-sm">{tab.icon}</span>
@@ -1092,7 +1108,7 @@ const ProjectDetail: React.FC = () => {
               )}
             </button>
           ))}
-        </div>
+        </motion.div>
 
         {/* Tab content */}
         {activeTab === 'developers' && (

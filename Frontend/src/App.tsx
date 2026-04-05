@@ -1,6 +1,8 @@
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Navbar from './components/LandingPage/Navbar';
 import Hero from './components/LandingPage/Hero';
+import AboutSection from './components/LandingPage/AboutSection';
+import ContactSection from './components/LandingPage/ContactSection';
 import LoginPage from './components/LoginPage/LoginPage';
 import SignupPage from './components/SignupPage/SignupPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -30,9 +32,11 @@ import ProjectLogs from './components/Developer/ProjectLogs';
 const LandingPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="landing h-screen flex flex-col overflow-hidden bg-[hsl(var(--lp-bg))] selection:bg-[hsl(var(--lp-accent))] selection:text-white">
+    <div className="landing min-h-screen flex flex-col bg-[hsl(var(--lp-bg))] selection:bg-[hsl(var(--lp-accent))] selection:text-white">
       <Navbar onSignIn={() => navigate('/login')} />
       <Hero onSignUp={() => navigate('/signup')} />
+      <AboutSection />
+      <ContactSection />
     </div>
   );
 };

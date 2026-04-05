@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 const API_BASE = 'http://103.127.146.14';
@@ -105,16 +106,16 @@ const SignupPage = () => {
   if (success) {
     const isManager = selectedRole === 'MANAGER';
     return (
-      <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex items-center justify-center forensic-grid">
+      <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex items-center justify-center">
         <div className="w-full max-w-md text-center">
-          <div className={`inline-flex items-center justify-center p-4 rounded-xl mb-6 ${isManager ? 'bg-amber-400/10' : 'bg-secondary/10'}`}>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 15 }} className={`inline-flex items-center justify-center p-4 rounded-xl mb-6 ${isManager ? 'bg-amber-400/10' : 'bg-secondary/10'}`}>
             <span className={`material-symbols-outlined text-5xl ${isManager ? 'text-amber-400' : 'text-secondary'}`}>
               {isManager ? 'hourglass_top' : 'check_circle'}
             </span>
-          </div>
-          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-3">
+          </motion.div>
+          <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.2 }} className="text-2xl font-extrabold text-on-surface tracking-tight mb-3">
             {isManager ? 'Request Submitted' : 'Account Created'}
-          </h2>
+          </motion.h2>
           <p className="text-on-surface-variant text-sm mb-2">
             {isManager
               ? 'Your request to join the organization has been sent to the admin for approval.'
@@ -149,11 +150,11 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col forensic-grid">
+    <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col">
       <main className="flex-grow flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-lg">
           {/* Brand Anchor */}
-          <div className="text-center mb-8">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="text-center mb-8">
             <Link to="/" className="inline-flex items-center justify-center p-3 rounded-xl bg-surface-container-low mb-4 transition-transform hover:scale-110 duration-300">
               <span className="material-symbols-outlined text-primary text-4xl">security</span>
             </Link>
@@ -161,10 +162,10 @@ const SignupPage = () => {
               <h1 className="text-3xl font-extrabold tracking-tighter text-primary font-headline">TraceHub</h1>
             </Link>
             <p className="text-on-surface-variant text-sm mt-2 tracking-tight">Create your forensic analyst account</p>
-          </div>
+          </motion.div>
 
           {/* Signup Card */}
-          <div className="glass-panel rounded-xl p-8 border border-outline-variant/15 shadow-[0px_24px_48px_-12px_rgba(6,14,32,0.5)]">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-xl p-8 border border-outline-variant/15 shadow-xl">
             {/* Role Selector */}
             <div className="mb-8">
               <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
@@ -179,17 +180,17 @@ const SignupPage = () => {
                     className={`relative flex flex-col items-center gap-2 p-4 rounded-lg border transition-all duration-200 cursor-pointer ${
                       selectedRole === opt.role
                         ? `${opt.accentBg} ring-1 ring-offset-0`
-                        : 'bg-surface-container-lowest border-white/5 hover:border-white/10'
+                        : 'bg-surface-container-lowest border-gray-200 hover:border-gray-300'
                     }`}
                     style={selectedRole === opt.role ? { ringColor: opt.accent } : {}}
                   >
-                    <span className={`material-symbols-outlined text-2xl ${selectedRole === opt.role ? opt.accent : 'text-slate-500'}`}>
+                    <span className={`material-symbols-outlined text-2xl ${selectedRole === opt.role ? opt.accent : 'text-on-surface-variant'}`}>
                       {opt.icon}
                     </span>
-                    <span className={`text-xs font-bold tracking-tight ${selectedRole === opt.role ? 'text-white' : 'text-slate-400'}`}>
+                    <span className={`text-xs font-bold tracking-tight ${selectedRole === opt.role ? 'text-on-surface' : 'text-on-surface-variant'}`}>
                       {opt.label}
                     </span>
-                    <span className="text-[9px] text-slate-500 text-center leading-tight">{opt.description}</span>
+                    <span className="text-[9px] text-on-surface-variant text-center leading-tight">{opt.description}</span>
                     {selectedRole === opt.role && (
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
                         <span className="material-symbols-outlined text-on-primary text-[10px]">check</span>
@@ -290,7 +291,7 @@ const SignupPage = () => {
                       onChange={(e) => setOrgName(e.target.value)}
                     />
                   </div>
-                  <p className="mt-1.5 text-[10px] text-slate-500">A new organization will be created with you as admin.</p>
+                  <p className="mt-1.5 text-[10px] text-on-surface-variant">A new organization will be created with you as admin.</p>
                 </div>
               )}
 
@@ -333,7 +334,7 @@ const SignupPage = () => {
                     <p className="mt-1.5 text-[10px] text-error">{orgsError}</p>
                   )}
                   {!orgsError && (
-                    <p className="mt-1.5 text-[10px] text-slate-500">A join request will be sent to the organization admin for approval.</p>
+                    <p className="mt-1.5 text-[10px] text-on-surface-variant">A join request will be sent to the organization admin for approval.</p>
                   )}
                 </div>
               )}
@@ -362,10 +363,10 @@ const SignupPage = () => {
                 </Link>
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Operational Status */}
-          <div className="mt-8 flex items-center justify-center space-x-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-8 flex items-center justify-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
               <span className="text-[10px] font-mono uppercase text-on-surface-variant tracking-wider">Auth Node: Operational</span>
@@ -374,14 +375,14 @@ const SignupPage = () => {
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-mono uppercase text-on-surface-variant tracking-wider">v2.4.0-Stable</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </main>
 
       {/* Background Decorative Element */}
-      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] pointer-events-none overflow-hidden opacity-10">
+      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.1, scale: 1 }} transition={{ duration: 1, delay: 0.5 }} className="fixed bottom-0 right-0 w-[500px] h-[500px] pointer-events-none overflow-hidden">
         <div className="absolute bottom-0 right-0 transform translate-x-1/4 translate-y-1/4 w-full h-full bg-primary rounded-full blur-[120px]"></div>
-      </div>
+      </motion.div>
     </div>
   );
 };

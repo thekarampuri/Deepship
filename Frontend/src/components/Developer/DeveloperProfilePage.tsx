@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const DeveloperProfilePage: React.FC = () => {
   const { user } = useAuth();
@@ -101,48 +117,48 @@ const DeveloperProfilePage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
-        <span className="text-lg font-bold text-white tracking-tight">My Profile</span>
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+        <span className="text-lg font-bold text-on-surface tracking-tight">My Profile</span>
       </header>
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         <div className="max-w-2xl">
           {/* User Info Card */}
-          <div className="bg-surface-container-low rounded-xl border border-white/5 p-6 mb-6">
+          <motion.div {...fadeUp(0)} className="bg-surface-container-low rounded-xl border border-gray-200 p-6 mb-6">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-14 h-14 rounded-xl bg-primary/15 flex items-center justify-center text-primary font-black text-xl">
                 {user?.full_name?.charAt(0) || 'D'}
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">{user?.full_name || 'Developer'}</h2>
-                <p className="text-sm text-slate-400">{user?.email || ''}</p>
+                <h2 className="text-lg font-bold text-on-surface">{user?.full_name || 'Developer'}</h2>
+                <p className="text-sm text-on-surface-variant">{user?.email || ''}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-tertiary/15 text-tertiary">
                     Developer
                   </span>
                   {user?.organization_name && (
-                    <span className="text-[10px] text-slate-500">{user.organization_name}</span>
+                    <span className="text-[10px] text-on-surface-variant">{user.organization_name}</span>
                   )}
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Skills Section */}
-          <div className="bg-surface-container-low rounded-xl border border-white/5 p-6">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-lg">psychology</span>
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">My Skills</h3>
+                <h3 className="text-sm font-bold text-on-surface uppercase tracking-wider">My Skills</h3>
               </div>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-[#0b1326]/30 border-t-[#0b1326] rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Saving...
                   </>
                 ) : (
@@ -154,7 +170,7 @@ const DeveloperProfilePage: React.FC = () => {
               </button>
             </div>
 
-            <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+            <p className="text-xs text-on-surface-variant mb-4 leading-relaxed">
               Add your skills so managers can find you when building project teams.
               Managers search by name and skills to invite developers to their projects.
             </p>
@@ -180,11 +196,11 @@ const DeveloperProfilePage: React.FC = () => {
             )}
 
             {skills.length === 0 && (
-              <div className="bg-surface-container-high rounded-lg p-6 text-center mb-5 border border-white/5">
-                <span className="material-symbols-outlined text-3xl text-slate-600 mb-2 block">
+              <div className="bg-surface-container-high rounded-lg p-6 text-center mb-5 border border-gray-200">
+                <span className="material-symbols-outlined text-3xl text-on-surface-variant/60 mb-2 block">
                   lightbulb
                 </span>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-on-surface-variant">
                   No skills added yet. Add your skills to be discoverable by managers.
                 </p>
               </div>
@@ -193,7 +209,7 @@ const DeveloperProfilePage: React.FC = () => {
             {/* Add Skill Input */}
             <div className="flex gap-2 mb-5">
               <div className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-500 text-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-sm">
                   add
                 </span>
                 <input
@@ -202,13 +218,13 @@ const DeveloperProfilePage: React.FC = () => {
                   value={newSkill}
                   onChange={(e) => setNewSkill(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-white/5 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-gray-200 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
                 />
               </div>
               <button
                 onClick={() => addSkill(newSkill)}
                 disabled={!newSkill.trim()}
-                className="px-4 py-2.5 bg-surface-container-highest text-sm font-bold text-slate-300 rounded-lg hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 bg-surface-container-highest text-sm font-bold text-on-surface-variant rounded-lg hover:text-on-surface transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 Add
               </button>
@@ -217,7 +233,7 @@ const DeveloperProfilePage: React.FC = () => {
             {/* Suggestions */}
             {unusedSuggestions.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
                   Suggested Skills
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -225,7 +241,7 @@ const DeveloperProfilePage: React.FC = () => {
                     <button
                       key={skill}
                       onClick={() => addSkill(skill)}
-                      className="px-2.5 py-1 text-xs text-slate-400 bg-surface-container-highest rounded-lg hover:text-white hover:bg-primary/10 hover:text-primary transition-colors border border-white/5"
+                      className="px-2.5 py-1 text-xs text-on-surface-variant bg-surface-container-highest rounded-lg hover:text-on-surface hover:bg-primary/10 hover:text-primary transition-colors border border-gray-200"
                     >
                       + {skill}
                     </button>
@@ -233,7 +249,7 @@ const DeveloperProfilePage: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </main>
 

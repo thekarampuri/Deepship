@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
@@ -11,6 +12,23 @@ interface ProjectHealth {
   project: ProjectDetail;
   recentErrors: Log[];
 }
+
+// ── Animation helpers ────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -145,10 +163,10 @@ const DeveloperDashboard: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-4">
-          <span className="text-lg font-bold text-white tracking-tight">Developer Dashboard</span>
-          <span className="text-slate-600 text-sm">
+          <span className="text-lg font-bold text-on-surface tracking-tight">Developer Dashboard</span>
+          <span className="text-on-surface-variant/60 text-sm">
             / Welcome back, {user?.full_name?.split(' ')[0] || 'Developer'}
           </span>
         </div>
@@ -175,51 +193,51 @@ const DeveloperDashboard: React.FC = () => {
         )}
 
         {/* ── Stats Row ─────────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {/* Assigned Projects */}
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5 hover:border-primary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/15 transition-colors">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 My Projects
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">
+                <span className="text-3xl font-black text-on-surface tracking-tighter">
                   {projects.length}
                 </span>
-                <span className="text-xs text-slate-500">assigned</span>
+                <span className="text-xs text-on-surface-variant">assigned</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">folder</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Total Logs */}
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5 hover:border-primary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/15 transition-colors">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Total Logs
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">
+                <span className="text-3xl font-black text-on-surface tracking-tighter">
                   {totalLogs.toLocaleString()}
                 </span>
-                <span className="text-xs text-slate-500">ingested</span>
+                <span className="text-xs text-on-surface-variant">ingested</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">receipt_long</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Errors */}
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5 hover:border-error/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-error/15 transition-colors">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Errors
               </p>
               <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-white'}`}>
+                <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-on-surface'}`}>
                   {totalErrors.toLocaleString()}
                 </span>
                 {totalFatals > 0 && (
@@ -232,35 +250,35 @@ const DeveloperDashboard: React.FC = () => {
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">bug_report</span>
             </div>
-          </div>
+          </motion.div>
 
           {/* Invitations */}
-          <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5 hover:border-tertiary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/15 transition-colors">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Invitations
               </p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">
+                <span className="text-3xl font-black text-on-surface tracking-tighter">
                   {pendingRequests.length}
                 </span>
-                <span className="text-xs text-slate-500">pending</span>
+                <span className="text-xs text-on-surface-variant">pending</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-5xl">mail</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* ── Two-column layout ──────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <motion.div {...fadeUp(0.2)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Project Health (2 cols) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Project Health Cards */}
             <div>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-base">monitor_heart</span>
                   Project Health
                 </h3>
@@ -276,12 +294,12 @@ const DeveloperDashboard: React.FC = () => {
               </div>
 
               {projects.length === 0 ? (
-                <div className="bg-surface-container-low rounded-xl border border-white/5 p-10 text-center">
-                  <span className="material-symbols-outlined text-4xl text-slate-600 mb-3 block">
+                <div className="bg-surface-container-low rounded-xl border border-gray-200 p-10 text-center">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3 block">
                     folder_open
                   </span>
-                  <p className="text-sm text-slate-400 mb-1 font-semibold">No projects assigned yet</p>
-                  <p className="text-xs text-slate-600 mb-4">When a manager invites you to a project, it will appear in your invitations.</p>
+                  <p className="text-sm text-on-surface-variant mb-1 font-semibold">No projects assigned yet</p>
+                  <p className="text-xs text-on-surface-variant/60 mb-4">When a manager invites you to a project, it will appear in your invitations.</p>
                   <Link
                     to="/developer/invitations"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors"
@@ -306,16 +324,16 @@ const DeveloperDashboard: React.FC = () => {
                       <div
                         key={ph.project.id}
                         onClick={() => navigate(`/developer/projects/${ph.project.id}/logs`)}
-                        className={`bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group border-l-2 ${healthColor}`}
+                        className={`bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all cursor-pointer group border-l-2 ${healthColor}`}
                       >
                         <div className="p-5">
                           <div className="flex items-start justify-between mb-3">
                             <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors truncate">
+                              <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
                                 {ph.project.name}
                               </h4>
                               {ph.project.organization_name && (
-                                <p className="text-[10px] text-slate-500 font-medium mt-0.5 truncate">
+                                <p className="text-[10px] text-on-surface-variant font-medium mt-0.5 truncate">
                                   {ph.project.organization_name}
                                 </p>
                               )}
@@ -376,18 +394,18 @@ const DeveloperDashboard: React.FC = () => {
 
                           {/* Latest error preview */}
                           {ph.recentErrors.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-white/5">
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                                 Latest Error
                               </p>
                               <div className="flex items-center gap-3">
                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-error/15 text-error flex-shrink-0">
                                   {ph.recentErrors[0].level}
                                 </span>
-                                <span className="text-xs text-slate-300 truncate flex-1">
+                                <span className="text-xs text-on-surface-variant truncate flex-1">
                                   {ph.recentErrors[0].message}
                                 </span>
-                                <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">
+                                <span className="text-[10px] text-on-surface-variant font-mono flex-shrink-0">
                                   {formatTimestamp(ph.recentErrors[0].timestamp)}
                                 </span>
                               </div>
@@ -405,14 +423,14 @@ const DeveloperDashboard: React.FC = () => {
             {allRecentErrors.length > 0 && (
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider flex items-center gap-2">
                     <span className="material-symbols-outlined text-error text-base">bug_report</span>
                     Recent Issues
                   </h3>
                 </div>
 
-                <div className="bg-surface-container-low rounded-xl border border-white/5 overflow-hidden">
-                  <div className="divide-y divide-white/5">
+                <div className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="divide-y divide-gray-200">
                     {allRecentErrors.map((log) => (
                       <div
                         key={log.id}
@@ -427,13 +445,13 @@ const DeveloperDashboard: React.FC = () => {
                           {log.level}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-white truncate">{log.message}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
+                          <p className="text-sm text-on-surface truncate">{log.message}</p>
+                          <p className="text-[10px] text-on-surface-variant mt-0.5">
                             {log.projectName}
                             {log.service && <span> &middot; {log.service}</span>}
                           </p>
                         </div>
-                        <span className="text-[10px] text-slate-500 font-mono flex-shrink-0">
+                        <span className="text-[10px] text-on-surface-variant font-mono flex-shrink-0">
                           {formatTimestamp(log.timestamp)}
                         </span>
                       </div>
@@ -448,55 +466,55 @@ const DeveloperDashboard: React.FC = () => {
           <div className="space-y-6">
             {/* Quick Actions */}
             <div>
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-base">bolt</span>
                 Quick Actions
               </h3>
               <div className="space-y-2">
                 <Link
                   to="/developer/projects"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-primary text-lg">folder_open</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">My Projects</p>
-                    <p className="text-[10px] text-slate-500">View assigned projects & logs</p>
+                    <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">My Projects</p>
+                    <p className="text-[10px] text-on-surface-variant">View assigned projects & logs</p>
                   </div>
-                  <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors text-sm">
+                  <span className="material-symbols-outlined text-on-surface-variant/60 group-hover:text-primary transition-colors text-sm">
                     chevron_right
                   </span>
                 </Link>
 
                 <Link
                   to="/developer/invitations"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-tertiary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-tertiary text-lg">mail</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">Invitations</p>
-                    <p className="text-[10px] text-slate-500">View project invitations</p>
+                    <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">Invitations</p>
+                    <p className="text-[10px] text-on-surface-variant">View project invitations</p>
                   </div>
-                  <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors text-sm">
+                  <span className="material-symbols-outlined text-on-surface-variant/60 group-hover:text-primary transition-colors text-sm">
                     chevron_right
                   </span>
                 </Link>
 
                 <Link
                   to="/developer/profile"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-secondary text-lg">person</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">My Profile</p>
-                    <p className="text-[10px] text-slate-500">Manage skills & preferences</p>
+                    <p className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">My Profile</p>
+                    <p className="text-[10px] text-on-surface-variant">Manage skills & preferences</p>
                   </div>
-                  <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors text-sm">
+                  <span className="material-symbols-outlined text-on-surface-variant/60 group-hover:text-primary transition-colors text-sm">
                     chevron_right
                   </span>
                 </Link>
@@ -506,7 +524,7 @@ const DeveloperDashboard: React.FC = () => {
             {/* Pending Invitations */}
             {pendingRequests.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-2">
                   <span className="material-symbols-outlined text-tertiary text-base">mail</span>
                   Pending Invitations
                 </h3>
@@ -522,10 +540,10 @@ const DeveloperDashboard: React.FC = () => {
                           <span className="material-symbols-outlined text-tertiary text-sm">mail</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">
+                          <p className="text-sm font-semibold text-on-surface truncate">
                             {req.project_name || 'Project'}
                           </p>
-                          <p className="text-[10px] text-slate-500">
+                          <p className="text-[10px] text-on-surface-variant">
                             {req.invited_by_name ? `From ${req.invited_by_name}` : `Received ${formatDate(req.requested_at)}`}
                           </p>
                         </div>
@@ -542,7 +560,7 @@ const DeveloperDashboard: React.FC = () => {
             {/* Recently Joined */}
             {approvedRequests.length > 0 && (
               <div>
-                <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary text-base">check_circle</span>
                   Recently Joined
                 </h3>
@@ -557,10 +575,10 @@ const DeveloperDashboard: React.FC = () => {
                           <span className="material-symbols-outlined text-secondary text-sm">folder</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">
+                          <p className="text-sm font-semibold text-on-surface truncate">
                             {req.project_name || 'Project'}
                           </p>
-                          <p className="text-[10px] text-slate-500">
+                          <p className="text-[10px] text-on-surface-variant">
                             Joined {req.resolved_at ? formatDate(req.resolved_at) : ''}
                           </p>
                         </div>
@@ -575,22 +593,22 @@ const DeveloperDashboard: React.FC = () => {
             )}
 
             {/* API Key info */}
-            <div className="bg-surface-container-low rounded-xl border border-white/5 p-4">
+            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-primary text-lg">vpn_key</span>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-white">API Keys</p>
-                  <p className="text-[10px] text-slate-500">Managed per project by managers</p>
+                  <p className="text-xs font-bold text-on-surface">API Keys</p>
+                  <p className="text-[10px] text-on-surface-variant">Managed per project by managers</p>
                 </div>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-on-surface-variant leading-relaxed">
                 API keys are created and managed by project managers. Select a project to view its logs and integration details.
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );

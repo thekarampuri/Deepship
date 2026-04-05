@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { JoinRequest } from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const InvitationsPage: React.FC = () => {
   const [invitations, setInvitations] = useState<JoinRequest[]>([]);
@@ -71,9 +87,9 @@ const InvitationsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-white tracking-tight">Invitations</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Invitations</span>
           {pending.length > 0 && (
             <span className="bg-tertiary/15 text-tertiary text-xs font-bold px-2 py-0.5 rounded-full">
               {pending.length} pending
@@ -93,10 +109,10 @@ const InvitationsPage: React.FC = () => {
 
         {/* Empty state */}
         {invitations.length === 0 && !error && (
-          <div className="bg-surface-container-low rounded-xl border border-white/5 p-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-slate-600 mb-4 block">mail</span>
-            <p className="text-white font-semibold mb-1">No invitations yet</p>
-            <p className="text-sm text-slate-500">
+          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-16 text-center">
+            <span className="material-symbols-outlined text-5xl text-on-surface-variant/60 mb-4 block">mail</span>
+            <p className="text-on-surface font-semibold mb-1">No invitations yet</p>
+            <p className="text-sm text-on-surface-variant">
               When a manager invites you to a project, it will appear here.
             </p>
           </div>
@@ -104,8 +120,8 @@ const InvitationsPage: React.FC = () => {
 
         {/* Pending Invitations */}
         {pending.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
+          <motion.div {...fadeUp(0)} className="mb-8">
+            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined text-tertiary text-base">hourglass_top</span>
               Pending Invitations
             </h3>
@@ -122,13 +138,13 @@ const InvitationsPage: React.FC = () => {
                         <span className="material-symbols-outlined text-tertiary text-lg">folder</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white">
+                        <h4 className="text-sm font-bold text-on-surface">
                           {inv.project_name || 'Unknown Project'}
                         </h4>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-[10px] text-on-surface-variant mt-0.5">
                           {inv.organization_name || 'Unknown Organization'}
                         </p>
-                        <div className="flex items-center gap-3 mt-2 text-[10px] text-slate-400">
+                        <div className="flex items-center gap-3 mt-2 text-[10px] text-on-surface-variant">
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-xs">person</span>
                             Invited by {inv.invited_by_name || 'Manager'}
@@ -153,10 +169,10 @@ const InvitationsPage: React.FC = () => {
                       <button
                         onClick={() => handleResolve(inv.id, 'APPROVED')}
                         disabled={resolving === inv.id}
-                        className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-[#0b1326] rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-primary text-white rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {resolving === inv.id ? (
-                          <div className="w-3 h-3 border-2 border-[#0b1326]/30 border-t-[#0b1326] rounded-full animate-spin" />
+                          <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                           <span className="material-symbols-outlined text-xs">check</span>
                         )}
@@ -167,19 +183,19 @@ const InvitationsPage: React.FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Resolved Invitations */}
         {resolved.length > 0 && (
-          <div>
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-slate-400 text-base">history</span>
+          <motion.div {...fadeUp(0.15)}>
+            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-on-surface-variant text-base">history</span>
               Past Invitations
             </h3>
 
-            <div className="bg-surface-container-low rounded-xl border border-white/5 overflow-hidden">
-              <div className="divide-y divide-white/5">
+            <div className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
+              <div className="divide-y divide-gray-200">
                 {resolved.map((inv) => (
                   <div key={inv.id} className="px-5 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -193,10 +209,10 @@ const InvitationsPage: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">
+                        <p className="text-sm font-semibold text-on-surface truncate">
                           {inv.project_name || 'Unknown Project'}
                         </p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
+                        <p className="text-[10px] text-on-surface-variant mt-0.5">
                           {inv.organization_name}
                           {inv.invited_by_name && ` · Invited by ${inv.invited_by_name}`}
                         </p>
@@ -212,7 +228,7 @@ const InvitationsPage: React.FC = () => {
                         {inv.status === 'APPROVED' ? 'Accepted' : 'Declined'}
                       </span>
                       {inv.resolved_at && (
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[10px] text-on-surface-variant">
                           {formatDate(inv.resolved_at)}
                         </span>
                       )}
@@ -221,7 +237,7 @@ const InvitationsPage: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </main>
 

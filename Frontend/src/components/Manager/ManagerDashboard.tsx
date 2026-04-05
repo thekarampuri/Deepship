@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { Project, JoinRequest } from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const ManagerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -79,10 +95,10 @@ const ManagerDashboard: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-4">
-          <span className="text-lg font-bold text-white tracking-tight">Manager Dashboard</span>
-          <span className="text-slate-600 text-sm">/ {user?.organization_name || 'Organization'}</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Manager Dashboard</span>
+          <span className="text-on-surface-variant text-sm">/ {user?.organization_name || 'Organization'}</span>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -92,44 +108,44 @@ const ManagerDashboard: React.FC = () => {
             <span className="material-symbols-outlined text-sm">add</span>
             New Project
           </button>
-          <div className="flex items-center gap-4 text-slate-400">
-            <span className="material-symbols-outlined cursor-pointer hover:text-[#c0c1ff] transition-colors">notifications</span>
+          <div className="flex items-center gap-4 text-on-surface-variant">
+            <span className="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">notifications</span>
           </div>
         </div>
       </header>
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-white/5">
+        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">My Projects</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">My Projects</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">{projects.length}</span>
+                <span className="text-3xl font-black text-on-surface tracking-tighter">{projects.length}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-6xl">folder</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Total Developers</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Developers</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">{totalDevelopers}</span>
+                <span className="text-3xl font-black text-on-surface tracking-tighter">{totalDevelopers}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-6xl">group</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Requests</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">{pendingRequests.length}</span>
+                <span className="text-3xl font-black text-on-surface tracking-tighter">{pendingRequests.length}</span>
                 {pendingRequests.length > 0 && (
                   <span className="text-tertiary text-xs font-bold">Awaiting review</span>
                 )}
@@ -138,28 +154,28 @@ const ManagerDashboard: React.FC = () => {
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-6xl">person_add</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-white/5">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Active API Keys</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Active API Keys</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white tracking-tighter">0</span>
+                <span className="text-3xl font-black text-on-surface tracking-tighter">0</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
               <span className="material-symbols-outlined text-6xl">vpn_key</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Projects Grid */}
-        <div className="mb-8">
-          <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">My Projects</h3>
+        <motion.div {...fadeUp(0.2)} className="mb-8">
+          <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4">My Projects</h3>
           {projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-white/5">
-              <span className="material-symbols-outlined text-5xl text-slate-600">folder_open</span>
-              <p className="text-sm text-slate-500">No projects yet. Create your first project.</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-gray-200">
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">folder_open</span>
+              <p className="text-sm text-on-surface-variant">No projects yet. Create your first project.</p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="mt-2 flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 text-sm font-bold rounded-lg hover:bg-primary/20 transition-colors"
@@ -176,13 +192,13 @@ const ManagerDashboard: React.FC = () => {
                   className={`bg-surface-container-low p-5 rounded-lg border transition-all group ${
                     project.status === 'PENDING'
                       ? 'border-amber-500/20 opacity-75'
-                      : 'border-white/5 hover:border-primary/20 cursor-pointer'
+                      : 'border-gray-200 hover:border-primary/20 cursor-pointer'
                   }`}
                   onClick={() => project.status === 'APPROVED' && navigate(`/manager/projects/${project.id}`)}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <h4 className={`text-sm font-bold transition-colors ${
-                      project.status === 'PENDING' ? 'text-slate-400' : 'text-white group-hover:text-primary'
+                      project.status === 'PENDING' ? 'text-on-surface-variant' : 'text-on-surface group-hover:text-primary'
                     }`}>{project.name}</h4>
                     <div className="flex items-center gap-1.5">
                       {project.status === 'PENDING' ? (
@@ -198,7 +214,7 @@ const ManagerDashboard: React.FC = () => {
                       ) : (
                         <>
                           <div className="w-2 h-2 rounded-full bg-secondary" />
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Active</span>
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Active</span>
                         </>
                       )}
                     </div>
@@ -207,17 +223,17 @@ const ManagerDashboard: React.FC = () => {
                     {project.description || 'No description provided.'}
                   </p>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-4 text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">
                       <span className="flex items-center gap-1">
                         <span className="material-symbols-outlined text-xs">person</span>
                         {project.developer_count}
                       </span>
                     </div>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-on-surface-variant">
                       {new Date(project.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-white/5">
+                  <div className="mt-3 pt-3 border-t border-gray-200">
                     {project.status === 'PENDING' ? (
                       <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">
                         Awaiting Admin Approval
@@ -236,21 +252,21 @@ const ManagerDashboard: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Pending Join Requests */}
-        <div className="bg-surface-container-low rounded-lg border border-white/5 overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Pending Join Requests</h3>
-            <span className="text-[10px] font-bold text-slate-500 bg-surface-container-highest px-2 py-1 rounded">{pendingRequests.length}</span>
+        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Pending Join Requests</h3>
+            <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">{pendingRequests.length}</span>
           </div>
           {pendingRequests.length === 0 ? (
             <div className="p-8 text-center">
-              <span className="material-symbols-outlined text-4xl text-slate-600 mb-2 block">inbox</span>
-              <p className="text-sm text-slate-500">No pending requests</p>
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2 block">inbox</span>
+              <p className="text-sm text-on-surface-variant">No pending requests</p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-gray-200">
               {pendingRequests.map((req) => (
                 <div key={req.id} className="px-6 py-4 flex items-center justify-between hover:bg-surface-container-high/50 transition-colors">
                   <div className="flex items-center gap-4">
@@ -258,15 +274,15 @@ const ManagerDashboard: React.FC = () => {
                       {req.user_name.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{req.user_name}</p>
-                      <p className="text-[10px] text-slate-500">{req.user_email}</p>
+                      <p className="text-sm font-semibold text-on-surface">{req.user_name}</p>
+                      <p className="text-[10px] text-on-surface-variant">{req.user_email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs text-on-surface-variant mr-4">
-                      Wants to join <span className="font-semibold text-white">{req.project_name}</span>
+                      Wants to join <span className="font-semibold text-on-surface">{req.project_name}</span>
                     </span>
-                    <span className="text-[10px] text-slate-500 mr-4">
+                    <span className="text-[10px] text-on-surface-variant mr-4">
                       {new Date(req.requested_at).toLocaleDateString()}
                     </span>
                     <button
@@ -286,7 +302,7 @@ const ManagerDashboard: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
       </main>
 
       {/* Success Toast */}
@@ -302,18 +318,18 @@ const ManagerDashboard: React.FC = () => {
 
       {/* Create Project Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-white/10 p-8 w-full max-w-md shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-surface-container-high rounded-xl border border-gray-300 p-8 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white">Create New Project</h3>
+              <h3 className="text-lg font-bold text-on-surface">Create New Project</h3>
               <button
                 onClick={() => { setShowCreateModal(false); setCreateError(''); }}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-on-surface-variant hover:text-on-surface transition-colors"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            <p className="text-xs text-slate-500 mb-4 -mt-2">Project will be sent to admin for approval.</p>
+            <p className="text-xs text-on-surface-variant mb-4 -mt-2">Project will be sent to admin for approval.</p>
             {createError && (
               <div className="mb-4 px-4 py-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-semibold">
                 {createError}
@@ -348,7 +364,7 @@ const ManagerDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 text-sm font-bold text-slate-400 border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors"
+                  className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
                 >
                   Cancel
                 </button>

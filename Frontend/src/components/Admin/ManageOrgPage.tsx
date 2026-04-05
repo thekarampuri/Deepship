@@ -1,8 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { JoinRequest, OrgMember, Project } from '../../services/api';
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const ManageOrgPage: React.FC = () => {
   const { user } = useAuth();
@@ -83,11 +99,11 @@ const ManageOrgPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-white tracking-tight">Manage Organization</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-sm text-slate-400">{user?.organization_name ?? 'Organization'}</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Manage Organization</span>
+          <span className="text-on-surface-variant/40">/</span>
+          <span className="text-sm text-on-surface-variant">{user?.organization_name ?? 'Organization'}</span>
         </div>
       </header>
 
@@ -100,53 +116,53 @@ const ManageOrgPage: React.FC = () => {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-amber-500/20 transition-all">
+        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-amber-500/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Requests</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <span className="text-3xl font-black text-amber-400 tracking-tighter">{pendingRequests.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-7xl text-amber-400">pending_actions</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-primary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Projects</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Projects</p>
               <span className="text-3xl font-black text-primary tracking-tighter">{pendingProjects.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-7xl text-primary">folder_open</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-secondary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-secondary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Managers</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Managers</p>
               <span className="text-3xl font-black text-secondary tracking-tighter">{managers.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-7xl text-secondary">assignment_ind</span>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-tertiary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/20 transition-all">
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Developers</p>
+              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Developers</p>
               <span className="text-3xl font-black text-tertiary tracking-tighter">{developers.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-7xl text-tertiary">code</span>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Pending Join Requests */}
-        <div className="mb-8">
+        <motion.div {...fadeUp(0.1)} className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-amber-400">pending_actions</span>
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">Pending Join Requests</h2>
+            <h2 className="text-base font-bold text-on-surface uppercase tracking-wider">Pending Join Requests</h2>
             {pendingRequests.length > 0 && (
               <span className="px-2 py-0.5 bg-amber-400/15 text-amber-400 text-[10px] font-black rounded uppercase tracking-widest">
                 {pendingRequests.length} pending
@@ -155,37 +171,37 @@ const ManageOrgPage: React.FC = () => {
           </div>
 
           {pendingRequests.length === 0 ? (
-            <div className="bg-surface-container-low rounded-xl border border-white/5 p-12 flex flex-col items-center gap-3">
-              <span className="material-symbols-outlined text-4xl text-slate-600">check_circle</span>
-              <p className="text-sm text-slate-500 font-medium">No pending requests</p>
+            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 flex flex-col items-center gap-3">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">check_circle</span>
+              <p className="text-sm text-on-surface-variant font-medium">No pending requests</p>
             </div>
           ) : (
             <div className="space-y-3">
               {pendingRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-surface-container-low rounded-xl border border-white/5 p-5 flex items-center justify-between hover:border-amber-500/20 transition-all"
+                  className="bg-surface-container-low rounded-xl border border-gray-200 p-5 flex items-center justify-between hover:border-amber-500/20 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center text-amber-400 font-bold text-sm">
                       {req.user_name?.charAt(0) ?? 'U'}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{req.user_name}</p>
-                      <p className="text-xs text-slate-500">{req.user_email}</p>
+                      <p className="text-sm font-semibold text-on-surface">{req.user_name}</p>
+                      <p className="text-xs text-on-surface-variant">{req.user_email}</p>
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <span className="px-2 py-0.5 bg-secondary/15 text-secondary text-[9px] font-black rounded uppercase tracking-widest">
                         {req.user_role ?? 'MANAGER'}
                       </span>
-                      <span className="px-2 py-0.5 bg-surface-container-highest text-slate-400 text-[9px] font-black rounded uppercase tracking-widest">
+                      <span className="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[9px] font-black rounded uppercase tracking-widest">
                         {req.request_type}
                       </span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-on-surface-variant">
                       {new Date(req.requested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                     <button
@@ -209,13 +225,13 @@ const ManageOrgPage: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Pending Projects */}
-        <div className="mb-8">
+        <motion.div {...fadeUp(0.2)} className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-primary">folder_open</span>
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">Pending Project Approvals</h2>
+            <h2 className="text-base font-bold text-on-surface uppercase tracking-wider">Pending Project Approvals</h2>
             {pendingProjects.length > 0 && (
               <span className="px-2 py-0.5 bg-primary/15 text-primary text-[10px] font-black rounded uppercase tracking-widest">
                 {pendingProjects.length} pending
@@ -224,31 +240,31 @@ const ManageOrgPage: React.FC = () => {
           </div>
 
           {pendingProjects.length === 0 ? (
-            <div className="bg-surface-container-low rounded-xl border border-white/5 p-12 flex flex-col items-center gap-3">
-              <span className="material-symbols-outlined text-4xl text-slate-600">check_circle</span>
-              <p className="text-sm text-slate-500 font-medium">No pending project approvals</p>
+            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 flex flex-col items-center gap-3">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">check_circle</span>
+              <p className="text-sm text-on-surface-variant font-medium">No pending project approvals</p>
             </div>
           ) : (
             <div className="space-y-3">
               {pendingProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-surface-container-low rounded-xl border border-white/5 p-5 flex items-center justify-between hover:border-primary/20 transition-all"
+                  className="bg-surface-container-low rounded-xl border border-gray-200 p-5 flex items-center justify-between hover:border-primary/20 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
                       <span className="material-symbols-outlined">folder</span>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white">{project.name}</p>
+                      <p className="text-sm font-semibold text-on-surface">{project.name}</p>
                       {project.description && (
-                        <p className="text-xs text-slate-500 line-clamp-1 max-w-md">{project.description}</p>
+                        <p className="text-xs text-on-surface-variant line-clamp-1 max-w-md">{project.description}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[10px] text-on-surface-variant">
                       {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                     <button
@@ -272,29 +288,29 @@ const ManageOrgPage: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Current Members */}
-        <div>
+        <motion.div {...fadeUp(0.3)}>
           <div className="flex items-center gap-3 mb-4">
             <span className="material-symbols-outlined text-primary">groups</span>
-            <h2 className="text-base font-bold text-white uppercase tracking-wider">Organization Members</h2>
+            <h2 className="text-base font-bold text-on-surface uppercase tracking-wider">Organization Members</h2>
             <span className="px-2 py-0.5 bg-primary/15 text-primary text-[10px] font-black rounded uppercase tracking-widest">
               {members.length} total
             </span>
           </div>
 
-          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-white/5 shadow-2xl">
+          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Member</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Role</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Status</th>
-                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-slate-500 uppercase">Joined</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Member</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Role</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">Joined</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-gray-200">
                 {members.map((member) => (
                   <tr key={member.id} className="group hover:bg-surface-container-high transition-colors">
                     <td className="px-6 py-4">
@@ -303,8 +319,8 @@ const ManageOrgPage: React.FC = () => {
                           {member.full_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-white">{member.full_name}</p>
-                          <p className="text-[10px] text-slate-500">{member.email}</p>
+                          <p className="text-sm font-semibold text-on-surface">{member.full_name}</p>
+                          <p className="text-[10px] text-on-surface-variant">{member.email}</p>
                         </div>
                       </div>
                     </td>
@@ -319,12 +335,12 @@ const ManageOrgPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <div className={`w-1.5 h-1.5 rounded-full ${member.is_active ? 'bg-secondary' : 'bg-slate-500'}`} />
-                        <span className="text-xs text-slate-300">{member.is_active ? 'Active' : 'Inactive'}</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${member.is_active ? 'bg-secondary' : 'bg-gray-400'}`} />
+                        <span className="text-xs text-on-surface-variant">{member.is_active ? 'Active' : 'Inactive'}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-on-surface-variant">
                         {new Date(member.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </td>
@@ -333,7 +349,7 @@ const ManageOrgPage: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   );

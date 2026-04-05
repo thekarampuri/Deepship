@@ -32,12 +32,13 @@
 
 @layer components {
   .glass-panel {
-    background: rgba(45, 52, 73, 0.8);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0,0,0,0.06);
     backdrop-filter: blur(24px);
   }
   
   .glow-effect {
-    box-shadow: 0 0 20px rgba(192, 193, 255, 0.15);
+    box-shadow: 0 0 20px rgba(108, 99, 255, 0.08);
   }
   
   .mono-text {
@@ -45,7 +46,7 @@
   }
   
   .forensic-grid {
-    background-image: radial-gradient(#131b2e 1px, transparent 1px);
+    background-image: radial-gradient(#e2e3ef 1px, transparent 1px);
     background-size: 40px 40px;
   }
   
@@ -55,25 +56,25 @@
     vertical-align: middle;
   }
 
-  .severity-bar-error { border-left: 2px solid #ffb4ab; }
-  .severity-bar-warn { border-left: 2px solid #ffb95f; }
-  .severity-bar-info { border-left: 2px solid #4edea3; }
+  .severity-bar-error { border-left: 2px solid #dc362e; }
+  .severity-bar-warn { border-left: 2px solid #c07800; }
+  .severity-bar-info { border-left: 2px solid #00a572; }
 
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #060e20;
+    background: #f0f2f8;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #464555;
+    background: #c8c9d4;
     border-radius: 10px;
   }
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #060e20; }
-::-webkit-scrollbar-thumb { background: #222a3d; border-radius: 10px; }
+::-webkit-scrollbar-track { background: #f0f2f8; }
+::-webkit-scrollbar-thumb { background: #c8c9d4; border-radius: 10px; }
 
 /* ── Landing page utilities ──────────────────────────────────────────── */
 .shadow-dashboard {

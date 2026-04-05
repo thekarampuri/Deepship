@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { Project } from '../../services/api';
@@ -59,11 +60,11 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-surface-container-high rounded-xl border border-white/10 p-8 w-full max-w-md shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-surface-container-high rounded-xl border border-gray-300 p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold text-white">Create New Project</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+          <h3 className="text-lg font-bold text-on-surface">Create New Project</h3>
+          <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface transition-colors">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -80,7 +81,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
               Project Name
             </label>
             <input
-              className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-slate-600"
+              className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-on-surface-variant/60"
               placeholder="My New Project"
               required
               value={name}
@@ -90,10 +91,10 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
           </div>
           <div>
             <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-              Description <span className="normal-case tracking-normal text-slate-600">(optional)</span>
+              Description <span className="normal-case tracking-normal text-on-surface-variant/60">(optional)</span>
             </label>
             <textarea
-              className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-slate-600 resize-none"
+              className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-on-surface-variant/60 resize-none"
               placeholder="Brief description of the project..."
               rows={3}
               value={description}
@@ -104,18 +105,18 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 text-sm font-bold text-slate-400 border border-white/10 rounded-lg hover:bg-surface-container-highest transition-colors"
+              className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || !name.trim()}
-              className="flex-1 py-2.5 text-sm font-bold text-[#0b1326] bg-primary rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-[#0b1326]/30 border-t-[#0b1326] rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Creating...
                 </>
               ) : (
@@ -155,7 +156,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
           ? 'border-amber-500/20 opacity-75'
           : isRejected
             ? 'border-error/20 opacity-60'
-            : 'border-white/5 hover:border-primary/20 cursor-pointer group'
+            : 'border-gray-200 hover:border-primary/20 cursor-pointer group'
       }`}
       onClick={() => !isPending && !isRejected && onClick()}
     >
@@ -163,11 +164,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
         {/* Card header */}
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0 pr-3">
-            <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors truncate">
+            <h4 className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors truncate">
               {project.name}
             </h4>
             {project.organization_name && (
-              <p className="text-[10px] text-slate-500 font-medium mt-0.5 truncate">
+              <p className="text-[10px] text-on-surface-variant font-medium mt-0.5 truncate">
                 {project.organization_name}
               </p>
             )}
@@ -196,7 +197,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
             {project.description}
           </p>
         ) : (
-          <p className="text-xs text-slate-600 italic flex-1 mb-4">No description provided</p>
+          <p className="text-xs text-on-surface-variant/60 italic flex-1 mb-4">No description provided</p>
         )}
 
         {/* Stats row */}
@@ -216,8 +217,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/5">
-          <span className="text-[10px] text-slate-600 font-medium">
+        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+          <span className="text-[10px] text-on-surface-variant/60 font-medium">
             Created {formatDate(project.created_at)}
           </span>
           {isPending ? (
@@ -244,6 +245,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
 };
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const ProjectsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -292,22 +308,22 @@ const ProjectsListPage: React.FC = () => {
       <Sidebar />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/manager/dashboard')}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <span className="text-lg font-bold text-white tracking-tight">My Projects</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">My Projects</span>
           <span className="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-xs font-bold rounded-full">
             {projects.length}
           </span>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
         >
           <span className="material-symbols-outlined text-sm">add</span>
           New Project
@@ -324,8 +340,8 @@ const ProjectsListPage: React.FC = () => {
         )}
 
         {/* Search bar */}
-        <div className="mb-6 relative">
-          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none">
+        <motion.div {...fadeUp(0)} className="mb-6 relative">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">
             search
           </span>
           <input
@@ -333,28 +349,28 @@ const ProjectsListPage: React.FC = () => {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-sm pl-11 pr-4 py-2.5 bg-surface-container-low border border-white/5 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/20 transition-all"
+            className="w-full max-w-sm pl-11 pr-4 py-2.5 bg-surface-container-low border border-gray-200 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/20 transition-all"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute left-[calc(100%-max(100%-24rem,0rem)-2rem)] top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+              className="absolute left-[calc(100%-max(100%-24rem,0rem)-2rem)] top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
             >
               <span className="material-symbols-outlined text-sm">close</span>
             </button>
           )}
-        </div>
+        </motion.div>
 
         {/* Grid or empty state */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container-low border border-white/5 flex items-center justify-center mb-4">
-              <span className="material-symbols-outlined text-4xl text-slate-600">folder_open</span>
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-low border border-gray-200 flex items-center justify-center mb-4">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/60">folder_open</span>
             </div>
             {search ? (
               <>
-                <p className="text-white font-semibold mb-1">No projects match "{search}"</p>
-                <p className="text-sm text-slate-500 mb-4">Try a different search term</p>
+                <p className="text-on-surface font-semibold mb-1">No projects match "{search}"</p>
+                <p className="text-sm text-on-surface-variant mb-4">Try a different search term</p>
                 <button
                   onClick={() => setSearch('')}
                   className="text-sm font-bold text-primary hover:text-primary/80 transition-colors"
@@ -364,11 +380,11 @@ const ProjectsListPage: React.FC = () => {
               </>
             ) : (
               <>
-                <p className="text-white font-semibold mb-1">No projects yet</p>
-                <p className="text-sm text-slate-500 mb-4">Create your first project to get started</p>
+                <p className="text-on-surface font-semibold mb-1">No projects yet</p>
+                <p className="text-sm text-on-surface-variant mb-4">Create your first project to get started</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 transition-all"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 transition-all"
                 >
                   <span className="material-symbols-outlined text-sm">add</span>
                   New Project
@@ -379,11 +395,11 @@ const ProjectsListPage: React.FC = () => {
         ) : (
           <>
             {search && (
-              <p className="text-xs text-slate-500 font-medium mb-4">
+              <p className="text-xs text-on-surface-variant font-medium mb-4">
                 {filtered.length} result{filtered.length !== 1 ? 's' : ''} for "{search}"
               </p>
             )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <motion.div {...fadeUp(0.1)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map((project) => (
                 <ProjectCard
                   key={project.id}
@@ -391,7 +407,7 @@ const ProjectsListPage: React.FC = () => {
                   onClick={() => navigate(`/manager/projects/${project.id}`)}
                 />
               ))}
-            </div>
+            </motion.div>
           </>
         )}
       </main>

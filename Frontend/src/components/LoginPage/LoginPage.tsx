@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 const LoginPage = () => {
@@ -40,11 +41,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col forensic-grid">
+    <div className="bg-surface-dim text-on-surface font-body selection:bg-primary/30 min-h-screen flex flex-col">
       <main className="flex-grow flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           {/* Brand Anchor */}
-          <div className="text-center mb-10">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }} className="text-center mb-10">
             <div
               onClick={handleBack}
               className="inline-flex items-center justify-center p-3 rounded-xl bg-surface-container-low mb-4 transition-transform hover:scale-110 duration-300 cursor-pointer"
@@ -58,10 +59,10 @@ const LoginPage = () => {
               <h1 className="text-3xl font-extrabold tracking-tighter text-primary font-headline">TraceHub</h1>
             </button>
             <p className="text-on-surface-variant text-sm mt-2 tracking-tight">Forensic Log Aggregation & Analysis</p>
-          </div>
+          </motion.div>
 
           {/* Login Card */}
-          <div className="glass-panel rounded-xl p-8 border border-outline-variant/15 shadow-[0px_24px_48px_-12px_rgba(6,14,32,0.5)]">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }} className="bg-white rounded-xl p-8 border border-outline-variant/15 shadow-xl">
             {error && (
               <div className="mb-6 flex items-center gap-3 p-3 rounded-lg bg-error-container/20 border border-error/20">
                 <span className="material-symbols-outlined text-error text-lg">error</span>
@@ -146,8 +147,8 @@ const LoginPage = () => {
             </form>
 
             {/* Demo credentials hint */}
-            <div className="mt-6 p-3 rounded-lg bg-surface-container-lowest/50 border border-white/5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Demo Credentials</p>
+            <div className="mt-6 p-3 rounded-lg bg-surface-container-lowest/50 border border-gray-200">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Demo Credentials</p>
               <div className="space-y-1 text-xs text-on-surface-variant font-mono">
                 <p>admin@tracehub.io / admin123</p>
                 <p>manager@tracehub.io / manager123</p>
@@ -163,10 +164,10 @@ const LoginPage = () => {
                 </Link>
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Operational Status */}
-          <div className="mt-8 flex items-center justify-center space-x-4">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-8 flex items-center justify-center space-x-4">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
               <span className="text-[10px] font-mono uppercase text-on-surface-variant tracking-wider">Auth Node: Operational</span>
@@ -175,30 +176,30 @@ const LoginPage = () => {
             <div className="flex items-center space-x-2">
               <span className="text-[10px] font-mono uppercase text-on-surface-variant tracking-wider">v2.4.0-Stable</span>
             </div>
-          </div>
+          </motion.div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-[#464555]/15 bg-[#0b1326]">
+      <footer className="w-full border-t border-gray-200 bg-surface-dim">
         <div className="flex flex-col md:flex-row justify-between items-center px-8 py-12 max-w-7xl mx-auto">
           <div className="mb-6 md:mb-0">
-            <span className="text-lg font-black text-[#c0c1ff] tracking-tighter">TraceHub</span>
-            <p className="mt-2 text-[10px] text-slate-500 font-sans tracking-widest uppercase">&copy; {new Date().getFullYear()} TraceHub Forensic Systems. All rights reserved.</p>
+            <span className="text-lg font-black text-primary tracking-tighter">TraceHub</span>
+            <p className="mt-2 text-[10px] text-on-surface-variant font-sans tracking-widest uppercase">&copy; {new Date().getFullYear()} TraceHub Forensic Systems. All rights reserved.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8">
-            <a className="text-xs uppercase tracking-widest text-slate-500 hover:text-[#c0c1ff] transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
-            <a className="text-xs uppercase tracking-widest text-slate-500 hover:text-[#c0c1ff] transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
-            <a className="text-xs uppercase tracking-widest text-slate-500 hover:text-[#c0c1ff] transition-colors opacity-80 hover:opacity-100" href="#">Security</a>
-            <a className="text-xs uppercase tracking-widest text-slate-500 hover:text-[#c0c1ff] transition-colors opacity-80 hover:opacity-100" href="#">Status</a>
+            <a className="text-xs uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+            <a className="text-xs uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Terms of Service</a>
+            <a className="text-xs uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Security</a>
+            <a className="text-xs uppercase tracking-widest text-on-surface-variant hover:text-primary transition-colors opacity-80 hover:opacity-100" href="#">Status</a>
           </div>
         </div>
       </footer>
 
       {/* Background Decorative Element */}
-      <div className="fixed bottom-0 right-0 w-[500px] h-[500px] pointer-events-none overflow-hidden opacity-10">
+      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 0.1, scale: 1 }} transition={{ duration: 1, delay: 0.5 }} className="fixed bottom-0 right-0 w-[500px] h-[500px] pointer-events-none overflow-hidden">
         <div className="absolute bottom-0 right-0 transform translate-x-1/4 translate-y-1/4 w-full h-full bg-primary rounded-full blur-[120px]"></div>
-      </div>
+      </motion.div>
     </div>
   );
 };

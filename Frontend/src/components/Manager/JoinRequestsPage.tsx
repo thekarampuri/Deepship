@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
 import type { JoinRequest } from '../../services/api';
@@ -60,8 +61,8 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, onApprove, onReject, a
           {initial}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{request.user_name}</p>
-          <p className="text-[10px] text-slate-500 truncate">{request.user_email}</p>
+          <p className="text-sm font-semibold text-on-surface truncate">{request.user_name}</p>
+          <p className="text-[10px] text-on-surface-variant truncate">{request.user_email}</p>
         </div>
       </div>
 
@@ -69,13 +70,13 @@ const RequestRow: React.FC<RequestRowProps> = ({ request, onApprove, onReject, a
       <div className="flex-1 min-w-0 sm:text-center">
         <p className="text-xs text-on-surface-variant">
           wants to join{' '}
-          <span className="font-bold text-white">{request.project_name}</span>
+          <span className="font-bold text-on-surface">{request.project_name}</span>
         </p>
       </div>
 
       {/* Right: time + badge + actions */}
       <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-[10px] text-slate-500 font-medium hidden md:block">
+        <span className="text-[10px] text-on-surface-variant font-medium hidden md:block">
           {timeAgo(request.requested_at)}
         </span>
 
@@ -125,6 +126,21 @@ const tabs: { key: TabKey; label: string; icon: string }[] = [
 ];
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] },
+});
+
+const staggerContainer = {
+  animate: { transition: { staggerChildren: 0.08 } },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 15 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+};
 
 const JoinRequestsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -179,15 +195,15 @@ const JoinRequestsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/manager/dashboard')}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="text-on-surface-variant hover:text-on-surface transition-colors"
           >
             <span className="material-symbols-outlined">arrow_back</span>
           </button>
-          <span className="text-lg font-bold text-white tracking-tight">Join Requests</span>
+          <span className="text-lg font-bold text-on-surface tracking-tight">Join Requests</span>
 
           {/* Count badges */}
           <div className="flex items-center gap-2 ml-1">
@@ -224,7 +240,7 @@ const JoinRequestsPage: React.FC = () => {
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-1 mb-6 bg-surface-container-lowest rounded-xl p-1 w-fit">
+        <motion.div {...fadeUp(0)} className="flex gap-1 mb-6 bg-surface-container-lowest rounded-xl p-1 w-fit">
           {tabs.map((tab) => {
             const count = countFor(tab.key);
             const isActive = activeTab === tab.key;
@@ -234,8 +250,8 @@ const JoinRequestsPage: React.FC = () => {
                 onClick={() => setActiveTab(tab.key)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   isActive
-                    ? 'bg-surface-container-high text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-surface-container-low/50'
+                    ? 'bg-surface-container-high text-on-surface shadow-sm'
+                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low/50'
                 }`}
               >
                 <span className="material-symbols-outlined text-sm">{tab.icon}</span>
@@ -244,7 +260,7 @@ const JoinRequestsPage: React.FC = () => {
                   className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                     isActive
                       ? 'bg-surface-container-highest text-on-surface-variant'
-                      : 'bg-surface-container-low text-slate-500'
+                      : 'bg-surface-container-low text-on-surface-variant'
                   }`}
                 >
                   {count}
@@ -252,21 +268,21 @@ const JoinRequestsPage: React.FC = () => {
               </button>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Request list */}
-        <div className="bg-surface-container-low rounded-xl border border-white/5 overflow-hidden">
+        <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-white/5 flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-3xl text-slate-600">
+              <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-gray-200 flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-3xl text-on-surface-variant/60">
                   {activeTab === 'PENDING' ? 'inbox' : activeTab === 'APPROVED' ? 'check_circle' : 'cancel'}
                 </span>
               </div>
-              <p className="text-white font-semibold mb-1">
+              <p className="text-on-surface font-semibold mb-1">
                 No {activeTab.toLowerCase()} requests
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-on-surface-variant">
                 {activeTab === 'PENDING'
                   ? 'All requests have been handled'
                   : activeTab === 'APPROVED'
@@ -275,7 +291,7 @@ const JoinRequestsPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="divide-y divide-gray-200">
               {filtered.map((request) => (
                 <RequestRow
                   key={request.id}
@@ -287,11 +303,11 @@ const JoinRequestsPage: React.FC = () => {
               ))}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Summary footer */}
         {filtered.length > 0 && (
-          <p className="mt-4 text-[10px] text-slate-600 font-medium text-right">
+          <p className="mt-4 text-[10px] text-on-surface-variant/60 font-medium text-right">
             Showing {filtered.length} {activeTab.toLowerCase()} request{filtered.length !== 1 ? 's' : ''}
             {' '}· {requests.length} total
           </p>
