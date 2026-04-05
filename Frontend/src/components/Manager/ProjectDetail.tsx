@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
-import type { Log, Member, ApiKey, ProjectDetail as ProjectDetailType } from '../../services/api';
+import type { Log, Member, ApiKey, ProjectDetail as ProjectDetailType, DeveloperSearchResult } from '../../services/api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -167,38 +167,53 @@ interface DevelopersTabProps {
 }
 
 const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, onDevelopersChange, showToast }) => {
-  const [showAssignModal, setShowAssignModal] = useState(false);
-  const [allDevs, setAllDevs] = useState<Member[]>([]);
-  const [allDevsLoading, setAllDevsLoading] = useState(false);
-  const [assignSearch, setAssignSearch] = useState('');
-  const [assigning, setAssigning] = useState<string | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [searchResults, setSearchResults] = useState<DeveloperSearchResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [inviting, setInviting] = useState<string | null>(null);
+  const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [removing, setRemoving] = useState<string | null>(null);
 
-  const openAssignModal = async () => {
-    setShowAssignModal(true);
-    setAllDevsLoading(true);
-    setAssignSearch('');
+  const doSearch = async (query: string) => {
+    setSearchLoading(true);
     try {
-      const members = await api.getMembers('DEVELOPER');
-      setAllDevs(members);
+      const results = await api.searchDevelopers(query);
+      setSearchResults(results);
     } catch (e) {
       showToast((e as Error).message, 'error');
-      setShowAssignModal(false);
     } finally {
-      setAllDevsLoading(false);
+      setSearchLoading(false);
     }
   };
 
-  const handleAssign = async (dev: Member) => {
-    setAssigning(dev.id);
+  const openInviteModal = () => {
+    setShowInviteModal(true);
+    setSearchQuery('');
+    setSearchResults([]);
+    setInvitedIds(new Set());
+    // Load all developers initially
+    doSearch('');
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') doSearch(searchQuery);
+  };
+
+  const handleInvite = async (dev: DeveloperSearchResult) => {
+    setInviting(dev.id);
     try {
-      await api.assignDeveloper(projectId, dev.id);
-      onDevelopersChange([...developers, dev]);
-      showToast(`${dev.full_name} assigned to project`, 'success');
+      await api.inviteDeveloperToProject(projectId, dev.id);
+      setInvitedIds((prev) => new Set(prev).add(dev.id));
+      showToast(`Invitation sent to ${dev.full_name}`, 'success');
     } catch (e) {
       showToast((e as Error).message, 'error');
     } finally {
-      setAssigning(null);
+      setInviting(null);
     }
   };
 
@@ -216,23 +231,18 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
   };
 
   const existingIds = new Set(developers.map((d) => d.id));
-  const availableDevs = allDevs.filter(
-    (d) =>
-      !existingIds.has(d.id) &&
-      (d.full_name.toLowerCase().includes(assignSearch.toLowerCase()) ||
-        d.email.toLowerCase().includes(assignSearch.toLowerCase()))
-  );
+  const availableDevs = searchResults.filter((d) => !existingIds.has(d.id));
 
   return (
     <>
       <div className="space-y-4">
         <div className="flex justify-end">
           <button
-            onClick={openAssignModal}
+            onClick={openInviteModal}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
           >
             <span className="material-symbols-outlined text-sm">person_add</span>
-            Assign Developer
+            Invite Developer
           </button>
         </div>
 
@@ -240,8 +250,8 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
           {developers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">group</span>
-              <p className="text-white font-semibold mb-1">No developers assigned</p>
-              <p className="text-sm text-slate-500">Assign developers to get started</p>
+              <p className="text-white font-semibold mb-1">No developers yet</p>
+              <p className="text-sm text-slate-500">Search and invite developers to join this project</p>
             </div>
           ) : (
             <table className="w-full text-left">
@@ -286,72 +296,113 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
         </div>
       </div>
 
-      {/* Assign Developer Modal */}
-      {showAssignModal && (
+      {/* Invite Developer Modal */}
+      {showInviteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-white/10 p-6 w-full max-w-md shadow-2xl flex flex-col max-h-[80vh]">
+          <div className="bg-surface-container-high rounded-xl border border-white/10 p-6 w-full max-w-lg shadow-2xl flex flex-col max-h-[80vh]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-white">Assign Developer</h3>
-              <button onClick={() => setShowAssignModal(false)} className="text-slate-400 hover:text-white transition-colors">
+              <h3 className="text-base font-bold text-white">Invite Developer</h3>
+              <button onClick={() => setShowInviteModal(false)} className="text-slate-400 hover:text-white transition-colors">
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
+
+            <p className="text-xs text-slate-400 mb-4">
+              Search developers by name or skills. The developer will receive an invitation to accept.
+            </p>
 
             {/* Search */}
             <div className="relative mb-4">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none">search</span>
               <input
                 type="text"
-                placeholder="Search developers..."
-                value={assignSearch}
-                onChange={(e) => setAssignSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border-0 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40"
+                placeholder="Search by name, email, or skill... (press Enter)"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                className="w-full pl-10 pr-20 py-2.5 bg-surface-container-lowest border-0 rounded-lg text-sm text-on-surface placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-primary/40"
                 autoFocus
               />
+              <button
+                onClick={() => doSearch(searchQuery)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary rounded hover:bg-primary/20 transition-colors"
+              >
+                Search
+              </button>
             </div>
 
-            {/* List */}
+            {/* Results List */}
             <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
-              {allDevsLoading ? (
+              {searchLoading ? (
                 <div className="flex justify-center py-10">
                   <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
               ) : availableDevs.length === 0 ? (
                 <div className="text-center py-10">
-                  <span className="material-symbols-outlined text-3xl text-slate-600 mb-2">person_search</span>
+                  <span className="material-symbols-outlined text-3xl text-slate-600 mb-2 block">person_search</span>
                   <p className="text-sm text-slate-500">
-                    {assignSearch ? 'No developers match your search' : 'All developers are already assigned'}
+                    {searchQuery
+                      ? 'No developers found for this search'
+                      : searchResults.length > 0
+                        ? 'All developers are already in this project'
+                        : 'Search for developers by name or skill'}
                   </p>
                 </div>
               ) : (
-                availableDevs.map((dev) => (
-                  <div
-                    key={dev.id}
-                    className="flex items-center justify-between px-4 py-3 rounded-lg bg-surface-container-low hover:bg-surface-container-highest transition-colors group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold text-sm">
-                        {dev.full_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">{dev.full_name}</p>
-                        <p className="text-[10px] text-slate-500">{dev.email}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleAssign(dev)}
-                      disabled={assigning === dev.id}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                availableDevs.map((dev) => {
+                  const alreadyInvited = invitedIds.has(dev.id);
+                  return (
+                    <div
+                      key={dev.id}
+                      className="flex items-center justify-between px-4 py-3 rounded-lg bg-surface-container-low hover:bg-surface-container-highest transition-colors group"
                     >
-                      {assigning === dev.id ? (
-                        <div className="w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin" />
-                      ) : (
-                        <span className="material-symbols-outlined text-xs">add</span>
-                      )}
-                      Assign
-                    </button>
-                  </div>
-                ))
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                          {dev.full_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white">{dev.full_name}</p>
+                          <p className="text-[10px] text-slate-500">{dev.email}</p>
+                          {dev.skills.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {dev.skills.slice(0, 5).map((skill) => (
+                                <span
+                                  key={skill}
+                                  className="px-1.5 py-0.5 text-[9px] font-medium bg-primary/10 text-primary/80 rounded"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {dev.skills.length > 5 && (
+                                <span className="px-1.5 py-0.5 text-[9px] font-medium text-slate-500">
+                                  +{dev.skills.length - 5} more
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleInvite(dev)}
+                        disabled={inviting === dev.id || alreadyInvited}
+                        className={`ml-3 flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+                          alreadyInvited
+                            ? 'bg-secondary/10 text-secondary border border-secondary/20 cursor-default'
+                            : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20'
+                        }`}
+                      >
+                        {inviting === dev.id ? (
+                          <div className="w-3 h-3 border border-primary/30 border-t-primary rounded-full animate-spin" />
+                        ) : alreadyInvited ? (
+                          <span className="material-symbols-outlined text-xs">check</span>
+                        ) : (
+                          <span className="material-symbols-outlined text-xs">send</span>
+                        )}
+                        {alreadyInvited ? 'Invited' : 'Invite'}
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

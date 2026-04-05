@@ -7,6 +7,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from pydantic import BaseModel as _BaseModel
+
 from app.auth.schemas import (
     LoginRequest,
     RefreshRequest,
@@ -14,6 +16,10 @@ from app.auth.schemas import (
     TokenResponse,
     UserResponse,
 )
+
+
+class UpdateSkills(_BaseModel):
+    skills: list[str]
 from app.auth.service import (
     create_access_token,
     create_refresh_token,
@@ -177,7 +183,7 @@ async def me(user: Annotated[UserContext, Depends(get_current_user)]):
     pool = get_pool()
     row = await pool.fetchrow(
         """SELECT u.id, u.email, u.full_name, u.role, u.organization_id, u.is_active,
-                  o.name AS organization_name
+                  u.skills, o.name AS organization_name
            FROM users u
            LEFT JOIN organizations o ON o.id = u.organization_id
            WHERE u.id = $1""",
@@ -211,7 +217,25 @@ async def me(user: Annotated[UserContext, Depends(get_current_user)]):
         organization_name=row["organization_name"],
         is_active=row["is_active"],
         approval_status=approval_status,
+        skills=list(row["skills"]) if row["skills"] else [],
     )
+
+
+@router.put("/me/skills")
+async def update_skills(
+    body: UpdateSkills,
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    """Update the current user's skills list."""
+    pool = get_pool()
+    # Clean and deduplicate skills
+    cleaned = list(dict.fromkeys(s.strip() for s in body.skills if s.strip()))
+    await pool.execute(
+        "UPDATE users SET skills = $1, updated_at = NOW() WHERE id = $2",
+        cleaned,
+        user.id,
+    )
+    return {"skills": cleaned}
 
 
 # ── LOGIN ──────────────────────────────────────────────────────────────────

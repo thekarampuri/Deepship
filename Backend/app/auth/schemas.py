@@ -38,3 +38,4 @@ class UserResponse(BaseModel):
     organization_name: str | None = None
     is_active: bool
     approval_status: str | None = None     # PENDING / APPROVED / REJECTED (for MANAGER)
+    skills: list[str] = []

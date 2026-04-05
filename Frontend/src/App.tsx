@@ -25,7 +25,8 @@ import JoinRequestsPage from './components/Manager/JoinRequestsPage';
 // ── Developer ─────────────────────────────────────────────────────────────────
 import DeveloperDashboard from './components/Developer/DeveloperDashboard';
 import MyProjectsPage from './components/Developer/MyProjectsPage';
-import BrowsePage from './components/Developer/BrowsePage';
+import InvitationsPage from './components/Developer/InvitationsPage';
+import DeveloperProfilePage from './components/Developer/DeveloperProfilePage';
 import ProjectLogs from './components/Developer/ProjectLogs';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -166,10 +167,18 @@ function App() {
         }
       />
       <Route
-        path="/developer/browse"
+        path="/developer/invitations"
         element={
           <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <BrowsePage />
+            <InvitationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/developer/profile"
+        element={
+          <ProtectedRoute allowedRoles={['DEVELOPER']}>
+            <DeveloperProfilePage />
           </ProtectedRoute>
         }
       />

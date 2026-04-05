@@ -96,11 +96,21 @@ export interface JoinRequest {
   project_name?: string;
   organization_id?: string;
   organization_name?: string;
-  request_type: 'ORG' | 'PROJECT';
+  request_type: 'ORG' | 'PROJECT' | 'PROJECT_INVITE';
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   requested_at: string;
   resolved_at?: string;
   resolved_by?: string;
+  invited_by?: string;
+  invited_by_name?: string;
+}
+
+export interface DeveloperSearchResult {
+  id: string;
+  email: string;
+  full_name: string;
+  skills: string[];
+  created_at: string;
 }
 
 export interface OrgMember {
@@ -254,3 +264,34 @@ export const getMembers = (role?: string) => {
 
 export const deactivateUser = (userId: string) =>
   apiFetch<void>(`/api/v1/users/${userId}`, { method: 'DELETE' });
+
+// ─── Developer Profile ───────────────────────────────────────────────────────
+
+export const updateMySkills = (skills: string[]) =>
+  apiFetch<{ skills: string[] }>('/auth/me/skills', {
+    method: 'PUT',
+    body: JSON.stringify({ skills }),
+  });
+
+// ─── Developer Search (for Managers) ─────────────────────────────────────────
+
+export const searchDevelopers = (query: string) =>
+  apiFetch<DeveloperSearchResult[]>(
+    `/api/v1/developers/search?q=${encodeURIComponent(query)}`,
+  );
+
+// ─── Project Invitations ─────────────────────────────────────────────────────
+
+export const inviteDeveloperToProject = (projectId: string, userId: string) =>
+  apiFetch<{ id: string; status: string }>(
+    `/api/v1/projects/${projectId}/invite`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId }),
+    },
+  );
+
+export const getMyInvitations = () =>
+  apiFetch<JoinRequest[]>(
+    '/api/v1/join-requests?request_type=PROJECT_INVITE',
+  );

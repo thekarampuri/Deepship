@@ -6,7 +6,9 @@ import hashlib
 import secrets
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from app.database import get_pool
@@ -572,4 +574,138 @@ async def update_project_status(
         "id": str(project["id"]),
         "name": project["name"],
         "status": body.status,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Developer search (for managers to find and invite developers)
+# ---------------------------------------------------------------------------
+
+@router.get("/developers/search")
+async def search_developers(
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
+    q: str = Query(default="", description="Search by name or skill"),
+):
+    """Search developers by name or skills. Returns developers not already in
+    the manager's organization who are available for invitation."""
+    pool = get_pool()
+    query = q.strip()
+
+    if not query:
+        rows = await pool.fetch(
+            """SELECT u.id, u.email, u.full_name, u.skills, u.created_at
+               FROM users u
+               WHERE u.role = 'DEVELOPER' AND u.is_active = TRUE
+               ORDER BY u.full_name
+               LIMIT 50""",
+        )
+    else:
+        rows = await pool.fetch(
+            """SELECT u.id, u.email, u.full_name, u.skills, u.created_at
+               FROM users u
+               WHERE u.role = 'DEVELOPER'
+                 AND u.is_active = TRUE
+                 AND (
+                   u.full_name ILIKE $1
+                   OR u.email ILIKE $1
+                   OR EXISTS (
+                     SELECT 1 FROM unnest(u.skills) AS s
+                     WHERE s ILIKE $1
+                   )
+                 )
+               ORDER BY u.full_name
+               LIMIT 50""",
+            f"%{query}%",
+        )
+
+    return [
+        {
+            "id": str(r["id"]),
+            "email": r["email"],
+            "full_name": r["full_name"],
+            "skills": list(r["skills"]) if r["skills"] else [],
+            "created_at": r["created_at"].isoformat(),
+        }
+        for r in rows
+    ]
+
+
+# ---------------------------------------------------------------------------
+# Project invitation (Manager invites Developer)
+# ---------------------------------------------------------------------------
+
+class InviteDeveloper(BaseModel):
+    user_id: str
+
+
+@router.post("/projects/{project_id}/invite", status_code=status.HTTP_201_CREATED)
+async def invite_developer_to_project(
+    project_id: str,
+    body: InviteDeveloper,
+    user: Annotated[UserContext, Depends(require_approved_role("ADMIN", "MANAGER"))],
+):
+    """Send a project invitation to a developer. Creates a PROJECT_INVITE join request."""
+    pool = get_pool()
+    project = await _get_project_or_404(pool, project_id)
+
+    if user.role == "MANAGER" and str(project["organization_id"]) != user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
+
+    # Check the developer exists and is a DEVELOPER
+    dev = await pool.fetchrow(
+        "SELECT id, role FROM users WHERE id = $1 AND is_active = TRUE",
+        body.user_id,
+    )
+    if not dev:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Developer not found")
+    if dev["role"] != "DEVELOPER":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not a developer",
+        )
+
+    # Check if already a project member
+    existing_member = await pool.fetchrow(
+        "SELECT 1 FROM project_members WHERE project_id = $1 AND user_id = $2",
+        project_id, body.user_id,
+    )
+    if existing_member:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Developer is already a member of this project",
+        )
+
+    # Check for existing pending invitation
+    existing_invite = await pool.fetchrow(
+        """SELECT id FROM join_requests
+           WHERE user_id = $1 AND project_id = $2
+             AND request_type = 'PROJECT_INVITE' AND status = 'PENDING'""",
+        body.user_id, project_id,
+    )
+    if existing_invite:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An invitation is already pending for this developer",
+        )
+
+    row = await pool.fetchrow(
+        """INSERT INTO join_requests
+               (user_id, project_id, organization_id, request_type, status, invited_by)
+           VALUES ($1, $2, $3, 'PROJECT_INVITE', 'PENDING', $4)
+           RETURNING id, requested_at""",
+        body.user_id,
+        project_id,
+        str(project["organization_id"]) if project["organization_id"] else None,
+        user.id,
+    )
+
+    return {
+        "id": str(row["id"]),
+        "user_id": body.user_id,
+        "project_id": project_id,
+        "status": "PENDING",
+        "requested_at": row["requested_at"].isoformat(),
     }

@@ -34,7 +34,7 @@ const DeveloperDashboard: React.FC = () => {
       try {
         const [fetchedProjects, fetchedRequests] = await Promise.allSettled([
           api.getProjects(),
-          api.getJoinRequests(),
+          api.getMyInvitations(),
         ]);
 
         const projList =
@@ -154,10 +154,13 @@ const DeveloperDashboard: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           {pendingRequests.length > 0 && (
-            <span className="flex items-center gap-1.5 px-3 py-1.5 bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase tracking-widest rounded-lg border border-tertiary/20">
-              <span className="material-symbols-outlined text-xs">hourglass_top</span>
-              {pendingRequests.length} pending
-            </span>
+            <Link
+              to="/developer/invitations"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-tertiary/10 text-tertiary text-[10px] font-bold uppercase tracking-widest rounded-lg border border-tertiary/20 hover:bg-tertiary/15 transition-colors"
+            >
+              <span className="material-symbols-outlined text-xs">mail</span>
+              {pendingRequests.length} invitation{pendingRequests.length !== 1 ? 's' : ''}
+            </Link>
           )}
         </div>
       </header>
@@ -231,11 +234,11 @@ const DeveloperDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Join Requests */}
+          {/* Invitations */}
           <div className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-white/5 hover:border-tertiary/15 transition-colors">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">
-                Join Requests
+                Invitations
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-black text-white tracking-tighter">
@@ -245,7 +248,7 @@ const DeveloperDashboard: React.FC = () => {
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-5xl">person_add</span>
+              <span className="material-symbols-outlined text-5xl">mail</span>
             </div>
           </div>
         </div>
@@ -278,13 +281,13 @@ const DeveloperDashboard: React.FC = () => {
                     folder_open
                   </span>
                   <p className="text-sm text-slate-400 mb-1 font-semibold">No projects assigned yet</p>
-                  <p className="text-xs text-slate-600 mb-4">Browse available projects and request to join one.</p>
+                  <p className="text-xs text-slate-600 mb-4">When a manager invites you to a project, it will appear in your invitations.</p>
                   <Link
-                    to="/developer/browse"
+                    to="/developer/invitations"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-lg text-xs font-bold hover:bg-primary/20 transition-colors"
                   >
-                    <span className="material-symbols-outlined text-sm">explore</span>
-                    Browse Projects
+                    <span className="material-symbols-outlined text-sm">mail</span>
+                    View Invitations
                   </Link>
                 </div>
               ) : (
@@ -467,15 +470,31 @@ const DeveloperDashboard: React.FC = () => {
                 </Link>
 
                 <Link
-                  to="/developer/browse"
+                  to="/developer/invitations"
                   className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-tertiary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="material-symbols-outlined text-tertiary text-lg">explore</span>
+                    <span className="material-symbols-outlined text-tertiary text-lg">mail</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">Browse Projects</p>
-                    <p className="text-[10px] text-slate-500">Discover & request to join</p>
+                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">Invitations</p>
+                    <p className="text-[10px] text-slate-500">View project invitations</p>
+                  </div>
+                  <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors text-sm">
+                    chevron_right
+                  </span>
+                </Link>
+
+                <Link
+                  to="/developer/profile"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all group"
+                >
+                  <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="material-symbols-outlined text-secondary text-lg">person</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">My Profile</p>
+                    <p className="text-[10px] text-slate-500">Manage skills & preferences</p>
                   </div>
                   <span className="material-symbols-outlined text-slate-600 group-hover:text-primary transition-colors text-sm">
                     chevron_right
@@ -484,47 +503,48 @@ const DeveloperDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Pending Join Requests */}
+            {/* Pending Invitations */}
             {pendingRequests.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-tertiary text-base">hourglass_top</span>
-                  Pending Requests
+                  <span className="material-symbols-outlined text-tertiary text-base">mail</span>
+                  Pending Invitations
                 </h3>
                 <div className="space-y-2">
                   {pendingRequests.map((req) => (
-                    <div
+                    <Link
                       key={req.id}
-                      className="bg-surface-container-low rounded-xl border border-tertiary/10 px-4 py-3"
+                      to="/developer/invitations"
+                      className="block bg-surface-container-low rounded-xl border border-tertiary/10 px-4 py-3 hover:border-tertiary/25 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-tertiary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="material-symbols-outlined text-tertiary text-sm">folder</span>
+                          <span className="material-symbols-outlined text-tertiary text-sm">mail</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate">
                             {req.project_name || 'Project'}
                           </p>
                           <p className="text-[10px] text-slate-500">
-                            Requested {formatDate(req.requested_at)}
+                            {req.invited_by_name ? `From ${req.invited_by_name}` : `Received ${formatDate(req.requested_at)}`}
                           </p>
                         </div>
-                        <span className="px-2 py-1 bg-tertiary/10 rounded text-[9px] font-bold text-tertiary uppercase tracking-wider flex-shrink-0">
+                        <span className="px-2 py-1 bg-tertiary/10 rounded text-[9px] font-bold text-tertiary uppercase tracking-wider flex-shrink-0 animate-pulse">
                           Pending
                         </span>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Recently Approved */}
+            {/* Recently Joined */}
             {approvedRequests.length > 0 && (
               <div>
                 <h3 className="text-sm font-semibold text-white uppercase tracking-wider mb-4 flex items-center gap-2">
                   <span className="material-symbols-outlined text-secondary text-base">check_circle</span>
-                  Recently Approved
+                  Recently Joined
                 </h3>
                 <div className="space-y-2">
                   {approvedRequests.slice(0, 5).map((req) => (
@@ -541,7 +561,7 @@ const DeveloperDashboard: React.FC = () => {
                             {req.project_name || 'Project'}
                           </p>
                           <p className="text-[10px] text-slate-500">
-                            Approved {req.resolved_at ? formatDate(req.resolved_at) : ''}
+                            Joined {req.resolved_at ? formatDate(req.resolved_at) : ''}
                           </p>
                         </div>
                         <span className="px-2 py-1 bg-secondary/10 rounded text-[9px] font-bold text-secondary uppercase tracking-wider flex-shrink-0">

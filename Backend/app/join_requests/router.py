@@ -1,10 +1,16 @@
 """Join request endpoints: list and approve/reject.
 
-Flow:
-  - MANAGER signs up and selects an organization => join request (type=ORG) is auto-created
-  - ADMIN sees pending ORG requests on their dashboard
-  - ADMIN approves => MANAGER gets organization_id set, can now create projects
-  - ADMIN rejects => MANAGER sees "Approval denied" on login
+Flows:
+  ORG join:
+    - MANAGER signs up and selects an organization => join request (type=ORG) is auto-created
+    - ADMIN sees pending ORG requests on their dashboard
+    - ADMIN approves => MANAGER gets organization_id set, can now create projects
+
+  PROJECT_INVITE:
+    - MANAGER searches developers and sends invitation (type=PROJECT_INVITE)
+    - DEVELOPER sees the invitation on their dashboard
+    - DEVELOPER accepts => added to project_members
+    - DEVELOPER rejects => invitation is marked REJECTED
 """
 
 from __future__ import annotations
@@ -87,14 +93,17 @@ async def list_join_requests(
 
     rows = await pool.fetch(
         f"""SELECT jr.id, jr.user_id, jr.project_id, jr.organization_id,
-                   jr.request_type, jr.status, jr.requested_at, jr.resolved_at, jr.resolved_by,
+                   jr.request_type, jr.status, jr.requested_at, jr.resolved_at,
+                   jr.resolved_by, jr.invited_by,
                    u.full_name AS user_name, u.email AS user_email, u.role AS user_role,
                    p.name AS project_name,
-                   o.name AS organization_name
+                   o.name AS organization_name,
+                   inv.full_name AS invited_by_name
             FROM join_requests jr
             JOIN users u ON u.id = jr.user_id
             LEFT JOIN projects p ON p.id = jr.project_id
             LEFT JOIN organizations o ON o.id = jr.organization_id
+            LEFT JOIN users inv ON inv.id = jr.invited_by
             WHERE {where}
             ORDER BY jr.requested_at DESC""",
         *params,
@@ -116,6 +125,8 @@ async def list_join_requests(
             "requested_at": r["requested_at"].isoformat(),
             "resolved_at": r["resolved_at"].isoformat() if r["resolved_at"] else None,
             "resolved_by": str(r["resolved_by"]) if r["resolved_by"] else None,
+            "invited_by": str(r["invited_by"]) if r["invited_by"] else None,
+            "invited_by_name": r["invited_by_name"],
         }
         for r in rows
     ]
@@ -170,6 +181,13 @@ async def update_join_request(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="This request is for a different organization",
             )
+    elif jr["request_type"] == "PROJECT_INVITE":
+        # PROJECT_INVITE: only the invited developer can accept/reject
+        if user.id != str(jr["user_id"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the invited developer can accept or decline this invitation",
+            )
     else:
         # PROJECT join requests — MANAGER or ADMIN of same org
         if user.role not in ("MANAGER", "ADMIN"):
@@ -205,7 +223,7 @@ async def update_join_request(
                 str(jr["organization_id"]),
                 str(jr["user_id"]),
             )
-        else:
+        elif jr["request_type"] in ("PROJECT", "PROJECT_INVITE"):
             # Add developer to project_members
             await pool.execute(
                 """INSERT INTO project_members (project_id, user_id)

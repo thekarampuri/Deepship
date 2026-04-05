@@ -34,7 +34,7 @@ def get_connection():
         port=int(os.getenv("ORCHID_DB_PORT", "5432")),
         dbname=os.getenv("ORCHID_DB_NAME", "orchid"),
         user=os.getenv("ORCHID_DB_USER", "postgres"),
-        password=os.getenv("ORCHID_DB_PASSWORD", "Akhil@123"),
+        password=os.getenv("ORCHID_DB_PASSWORD", "omkar9211"),
     )
 
 
@@ -95,9 +95,18 @@ CREATE TABLE IF NOT EXISTS users (
     role            user_role    NOT NULL DEFAULT 'DEVELOPER',
     organization_id UUID         REFERENCES organizations(id) ON DELETE SET NULL,
     is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
+    skills          TEXT[]       DEFAULT '{}',
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
+
+-- Trigram index on full_name for name search
+CREATE INDEX IF NOT EXISTS idx_users_fullname_trgm
+    ON users USING GIN (full_name gin_trgm_ops);
+
+-- GIN index on skills array for skill-based search
+CREATE INDEX IF NOT EXISTS idx_users_skills
+    ON users USING GIN (skills);
 
 -- Add FK from organizations.created_by -> users after users table exists
 DO $$ BEGIN
@@ -134,6 +143,7 @@ CREATE TABLE IF NOT EXISTS projects (
     name            VARCHAR(150) NOT NULL,
     description     TEXT,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    status          VARCHAR(20)  NOT NULL DEFAULT 'APPROVED',
     UNIQUE (team_id, name)
 );
 
@@ -285,18 +295,22 @@ CREATE TABLE IF NOT EXISTS issue_events (
 );
 
 -- ==========================================================================
--- JOIN REQUESTS  (Manager requests to join org, Developer requests to join project)
+-- JOIN REQUESTS  (Manager→Org, Manager→Developer project invites)
+-- request_type: 'ORG'             — Manager requests to join an organization
+--               'PROJECT_INVITE'  — Manager invites a Developer to a project
+-- For PROJECT_INVITE: user_id = the invited developer, invited_by = the manager
 -- ==========================================================================
 CREATE TABLE IF NOT EXISTS join_requests (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id         UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     project_id      UUID                REFERENCES projects(id) ON DELETE CASCADE,
     organization_id UUID                REFERENCES organizations(id) ON DELETE SET NULL,
-    request_type    VARCHAR(20)         NOT NULL DEFAULT 'ORG',   -- 'ORG' or 'PROJECT'
     status          join_request_status NOT NULL DEFAULT 'PENDING',
     requested_at    TIMESTAMPTZ         NOT NULL DEFAULT NOW(),
     resolved_at     TIMESTAMPTZ,
-    resolved_by     UUID                REFERENCES users(id) ON DELETE SET NULL
+    resolved_by     UUID                REFERENCES users(id) ON DELETE SET NULL,
+    request_type    VARCHAR(20)         NOT NULL DEFAULT 'ORG',   -- 'ORG' or 'PROJECT_INVITE'
+    invited_by      UUID                REFERENCES users(id) ON DELETE SET NULL  -- manager who sent invite
 );
 
 CREATE INDEX IF NOT EXISTS idx_join_requests_user_id    ON join_requests (user_id);
@@ -310,9 +324,7 @@ CREATE INDEX IF NOT EXISTS idx_join_requests_status     ON join_requests (status
 # ---------------------------------------------------------------------------
 
 def _partition_sql(year: int, month: int) -> str:
-    """Return SQL to create a monthly partition for the logs table."""
-    import calendar
-    last_day = calendar.monthrange(year, month)[1]
+    """Return SQL to create a monthly partition for the logs table, with indexes."""
     name = f"logs_y{year}m{month:02d}"
     start = f"{year}-{month:02d}-01"
     if month == 12:
@@ -324,6 +336,14 @@ def _partition_sql(year: int, month: int) -> str:
 CREATE TABLE IF NOT EXISTS {name}
     PARTITION OF logs
     FOR VALUES FROM ('{start}') TO ('{end}');
+
+CREATE INDEX IF NOT EXISTS {name}_project_id_idx    ON {name} (project_id);
+CREATE INDEX IF NOT EXISTS {name}_level_idx         ON {name} (level);
+CREATE INDEX IF NOT EXISTS {name}_service_idx       ON {name} (service);
+CREATE INDEX IF NOT EXISTS {name}_trace_id_idx      ON {name} (trace_id);
+CREATE INDEX IF NOT EXISTS {name}_search_vector_idx ON {name} USING GIN (search_vector);
+CREATE INDEX IF NOT EXISTS {name}_message_idx       ON {name} USING GIN (message gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS {name}_extra_idx         ON {name} USING GIN (extra jsonb_path_ops);
 """
 
 
