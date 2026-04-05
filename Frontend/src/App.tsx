@@ -6,6 +6,7 @@ import ContactSection from './components/LandingPage/ContactSection';
 import LoginPage from './components/LoginPage/LoginPage';
 import SignupPage from './components/SignupPage/SignupPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import DashboardLayout from './components/Layout/DashboardLayout';
 import { useAuth } from './context/AuthContext';
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -67,115 +68,124 @@ function App() {
       <Route path="/logs" element={<RoleRedirect />} />
       <Route path="/projects" element={<RoleRedirect />} />
 
-      {/* ── Admin routes ────────────────────────────────────────────────────── */}
+      {/* ── Authenticated dashboard shell (persistent Sidebar) ──────────────── */}
       <Route
-        path="/admin/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
+          <ProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'DEVELOPER']}>
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/admin/manage-org"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <ManageOrgPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/projects"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminProjectsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminSettingsPage />
-          </ProtectedRoute>
-        }
-      />
+      >
+        {/* Admin */}
+        <Route
+          path="/admin/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/manage-org"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <ManageOrgPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/projects"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminProjectsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/settings"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <AdminSettingsPage />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* ── Manager routes ──────────────────────────────────────────────────── */}
-      <Route
-        path="/manager/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ManagerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager/projects"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ProjectsListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager/projects/:id"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ProjectDetail />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager/requests"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <JoinRequestsPage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Manager */}
+        <Route
+          path="/manager/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/projects"
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <ProjectsListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/projects/:id"
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <ProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/manager/requests"
+          element={
+            <ProtectedRoute allowedRoles={['MANAGER']}>
+              <JoinRequestsPage />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* ── Developer routes ────────────────────────────────────────────────── */}
-      <Route
-        path="/developer/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/developer/projects"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <MyProjectsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/developer/projects/:id/logs"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <ProjectLogs />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/developer/invitations"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <InvitationsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/developer/profile"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperProfilePage />
-          </ProtectedRoute>
-        }
-      />
+        {/* Developer */}
+        <Route
+          path="/developer/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['DEVELOPER']}>
+              <DeveloperDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer/projects"
+          element={
+            <ProtectedRoute allowedRoles={['DEVELOPER']}>
+              <MyProjectsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer/projects/:id/logs"
+          element={
+            <ProtectedRoute allowedRoles={['DEVELOPER']}>
+              <ProjectLogs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer/invitations"
+          element={
+            <ProtectedRoute allowedRoles={['DEVELOPER']}>
+              <InvitationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/developer/profile"
+          element={
+            <ProtectedRoute allowedRoles={['DEVELOPER']}>
+              <DeveloperProfilePage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
       {/* ── Catch-all ───────────────────────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />

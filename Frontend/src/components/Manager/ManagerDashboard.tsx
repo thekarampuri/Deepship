@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Sidebar from '../Sidebar/Sidebar';
+
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { Project, JoinRequest } from '../../services/api';
@@ -91,8 +91,7 @@ const ManagerDashboard: React.FC = () => {
   }
 
   return (
-    <div className="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen">
-      <Sidebar />
+    <div className="text-on-surface font-body overflow-x-hidden min-h-screen">
 
       {/* Top Bar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
@@ -114,66 +113,95 @@ const ManagerDashboard: React.FC = () => {
         </div>
       </header>
 
-      <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
+      <main className="ml-64 p-8 min-h-[calc(100vh-4rem)]">
+
+        {/* Greeting Section */}
+        <motion.div {...fadeUp(0)} className="mb-8">
+          <h1 className="text-3xl font-black tracking-tight text-on-surface">
+            Hello, <span className="text-primary">{user?.full_name || 'Manager'}</span>
+          </h1>
+          <p className="text-sm text-on-surface-variant mt-1">
+            {user?.organization_name || 'Your Organization'} — Manager Dashboard
+          </p>
+        </motion.div>
+
         {/* Stats Row */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
+
+          {/* My Projects */}
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 rounded-xl relative overflow-hidden group border-l-4 border-primary border border-outline-variant/10"
+          >
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">My Projects</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">{projects.length}</span>
+                <span className="text-3xl font-black text-primary tracking-tighter">{projects.length}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-6xl">folder</span>
+              <span className="material-symbols-outlined text-6xl text-primary">folder</span>
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
+          {/* Total Developers */}
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-secondary/20 via-secondary/10 to-transparent p-6 rounded-xl relative overflow-hidden group border-l-4 border-secondary border border-outline-variant/10"
+          >
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Developers</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">{totalDevelopers}</span>
+                <span className="text-3xl font-black text-secondary tracking-tighter">{totalDevelopers}</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-6xl">group</span>
+              <span className="material-symbols-outlined text-6xl text-secondary">group</span>
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
+          {/* Pending Requests */}
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-tertiary/20 via-tertiary/10 to-transparent p-6 rounded-xl relative overflow-hidden group border-l-4 border-tertiary border border-outline-variant/10"
+          >
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">{pendingRequests.length}</span>
+                <span className="text-3xl font-black text-tertiary tracking-tighter">{pendingRequests.length}</span>
                 {pendingRequests.length > 0 && (
                   <span className="text-tertiary text-xs font-bold">Awaiting review</span>
                 )}
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-6xl">person_add</span>
+              <span className="material-symbols-outlined text-6xl text-tertiary">person_add</span>
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
+          {/* Active API Keys */}
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-error/20 via-error/10 to-transparent p-6 rounded-xl relative overflow-hidden group border-l-4 border-error border border-outline-variant/10"
+          >
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Active API Keys</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">0</span>
+                <span className="text-3xl font-black text-error tracking-tighter">0</span>
               </div>
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-6xl">vpn_key</span>
+              <span className="material-symbols-outlined text-6xl text-error">vpn_key</span>
             </div>
           </motion.div>
+
         </motion.div>
 
         {/* Projects Grid */}
         <motion.div {...fadeUp(0.2)} className="mb-8">
           <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4">My Projects</h3>
           {projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-outline-variant/20">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-2xl border border-outline-variant/20">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">folder_open</span>
               <p className="text-sm text-on-surface-variant">No projects yet. Create your first project.</p>
               <button
@@ -189,64 +217,91 @@ const ManagerDashboard: React.FC = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className={`bg-surface-container-low p-5 rounded-lg border transition-all group ${
+                  className={`bg-surface-container-low rounded-2xl overflow-hidden border transition-all group ${
                     project.status === 'PENDING'
-                      ? 'border-amber-500/20 opacity-75'
-                      : 'border-outline-variant/20 hover:border-primary/20 cursor-pointer'
+                      ? 'border-tertiary/20 opacity-80'
+                      : project.status === 'REJECTED'
+                      ? 'border-error/20 opacity-75'
+                      : 'border-outline-variant/20 hover:border-primary/30 cursor-pointer hover:shadow-lg hover:shadow-primary/5'
                   }`}
                   onClick={() => project.status === 'APPROVED' && navigate(`/manager/projects/${project.id}`)}
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className={`text-sm font-bold transition-colors ${
-                      project.status === 'PENDING' ? 'text-on-surface-variant' : 'text-on-surface group-hover:text-primary'
-                    }`}>{project.name}</h4>
-                    <div className="flex items-center gap-1.5">
+                  {/* Colored top strip based on status */}
+                  <div
+                    className={`h-1.5 w-full ${
+                      project.status === 'APPROVED'
+                        ? 'bg-gradient-to-r from-secondary/60 to-primary/40'
+                        : project.status === 'PENDING'
+                        ? 'bg-gradient-to-r from-tertiary/60 to-tertiary/30'
+                        : 'bg-gradient-to-r from-error/60 to-error/30'
+                    }`}
+                  />
+
+                  <div className="p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className={`text-sm font-bold transition-colors ${
+                        project.status === 'PENDING'
+                          ? 'text-on-surface-variant'
+                          : project.status === 'REJECTED'
+                          ? 'text-on-surface-variant'
+                          : 'text-on-surface group-hover:text-primary'
+                      }`}>{project.name}</h4>
+                      <div className="flex items-center gap-1.5">
+                        {project.status === 'PENDING' ? (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-tertiary animate-pulse" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-tertiary">Pending</span>
+                          </>
+                        ) : project.status === 'REJECTED' ? (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-error" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-error">Rejected</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-2 h-2 rounded-full bg-secondary" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Active</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-on-surface-variant mb-4 line-clamp-2">
+                      {project.description || 'No description provided.'}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {/* Developer count badge */}
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          project.status === 'APPROVED'
+                            ? 'bg-secondary/10 text-secondary'
+                            : 'bg-surface-container-highest text-on-surface-variant'
+                        }`}>
+                          <span className="material-symbols-outlined text-xs">person</span>
+                          {project.developer_count}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-on-surface-variant">
+                        {new Date(project.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-outline-variant/20">
                       {project.status === 'PENDING' ? (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">Pending</span>
-                        </>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-tertiary/70">
+                          Awaiting Admin Approval
+                        </span>
                       ) : project.status === 'REJECTED' ? (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-error" />
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-error">Rejected</span>
-                        </>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-error/60">
+                          Project Rejected
+                        </span>
                       ) : (
-                        <>
-                          <div className="w-2 h-2 rounded-full bg-secondary" />
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Active</span>
-                        </>
+                        <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
+                          Manage
+                        </button>
                       )}
                     </div>
-                  </div>
-                  <p className="text-xs text-on-surface-variant mb-4 line-clamp-2">
-                    {project.description || 'No description provided.'}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">
-                      <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-xs">person</span>
-                        {project.developer_count}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-on-surface-variant">
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-outline-variant/20">
-                    {project.status === 'PENDING' ? (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">
-                        Awaiting Admin Approval
-                      </span>
-                    ) : project.status === 'REJECTED' ? (
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-error/60">
-                        Project Rejected
-                      </span>
-                    ) : (
-                      <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
-                        Manage
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
@@ -255,10 +310,16 @@ const ManagerDashboard: React.FC = () => {
         </motion.div>
 
         {/* Pending Join Requests */}
-        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg border border-outline-variant/20 overflow-hidden">
-          <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Pending Join Requests</h3>
-            <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">{pendingRequests.length}</span>
+        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-2xl border border-outline-variant/20 overflow-hidden">
+          {/* Colorful header with tertiary color */}
+          <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between bg-gradient-to-r from-tertiary/10 via-tertiary/5 to-transparent">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm text-tertiary">person_add</span>
+              <h3 className="text-sm font-semibold text-tertiary uppercase tracking-wider">Pending Join Requests</h3>
+            </div>
+            <span className="text-[10px] font-bold text-tertiary bg-tertiary/10 border border-tertiary/20 px-2 py-1 rounded-full">
+              {pendingRequests.length}
+            </span>
           </div>
           {pendingRequests.length === 0 ? (
             <div className="p-8 text-center">
@@ -266,11 +327,11 @@ const ManagerDashboard: React.FC = () => {
               <p className="text-sm text-on-surface-variant">No pending requests</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-outline-variant/10">
               {pendingRequests.map((req) => (
                 <div key={req.id} className="px-6 py-4 flex items-center justify-between hover:bg-surface-container-high/50 transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-tertiary/20 to-tertiary/10 border border-tertiary/20 flex items-center justify-center text-tertiary font-bold text-sm">
                       {req.user_name.charAt(0)}
                     </div>
                     <div>
@@ -287,13 +348,13 @@ const ManagerDashboard: React.FC = () => {
                     </span>
                     <button
                       onClick={() => handleResolve(req.id, 'APPROVED')}
-                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-secondary/10 text-secondary border border-secondary/20 rounded hover:bg-secondary/20 transition-colors"
+                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-secondary/10 text-secondary border border-secondary/20 rounded-lg hover:bg-secondary/20 transition-colors"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => handleResolve(req.id, 'REJECTED')}
-                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-error/10 text-error border border-error/20 rounded hover:bg-error/20 transition-colors"
+                      className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-error/10 text-error border border-error/20 rounded-lg hover:bg-error/20 transition-colors"
                     >
                       Reject
                     </button>
@@ -319,7 +380,7 @@ const ManagerDashboard: React.FC = () => {
       {/* Create Project Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-outline-variant/30 p-8 w-full max-w-md shadow-2xl">
+          <div className="bg-surface-container-high rounded-2xl border border-outline-variant/30 p-8 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-on-surface">Create New Project</h3>
               <button

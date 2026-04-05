@@ -1,5 +1,5 @@
 import React from 'react';
-import Sidebar from '../Sidebar/Sidebar';
+
 
 const TeamsPage: React.FC = () => {
   const auditLogs = [
@@ -48,7 +48,7 @@ const TeamsPage: React.FC = () => {
 
   return (
     <div className="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary min-h-screen">
-      <Sidebar />
+
 
       <main className="ml-64 min-h-screen flex flex-col">
         {/* Top App Bar */}

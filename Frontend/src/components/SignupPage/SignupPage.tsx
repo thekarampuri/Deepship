@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const API_BASE = 'http://103.127.146.14';
 
@@ -27,6 +28,7 @@ const roleOptions: RoleOption[] = [
 const SignupPage = () => {
   const navigate = useNavigate();
   const { signup } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('DEVELOPER');
   const [fullName, setFullName] = useState('');
@@ -158,13 +160,27 @@ const SignupPage = () => {
 
       {/* ── Right form panel ──────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col bg-surface-dim overflow-y-auto">
-        <div className="flex items-center gap-3 px-8 py-6 lg:hidden">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-base">lens_blur</span>
-            </div>
-            <span className="font-black text-lg tracking-tighter text-primary">TraceHub</span>
-          </Link>
+        {/* Top bar with theme toggle */}
+        <div className="flex items-center justify-between px-8 py-4">
+          {/* Mobile logo */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <Link to="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-on-primary text-base">lens_blur</span>
+              </div>
+              <span className="font-black text-lg tracking-tighter text-primary">TraceHub</span>
+            </Link>
+          </div>
+          <div className="hidden lg:block" />
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low border border-outline-variant/30 hover:border-primary/30 transition-all text-on-surface-variant hover:text-primary"
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span className="material-symbols-outlined text-lg">{isDark ? 'light_mode' : 'dark_mode'}</span>
+            <span className="text-xs font-semibold hidden sm:block">{isDark ? 'Light' : 'Dark'}</span>
+          </button>
         </div>
 
         <div className="flex-1 flex items-start justify-center px-8 py-10">

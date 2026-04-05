@@ -1,5 +1,5 @@
 import React from 'react';
-import Sidebar from '../Sidebar/Sidebar';
+
 
 const ProjectsPage: React.FC = () => {
   const projects = [
@@ -73,7 +73,7 @@ const ProjectsPage: React.FC = () => {
 
   return (
     <div className="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen">
-      <Sidebar />
+
 
       <main className="ml-64 pt-20 px-8 pb-12 min-h-screen flex flex-col">
         {/* Header Section */}

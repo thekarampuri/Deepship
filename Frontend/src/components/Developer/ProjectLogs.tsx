@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Sidebar from '../Sidebar/Sidebar';
+
 import * as api from '../../services/api';
 import type { Log, LogLevel, ProjectDetail, ApiKey } from '../../services/api';
 
@@ -206,7 +206,7 @@ const ProjectLogs: React.FC = () => {
 
   return (
     <div className="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen">
-      <Sidebar />
+
 
       {/* Top Bar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">

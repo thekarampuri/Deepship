@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import Sidebar from '../Sidebar/Sidebar';
+
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -22,7 +22,7 @@ const LogExplorer: React.FC = () => {
 
   return (
     <div className="bg-surface text-on-surface font-body overflow-hidden min-h-screen flex">
-      <Sidebar />
+
 
       <div className="flex-1 ml-64 flex flex-col min-h-screen h-screen">
         {/* TopAppBar */}

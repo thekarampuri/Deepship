@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import Sidebar from '../Sidebar/Sidebar';
+
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
 import type { Project, ProjectDetail, JoinRequest, Log } from '../../services/api';
@@ -160,7 +160,7 @@ const DeveloperDashboard: React.FC = () => {
 
   return (
     <div className="bg-surface text-on-surface font-body overflow-x-hidden min-h-screen">
-      <Sidebar />
+
 
       {/* Top Bar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
@@ -192,82 +192,83 @@ const DeveloperDashboard: React.FC = () => {
           </div>
         )}
 
+        {/* ── Greeting ──────────────────────────────────────────────────────── */}
+        <motion.div {...fadeUp(0)} className="mb-8">
+          <h1 className="text-3xl font-black text-on-surface tracking-tight leading-tight">
+            Hello, <span className="text-primary">{user?.full_name ?? 'Developer'}</span>
+          </h1>
+          <p className="text-on-surface-variant text-sm mt-1">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </motion.div>
+
         {/* ── Stats Row ─────────────────────────────────────────────────────── */}
-        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {/* Assigned Projects */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/15 transition-colors">
+        <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* My Projects */}
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-primary/20 via-primary/10 to-transparent p-6 rounded-2xl relative overflow-hidden group border-l-4 border-primary border border-primary/10"
+          >
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
-                My Projects
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">
-                  {projects.length}
-                </span>
-                <span className="text-xs text-on-surface-variant">assigned</span>
-              </div>
+              <p className="text-[10px] font-bold text-primary/70 tracking-widest uppercase mb-2">My Projects</p>
+              <span className="text-4xl font-black text-primary tracking-tighter">{projects.length}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-5xl">folder</span>
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: '5rem' }}>folder</span>
             </div>
+            <span className="absolute top-4 right-4 material-symbols-outlined text-primary text-xl opacity-60">folder</span>
           </motion.div>
 
           {/* Total Logs */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/15 transition-colors">
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-secondary/20 via-secondary/10 to-transparent p-6 rounded-2xl relative overflow-hidden group border-l-4 border-secondary border border-secondary/10"
+          >
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
-                Total Logs
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">
-                  {totalLogs.toLocaleString()}
-                </span>
-                <span className="text-xs text-on-surface-variant">ingested</span>
-              </div>
+              <p className="text-[10px] font-bold text-secondary/70 tracking-widest uppercase mb-2">Total Logs</p>
+              <span className="text-4xl font-black text-secondary tracking-tighter">{totalLogs.toLocaleString()}</span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-5xl">receipt_long</span>
+              <span className="material-symbols-outlined text-secondary" style={{ fontSize: '5rem' }}>receipt_long</span>
             </div>
+            <span className="absolute top-4 right-4 material-symbols-outlined text-secondary text-xl opacity-60">receipt_long</span>
           </motion.div>
 
           {/* Errors */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-error/15 transition-colors">
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-error/20 via-error/10 to-transparent p-6 rounded-2xl relative overflow-hidden group border-l-4 border-error border border-error/10"
+          >
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
-                Errors
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-on-surface'}`}>
-                  {totalErrors.toLocaleString()}
-                </span>
-                {totalFatals > 0 && (
-                  <span className="text-xs font-bold text-error/70">
-                    ({totalFatals} fatal)
-                  </span>
-                )}
-              </div>
+              <p className="text-[10px] font-bold text-error/70 tracking-widest uppercase mb-2">Errors</p>
+              <span className={`text-4xl font-black tracking-tighter ${totalErrors > 0 ? 'text-amber-400 animate-pulse' : 'text-error'}`}>
+                {totalErrors.toLocaleString()}
+              </span>
+              {totalFatals > 0 && (
+                <p className="text-[10px] font-bold text-error/70 mt-1">{totalFatals} fatal</p>
+              )}
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-5xl">bug_report</span>
+              <span className="material-symbols-outlined text-error" style={{ fontSize: '5rem' }}>bug_report</span>
             </div>
+            <span className="absolute top-4 right-4 material-symbols-outlined text-error text-xl opacity-60">bug_report</span>
           </motion.div>
 
           {/* Invitations */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-tertiary/15 transition-colors">
+          <motion.div
+            {...staggerItem}
+            className="bg-gradient-to-br from-tertiary/20 via-tertiary/10 to-transparent p-6 rounded-2xl relative overflow-hidden group border-l-4 border-tertiary border border-tertiary/10"
+          >
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
-                Invitations
-              </p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-on-surface tracking-tighter">
-                  {pendingRequests.length}
-                </span>
-                <span className="text-xs text-on-surface-variant">pending</span>
-              </div>
+              <p className="text-[10px] font-bold text-tertiary/70 tracking-widest uppercase mb-2">Invitations</p>
+              <span className={`text-4xl font-black tracking-tighter ${pendingRequests.length > 0 ? 'text-amber-400 animate-pulse' : 'text-tertiary'}`}>
+                {pendingRequests.length}
+              </span>
             </div>
             <div className="absolute bottom-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-              <span className="material-symbols-outlined text-5xl">mail</span>
+              <span className="material-symbols-outlined text-tertiary" style={{ fontSize: '5rem' }}>mail</span>
             </div>
+            <span className="absolute top-4 right-4 material-symbols-outlined text-tertiary text-xl opacity-60">mail</span>
           </motion.div>
         </motion.div>
 
@@ -430,7 +431,7 @@ const DeveloperDashboard: React.FC = () => {
                 </div>
 
                 <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 overflow-hidden">
-                  <div className="divide-y divide-gray-200">
+                  <div className="divide-y divide-outline-variant/20">
                     {allRecentErrors.map((log) => (
                       <div
                         key={log.id}

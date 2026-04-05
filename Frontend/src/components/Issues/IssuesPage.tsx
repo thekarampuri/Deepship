@@ -1,10 +1,10 @@
 import React from "react";
-import Sidebar from "../Sidebar/Sidebar";
+
 
 const IssuesPage: React.FC = () => {
   return (
     <div className="flex min-h-screen overflow-x-hidden bg-[#0b1326] text-[#dae2fd]">
-      <Sidebar />
+
 
       {/* Main Content Area */}
       <main className="flex-1 ml-64 flex flex-col min-h-screen">
