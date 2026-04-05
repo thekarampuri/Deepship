@@ -134,26 +134,78 @@ All methods accept these keyword arguments:
 | `extra`    | `dict[str, Any]` | Arbitrary key-value metadata                         |
 | `exc_info` | `bool`           | Capture current exception stack trace (error/fatal)  |
 
+The `error()` and `fatal()` methods accept additional arguments for error tracking:
+
+| Argument        | Type             | Description                                                       |
+|-----------------|------------------|-------------------------------------------------------------------|
+| `exc_info`      | `bool`           | Auto-capture stack trace from active `except` block; if no active exception, captures the caller's stack trace |
+| `exception`     | `BaseException`  | Pass an exception object directly — extracts `error_type`, `error_message`, and full traceback automatically |
+| `error_message` | `str`            | Explicit error description (overrides auto-captured message)       |
+| `stack_trace`   | `str`            | Explicit stack trace string (overrides auto-captured trace)        |
+
 ---
 
 ## Error Tracking
 
-When you log at `ERROR` or `FATAL` with `exc_info=True`, the SDK captures the full stack trace. The backend's RabbitMQ worker then:
+The SDK provides multiple ways to capture error details (`error_type`, `error_message`, `stack_trace`). All three fields are stored in the database and displayed in the TraceHub dashboard.
+
+### Method 1: Pass an exception object (recommended)
+
+```python
+try:
+    db.execute("SELECT * FROM users WHERE id = ?", user_id)
+except DatabaseError as e:
+    logger.error("Query failed", exception=e, module="db",
+                 extra={"query": "get_user", "user_id": user_id})
+```
+
+This automatically captures:
+- `error_type` — the exception class name (e.g. `DatabaseError`)
+- `error_message` — the exception message (e.g. `relation "users" does not exist`)
+- `stack_trace` — the full traceback from the exception's `__traceback__`
+
+### Method 2: Auto-capture from active `except` block
+
+```python
+try:
+    process_payment(order_id=123)
+except Exception:
+    logger.error("Payment failed", exc_info=True, module="billing")
+```
+
+When `exc_info=True` is used inside an `except` block, the SDK reads `sys.exc_info()` to capture the same three fields.
+
+### Method 3: Capture caller's stack trace (no active exception)
+
+```python
+# Not inside an except block — captures the call site's stack trace
+if balance < 0:
+    logger.error("Negative balance detected", exc_info=True, module="accounts")
+```
+
+When `exc_info=True` is used **outside** an `except` block, the SDK captures the caller's stack trace as context so you can see exactly where the error was logged.
+
+### Method 4: Explicit values
+
+```python
+logger.error(
+    "Upstream service returned error",
+    error_message="503 Service Unavailable",
+    stack_trace=upstream_response.headers.get("X-Stack-Trace", ""),
+    module="gateway",
+)
+```
+
+### How issues are grouped
+
+The backend's RabbitMQ worker:
 
 1. Normalizes the error message (strips UUIDs, timestamps, hex addresses)
 2. Extracts the top 5 stack frames
 3. Generates a SHA-256 fingerprint
 4. Creates or updates an **Issue** in the dashboard
 
-This means repeated occurrences of the same error are grouped into a single issue with an incrementing event count.
-
-```python
-try:
-    db.execute("SELECT * FROM users WHERE id = ?", user_id)
-except DatabaseError:
-    logger.error("Query failed", exc_info=True, module="db",
-                 extra={"query": "get_user", "user_id": user_id})
-```
+Repeated occurrences of the same error are grouped into a single issue with an incrementing event count.
 
 ---
 
@@ -312,6 +364,8 @@ def my_view(request):
 - **Dead-letter queue**: Failed batches saved to disk, replayed on next startup
 - **Ring buffer**: Fixed memory footprint, no OOM risk
 - **Graceful shutdown**: `atexit` hook flushes remaining logs
+- **Auto-reconnect**: HTTP client automatically recreated after persistent connection failures (v1.2.0+)
+- **Fault-tolerant batcher**: Background thread catches exceptions and auto-restarts if it dies (v1.2.0+)
 
 ---
 
@@ -325,8 +379,10 @@ class TraceHubLogger:
     def debug(self, message, *, module="", extra=None) -> None
     def info(self, message, *, module="", extra=None) -> None
     def warn(self, message, *, module="", extra=None) -> None
-    def error(self, message, *, exc_info=False, module="", extra=None) -> None
-    def fatal(self, message, *, exc_info=False, module="", extra=None) -> None
+    def error(self, message, *, exc_info=False, exception=None,
+              error_message=None, stack_trace=None, module="", extra=None) -> None
+    def fatal(self, message, *, exc_info=False, exception=None,
+              error_message=None, stack_trace=None, module="", extra=None) -> None
     def flush(self) -> None
     def close(self) -> None
 ```

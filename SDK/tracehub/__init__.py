@@ -1,6 +1,6 @@
 """TraceHub SDK — lightweight, non-blocking log ingestion for Python apps."""
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 # Default TraceHub API endpoint
 DEFAULT_ENDPOINT = "http://103.127.146.14"

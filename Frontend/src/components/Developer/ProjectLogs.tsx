@@ -516,6 +516,28 @@ const ProjectLogs: React.FC = () => {
                                 </span>
                               </div>
                             )}
+                            {log.module && (
+                              <div>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                  Module
+                                </p>
+                                <span className="text-on-surface-variant">{log.module}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Error Message */}
+                        {log.error_message && (
+                          <div className="mt-4 pt-4 border-t border-outline-variant/20">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                              Error Message
+                            </p>
+                            <div className="bg-error/5 border border-error/10 rounded-lg px-4 py-3">
+                              <span className="font-mono text-sm text-error leading-relaxed">
+                                {log.error_message}
+                              </span>
+                            </div>
                           </div>
                         )}
 

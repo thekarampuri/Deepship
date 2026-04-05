@@ -19,9 +19,18 @@ async def process_batch(
     message: aio_pika.abc.AbstractIncomingMessage,
     pool: asyncpg.Pool,
 ) -> None:
-    """Process a single RabbitMQ message containing a log batch."""
+    """Process a single RabbitMQ message containing a log batch.
+
+    Errors on individual entries are logged and skipped so that one bad
+    record does not block the entire batch (and cause infinite requeue).
+    """
     async with message.process(requeue=True):
-        entries: list[dict] = orjson.loads(message.body)
+        try:
+            entries: list[dict] = orjson.loads(message.body)
+        except Exception:
+            log.exception("Failed to deserialise message body — dropping message")
+            return
+
         if not entries:
             return
 
@@ -33,47 +42,59 @@ async def process_batch(
 
 
 async def _insert_logs(conn: asyncpg.Connection, entries: list[dict]) -> None:
-    """Bulk-insert logs and upsert issues for ERROR/FATAL entries."""
+    """Bulk-insert logs and upsert issues for ERROR/FATAL entries.
+
+    Each entry is inserted inside a savepoint so that a single malformed
+    record does not abort the entire transaction.
+    """
     for entry in entries:
-        log_id = uuid.uuid4()
-        project_id = uuid.UUID(entry["project_id"])
-        ts = _parse_timestamp(entry.get("timestamp", ""))
+        try:
+            await _insert_single_log(conn, entry)
+        except Exception:
+            log.exception("Failed to insert log entry — skipping: %s", entry.get("message", "")[:120])
 
-        await conn.execute(
-            """
-            INSERT INTO logs (
-                id, project_id, module, level, message, timestamp,
-                service, environment, host, pid, thread_id,
-                sdk_version, trace_id, stack_trace, error_type, error_message, extra
-            ) VALUES (
-                $1, $2, $3, $4::log_level, $5, $6,
-                $7, $8, $9, $10, $11,
-                $12, $13, $14, $15, $16, $17::jsonb
-            )
-            """,
-            log_id,
-            project_id,
-            entry.get("module") or None,
-            entry["level"],
-            entry["message"],
-            ts,
-            entry.get("service") or None,
-            entry.get("environment") or None,
-            entry.get("host") or None,
-            entry.get("pid") or None,
-            entry.get("thread_id") or None,
-            entry.get("sdk_version") or None,
-            entry.get("trace_id") or None,
-            entry.get("stack_trace"),
-            entry.get("error_type"),
-            entry.get("error_message"),
-            orjson.dumps(entry.get("extra") or {}).decode(),
+
+async def _insert_single_log(conn: asyncpg.Connection, entry: dict) -> None:
+    """Insert one log row and upsert its issue (if ERROR/FATAL)."""
+    log_id = uuid.uuid4()
+    project_id = uuid.UUID(entry["project_id"])
+    ts = _parse_timestamp(entry.get("timestamp", ""))
+
+    await conn.execute(
+        """
+        INSERT INTO logs (
+            id, project_id, module, level, message, timestamp,
+            service, environment, host, pid, thread_id,
+            sdk_version, trace_id, stack_trace, error_type, error_message, extra
+        ) VALUES (
+            $1, $2, $3, $4::log_level, $5, $6,
+            $7, $8, $9, $10, $11,
+            $12, $13, $14, $15, $16, $17::jsonb
         )
+        """,
+        log_id,
+        project_id,
+        entry.get("module") or None,
+        entry["level"],
+        entry["message"],
+        ts,
+        entry.get("service") or None,
+        entry.get("environment") or None,
+        entry.get("host") or None,
+        entry.get("pid") or None,
+        entry.get("thread_id") or None,
+        entry.get("sdk_version") or None,
+        entry.get("trace_id") or None,
+        entry.get("stack_trace"),
+        entry.get("error_type"),
+        entry.get("error_message"),
+        orjson.dumps(entry.get("extra") or {}).decode(),
+    )
 
-        # For ERROR / FATAL → upsert an issue
-        level = entry["level"]
-        if level in ("ERROR", "FATAL"):
-            await _upsert_issue(conn, entry, project_id, log_id, ts)
+    # For ERROR / FATAL → upsert an issue
+    level = entry["level"]
+    if level in ("ERROR", "FATAL"):
+        await _upsert_issue(conn, entry, project_id, log_id, ts)
 
 
 async def _upsert_issue(

@@ -27,9 +27,13 @@ async def main() -> None:
     log.info("Initialising database pool …")
     pool = await init_pool()
 
-    # Wrap processor callback so it receives the pool
+    # Wrap processor callback so it receives the pool.
+    # Catch-all ensures one bad message never kills the consumer.
     async def on_message(message):
-        await process_batch(message, pool)
+        try:
+            await process_batch(message, pool)
+        except Exception:
+            log.exception("Unhandled error processing message — message will be requeued")
 
     log.info("Connecting to RabbitMQ at %s …", settings.RABBITMQ_URL)
     connection = await start_consumer(

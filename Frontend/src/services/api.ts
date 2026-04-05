@@ -83,7 +83,11 @@ export interface Log {
   service?: string;
   environment?: string;
   host?: string;
+  pid?: number;
+  thread_id?: string;
+  sdk_version?: string;
   error_type?: string;
+  error_message?: string;
   stack_trace?: string;
   trace_id?: string;
   extra?: Record<string, unknown>;

@@ -97,22 +97,36 @@ class TraceHubLogger:
         message: str,
         *,
         exc_info: bool = False,
+        exception: Optional[BaseException] = None,
         error_message: Optional[str] = None,
+        stack_trace: Optional[str] = None,
         module: str = "",
         extra: Optional[dict[str, Any]] = None,
     ) -> None:
-        self._log(LogLevel.ERROR, message, exc_info=exc_info, error_message=error_message, module=module, extra=extra)
+        self._log(
+            LogLevel.ERROR, message,
+            exc_info=exc_info, exception=exception,
+            error_message=error_message, stack_trace=stack_trace,
+            module=module, extra=extra,
+        )
 
     def fatal(
         self,
         message: str,
         *,
         exc_info: bool = False,
+        exception: Optional[BaseException] = None,
         error_message: Optional[str] = None,
+        stack_trace: Optional[str] = None,
         module: str = "",
         extra: Optional[dict[str, Any]] = None,
     ) -> None:
-        self._log(LogLevel.FATAL, message, exc_info=exc_info, error_message=error_message, module=module, extra=extra)
+        self._log(
+            LogLevel.FATAL, message,
+            exc_info=exc_info, exception=exception,
+            error_message=error_message, stack_trace=stack_trace,
+            module=module, extra=extra,
+        )
 
     # -- lifecycle ----------------------------------------------------------
 
@@ -133,7 +147,9 @@ class TraceHubLogger:
         message: str,
         *,
         exc_info: bool = False,
+        exception: Optional[BaseException] = None,
         error_message: Optional[str] = None,
+        stack_trace: Optional[str] = None,
         module: str = "",
         extra: Optional[dict] = None,
     ) -> None:
@@ -142,7 +158,9 @@ class TraceHubLogger:
             message=message,
             module=module,
             exc_info=exc_info,
+            exception=exception,
             error_message=error_message,
+            stack_trace=stack_trace,
             extra=extra,
         )
         self._buffer.push(entry)

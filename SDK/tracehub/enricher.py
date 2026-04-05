@@ -47,7 +47,9 @@ class Enricher:
         message: str,
         module: str = "",
         exc_info: bool = False,
+        exception: Optional[BaseException] = None,
         error_message: Optional[str] = None,
+        stack_trace: Optional[str] = None,
         extra: Optional[dict] = None,
     ) -> LogEntry:
         entry = LogEntry(
@@ -65,14 +67,28 @@ class Enricher:
             extra=extra or {},
         )
 
-        if exc_info:
+        # Priority 1: explicit exception object passed by the caller
+        if exception is not None:
+            entry.error_type = type(exception).__name__
+            entry.error_message = str(exception)
+            entry.stack_trace = "".join(
+                traceback.format_exception(type(exception), exception, exception.__traceback__)
+            )
+        # Priority 2: auto-capture from sys.exc_info() (active except block)
+        elif exc_info:
             exc = sys.exc_info()
             if exc[0] is not None:
                 entry.stack_trace = traceback.format_exc()
                 entry.error_type = exc[0].__name__
-                # Auto-capture the exception message if not provided
-                if not error_message and exc[1] is not None:
+                if exc[1] is not None:
                     entry.error_message = str(exc[1])
+            else:
+                # No active exception — capture the caller's stack trace
+                entry.stack_trace = "".join(traceback.format_stack()[:-1])
+
+        # Priority 3: explicit stack_trace string
+        if stack_trace:
+            entry.stack_trace = stack_trace
 
         # Allow explicit error_message to override auto-captured one
         if error_message:

@@ -41,6 +41,7 @@ class HttpTransport:
     """Sends compressed log batches to the ingestion API.
 
     - Retries with exponential backoff on 5xx / timeout / network errors.
+    - Auto-recreates the HTTP client on persistent connection failures.
     - Never raises exceptions to the caller — failures are sent to DLQ.
     """
 
@@ -60,7 +61,32 @@ class HttpTransport:
         self._max_retries = max_retries
         self._compress = compress
         self._dlq = DeadLetterQueue(dlq_path)
-        self._client = httpx.Client(timeout=self._timeout)
+        self._client: Optional[httpx.Client] = None
+        self._consecutive_failures = 0
+        self._lock = __import__("threading").Lock()
+
+    # -- client lifecycle ---------------------------------------------------
+
+    def _get_client(self) -> httpx.Client:
+        """Return the shared httpx client, creating or recreating as needed."""
+        if self._client is None:
+            self._client = httpx.Client(timeout=self._timeout)
+        return self._client
+
+    def _recreate_client(self) -> None:
+        """Close the current client and create a fresh one.
+
+        This fixes stale TCP connections that the server/firewall has closed.
+        """
+        with self._lock:
+            if self._client is not None:
+                try:
+                    self._client.close()
+                except Exception:
+                    pass
+            self._client = httpx.Client(timeout=self._timeout)
+            self._consecutive_failures = 0
+            print("[tracehub] HTTP client recreated after connection failures", file=sys.stderr)
 
     # -- public API ---------------------------------------------------------
 
@@ -76,8 +102,9 @@ class HttpTransport:
 
         for attempt in range(1, self._max_retries + 1):
             try:
-                resp = self._client.post(self._url, content=body, headers=headers)
+                resp = self._get_client().post(self._url, content=body, headers=headers)
                 if resp.status_code in (200, 202):
+                    self._consecutive_failures = 0
                     return True
                 if resp.status_code < 500:
                     # Client error (4xx) — retrying won't help.
@@ -88,8 +115,12 @@ class HttpTransport:
                     )
                     self._dlq.save(batch)
                     return False
-            except (httpx.TransportError, httpx.TimeoutException):
-                pass
+            except (httpx.TransportError, httpx.TimeoutException) as exc:
+                self._consecutive_failures += 1
+                # After 2 consecutive transport failures, recreate the client
+                # to recover from stale / half-closed TCP connections.
+                if self._consecutive_failures >= 2:
+                    self._recreate_client()
 
             if attempt < self._max_retries:
                 time.sleep(2**attempt)
