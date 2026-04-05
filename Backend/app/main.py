@@ -17,13 +17,9 @@ async def lifespan(app: FastAPI):
     # --- startup ---
     await init_pool()
 
-    # RabbitMQ publisher (best-effort; queue may not be running locally)
-    try:
-        from app.queue.publisher import init_publisher
-        await init_publisher(settings.RABBITMQ_URL, settings.LOG_QUEUE_NAME)
-    except Exception:
-        import logging
-        logging.getLogger(__name__).warning("RabbitMQ not available — ingestion will fail until it connects.")
+    # RabbitMQ publisher (required for log ingestion)
+    from app.queue.publisher import init_publisher
+    await init_publisher(settings.RABBITMQ_URL, settings.LOG_QUEUE_NAME)
 
     yield
 

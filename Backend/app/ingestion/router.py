@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Header, Request, status
 from app.dependencies import validate_api_key
 from app.ingestion.schemas import IngestResponse, LogEntryIn
 from app.ingestion.service import decompress_body, parse_batch, prepare_for_queue
+from app.queue.publisher import publish_batch
 
 log = logging.getLogger(__name__)
 
@@ -34,28 +35,8 @@ async def ingest_logs(
     # Validate each entry through Pydantic
     entries = [LogEntryIn(**e) for e in raw_entries]
 
-    # Prepare payload
+    # Prepare payload and publish to RabbitMQ
     payload = prepare_for_queue(entries, project_id)
-
-    # Try RabbitMQ first; if unavailable, process directly (dev/test fallback)
-    try:
-        from app.queue.publisher import publish_batch
-        await publish_batch(payload)
-    except (RuntimeError, Exception) as exc:
-        log.warning("RabbitMQ unavailable (%s) — processing logs directly", exc)
-        await _process_directly(payload)
+    await publish_batch(payload)
 
     return IngestResponse(accepted=len(entries))
-
-
-async def _process_directly(payload: bytes) -> None:
-    """Fallback: insert logs directly into the database (no queue)."""
-    import orjson
-    from app.database import get_pool
-    from app.worker.processor import _insert_logs
-
-    pool = get_pool()
-    entries = orjson.loads(payload)
-    async with pool.acquire() as conn:
-        async with conn.transaction():
-            await _insert_logs(conn, entries)
