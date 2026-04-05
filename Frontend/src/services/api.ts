@@ -30,6 +30,7 @@ export interface Project {
 export interface ProjectDetail extends Project {
   team_id: string;
   api_key_count: number;
+  managers?: Array<{ id: string; email: string; full_name: string }>;
   developers: Array<{ id: string; email: string; full_name: string }>;
   logs_summary: {
     total_logs: number;
@@ -301,3 +302,8 @@ export const getMyInvitations = () =>
   apiFetch<JoinRequest[]>(
     '/api/v1/join-requests?request_type=PROJECT_INVITE',
   );
+
+// ─── User Projects (Admin/Manager) ───────────────────────────────────────────
+
+export const getUserProjects = (userId: string) =>
+  apiFetch<Project[]>(`/api/v1/users/${userId}/projects`);

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
-import type { Project, JoinRequest } from '../../services/api';
+import type { Project, ProjectDetail, JoinRequest, Log, DeveloperSearchResult } from '../../services/api';
+import ProjectDetailDrawer from '../shared/ProjectDetailDrawer';
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -29,20 +30,48 @@ const ManagerDashboard: React.FC = () => {
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Project detail drawer
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<ProjectDetail | null>(null);
+  const [drawerLogs, setDrawerLogs] = useState<Log[]>([]);
+  const [devProfiles, setDevProfiles] = useState<DeveloperSearchResult[]>([]);
+
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    Promise.all([api.getProjects(), api.getJoinRequests()])
-      .then(([projectsData, requestsData]) => {
-        setProjects(projectsData);
-        setJoinRequests(requestsData);
+    Promise.allSettled([api.getProjects(), api.getJoinRequests(), api.searchDevelopers('')])
+      .then(([projectsRes, requestsRes, devsRes]) => {
+        if (projectsRes.status === 'fulfilled') setProjects(projectsRes.value);
+        if (requestsRes.status === 'fulfilled') setJoinRequests(requestsRes.value);
+        if (devsRes.status === 'fulfilled') setDevProfiles(devsRes.value);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  const devSkillsMap = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    devProfiles.forEach(d => { map[d.id] = d.skills; });
+    return map;
+  }, [devProfiles]);
+
+  const openProjectDrawer = async (projectId: string) => {
+    setDrawerOpen(true);
+    setDrawerLoading(true);
+    setSelectedProject(null);
+    setDrawerLogs([]);
+    const [detailRes, logsRes] = await Promise.allSettled([
+      api.getProject(projectId),
+      api.getProjectLogs(projectId, undefined, undefined, 30),
+    ]);
+    if (detailRes.status === 'fulfilled') setSelectedProject(detailRes.value);
+    if (logsRes.status === 'fulfilled') setDrawerLogs(logsRes.value);
+    setDrawerLoading(false);
+  };
 
   const pendingRequests = joinRequests.filter((r) => r.status === 'PENDING');
 
@@ -224,7 +253,7 @@ const ManagerDashboard: React.FC = () => {
                       ? 'border-error/20 opacity-75'
                       : 'border-outline-variant/20 hover:border-primary/30 cursor-pointer hover:shadow-lg hover:shadow-primary/5'
                   }`}
-                  onClick={() => project.status === 'APPROVED' && navigate(`/manager/projects/${project.id}`)}
+                  onClick={() => project.status === 'APPROVED' && openProjectDrawer(project.id)}
                 >
                   {/* Colored top strip based on status */}
                   <div
@@ -376,6 +405,17 @@ const ManagerDashboard: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Project Detail Drawer */}
+      <ProjectDetailDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        project={selectedProject}
+        loading={drawerLoading}
+        logs={drawerLogs}
+        devSkillsMap={devSkillsMap}
+        onManage={selectedProject ? () => navigate(`/manager/projects/${selectedProject.id}`) : undefined}
+      />
 
       {/* Create Project Modal */}
       {showCreateModal && (

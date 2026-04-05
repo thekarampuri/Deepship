@@ -264,6 +264,15 @@ async def get_project(
         project_id,
     )
 
+    # Managers (team members with MANAGER role)
+    managers = await pool.fetch(
+        """SELECT u.id, u.email, u.full_name
+           FROM team_members tm
+           JOIN users u ON u.id = tm.user_id
+           WHERE tm.team_id = $1 AND u.role = 'MANAGER' AND u.is_active = TRUE""",
+        str(project["team_id"]),
+    )
+
     return {
         "id": str(project["id"]),
         "name": project["name"],
@@ -271,6 +280,10 @@ async def get_project(
         "organization_id": str(project["organization_id"]) if project["organization_id"] else None,
         "team_id": str(project["team_id"]),
         "created_at": project["created_at"].isoformat(),
+        "managers": [
+            {"id": str(m["id"]), "email": m["email"], "full_name": m["full_name"]}
+            for m in managers
+        ],
         "developers": [
             {"id": str(d["id"]), "email": d["email"], "full_name": d["full_name"]}
             for d in devs
@@ -749,3 +762,42 @@ async def invite_developer_to_project(
         "status": "PENDING",
         "requested_at": row["requested_at"].isoformat(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Get projects assigned to a specific user (ADMIN/MANAGER only)
+# ---------------------------------------------------------------------------
+
+@router.get("/users/{user_id}/projects")
+async def get_user_projects(
+    user_id: str,
+    user: Annotated[UserContext, Depends(require_role("ADMIN", "MANAGER"))],
+):
+    """Return all approved projects a developer is assigned to (ADMIN or MANAGER only)."""
+    pool = get_pool()
+    rows = await pool.fetch(
+        """SELECT p.id, p.name, p.description, p.organization_id, p.created_at,
+                  p.status, o.name AS organization_name,
+                  COUNT(DISTINCT pm2.user_id) AS developer_count
+           FROM projects p
+           JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = $1
+           LEFT JOIN organizations o ON o.id = p.organization_id
+           LEFT JOIN project_members pm2 ON pm2.project_id = p.id
+           WHERE p.status = 'APPROVED'
+           GROUP BY p.id, o.name
+           ORDER BY p.name""",
+        user_id,
+    )
+    return [
+        {
+            "id": str(r["id"]),
+            "name": r["name"],
+            "description": r["description"],
+            "organization_id": str(r["organization_id"]) if r["organization_id"] else None,
+            "organization_name": r["organization_name"],
+            "developer_count": r["developer_count"],
+            "created_at": r["created_at"].isoformat(),
+            "status": r["status"],
+        }
+        for r in rows
+    ]
