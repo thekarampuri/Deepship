@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
-import type { Organization, Project, JoinRequest } from '../../services/api';
+import type { Organization, Project } from '../../services/api';
 
 type ProjectStatus = 'available' | 'pending' | 'joined';
 
@@ -35,7 +35,6 @@ const BrowsePage: React.FC = () => {
   const [orgsLoading, setOrgsLoading] = useState(true);
   const [orgsError, setOrgsError] = useState('');
 
-  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
 
   // Map projectId → status (derived from join requests + assigned projects)
   const [statusMap, setStatusMap] = useState<Record<string, ProjectStatus>>({});
@@ -54,7 +53,7 @@ const BrowsePage: React.FC = () => {
     Promise.all([api.getOrganizations(), api.getJoinRequests(), api.getProjects()])
       .then(([fetchedOrgs, fetchedRequests, assignedProjects]) => {
         setOrgs(fetchedOrgs);
-        setJoinRequests(fetchedRequests);
+        // fetchedRequests used below to build statusMap
 
         // Build the status map
         const map: Record<string, ProjectStatus> = {};
@@ -66,6 +65,7 @@ const BrowsePage: React.FC = () => {
 
         // Mark pending / approved join requests
         for (const req of fetchedRequests) {
+          if (!req.project_id) continue;
           if (req.status === 'PENDING') {
             map[req.project_id] = map[req.project_id] ?? 'pending';
           } else if (req.status === 'APPROVED') {
@@ -163,7 +163,12 @@ const BrowsePage: React.FC = () => {
 
       {/* Top Bar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-[#0b1326]/80 backdrop-blur-md h-16 border-b border-white/5">
-        <span className="text-lg font-bold text-white tracking-tight">Browse Projects</span>
+        <div className="flex items-center gap-3">
+          <span className="text-lg font-bold text-white tracking-tight">Browse Projects</span>
+          <span className="bg-primary/15 text-primary text-xs font-bold px-2 py-0.5 rounded-full">
+            {orgs.length} orgs
+          </span>
+        </div>
       </header>
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
@@ -330,8 +335,6 @@ const BrowsePage: React.FC = () => {
           })}
         </div>
 
-        {/* Unused joinRequests reference to satisfy lint */}
-        {joinRequests.length < 0 && null}
       </main>
     </div>
   );

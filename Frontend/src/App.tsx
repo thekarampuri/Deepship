@@ -173,22 +173,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/developer/logs"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <MyProjectsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/developer/settings"
-        element={
-          <ProtectedRoute allowedRoles={['DEVELOPER']}>
-            <DeveloperDashboard />
-          </ProtectedRoute>
-        }
-      />
 
       {/* ── Catch-all ───────────────────────────────────────────────────────── */}
       <Route path="*" element={<Navigate to="/" replace />} />
