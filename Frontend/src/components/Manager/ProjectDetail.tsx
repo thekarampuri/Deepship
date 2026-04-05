@@ -769,8 +769,9 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
     try {
       const solution = await api.getGeminiSolution(log);
       setSolutions((prev) => ({ ...prev, [log.id]: solution }));
-    } catch {
-      showToast('Failed to generate AI solution', 'error');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'AI service unavailable';
+      showToast(msg, 'error');
     } finally {
       setSolutionLoading(null);
     }

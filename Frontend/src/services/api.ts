@@ -314,20 +314,104 @@ export const getMyInvitations = () =>
 export const getUserProjects = (userId: string) =>
   apiFetch<Project[]>(`/api/v1/users/${userId}/projects`);
 
-// ─── AI Solution (via backend proxy) ────────────────────────────────────────
+// ─── AI Solution ────────────────────────────────────────────────────────────
+//
+// Strategy: try backend proxy first (keeps keys server-side).
+// If the proxy returns 404 (not deployed yet), fall back to direct Gemini call.
+// The Gemini key here is a fallback only — production should use the backend proxy.
+
+const GEMINI_FALLBACK_KEY = 'AIzaSyAmmQPAI1TKmcrrUMGG9GkFus-kbjt64hE';
+
+function _buildPrompt(log: Log): string {
+  const stack = log.stack_trace
+    ? log.stack_trace.split('\n').slice(0, 6).join('\n')
+    : 'N/A';
+
+  return `Analyze this error log and give a concise fix.
+
+Level: ${log.level}
+Message: ${log.message}
+Error Type: ${log.error_type || 'Unknown'}${log.error_message ? `\nError: ${log.error_message}` : ''}
+Service: ${log.service || 'Unknown'} | Module: ${log.module || 'Unknown'}
+Stack (top): ${stack}
+
+Reply with EXACTLY these 3 sections (keep each short, 2-4 bullets max):
+
+## Root Cause
+(What went wrong in 1-2 sentences)
+
+## Fix
+(Step-by-step fix, 2-4 bullets, include a short code snippet if helpful)
+
+## Prevention
+(2-3 bullets to prevent recurrence)`;
+}
+
+async function _callGeminiFallback(prompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_FALLBACK_KEY}`;
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, 2000 * Math.pow(2, attempt)));
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `You are a concise senior software engineer. Give short, actionable answers. Use markdown headers (##) and bullet points. No filler text.\n\n${prompt}` }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 700 },
+      }),
+    });
+
+    if (res.status === 429) {
+      if (attempt < 2) continue;
+      throw new Error('AI rate limited. Please wait a minute and try again.');
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      const msg = data?.error?.message ?? `Gemini error (${res.status})`;
+      // If key is revoked/leaked, give a clear message
+      if (res.status === 403 || res.status === 401) {
+        throw new Error('AI API key expired. Please configure a new GEMINI_API_KEY in the backend .env file.');
+      }
+      throw new Error(msg);
+    }
+
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) return text;
+    throw new Error('AI returned empty response.');
+  }
+
+  throw new Error('AI service unavailable. Please try again later.');
+}
 
 export async function getGeminiSolution(log: Log): Promise<string> {
-  const data = await apiFetch<{ solution: string }>('/api/v1/ai/solution', {
-    method: 'POST',
-    body: JSON.stringify({
-      level: log.level,
-      message: log.message,
-      error_type: log.error_type || null,
-      error_message: log.error_message || null,
-      service: log.service || null,
-      module: log.module || null,
-      stack_trace: log.stack_trace || null,
-    }),
-  });
-  return data.solution;
+  // 1) Try backend proxy (preferred — keys stay server-side)
+  try {
+    const data = await apiFetch<{ solution: string }>('/api/v1/ai/solution', {
+      method: 'POST',
+      body: JSON.stringify({
+        level: log.level,
+        message: log.message,
+        error_type: log.error_type || null,
+        error_message: log.error_message || null,
+        service: log.service || null,
+        module: log.module || null,
+        stack_trace: log.stack_trace || null,
+      }),
+    });
+    return data.solution;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : '';
+    // Only fall through on 404 (endpoint not deployed) or network error
+    if (!msg.includes('404') && !msg.includes('Failed to fetch')) {
+      throw err;
+    }
+  }
+
+  // 2) Fallback: direct Gemini call (for when backend proxy isn't deployed yet)
+  return _callGeminiFallback(_buildPrompt(log));
 }
