@@ -43,6 +43,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Global exception handler — ensures a proper JSON 500 response is returned
+# so the CORS middleware can attach its headers (plain crashes bypass CORS).
+from fastapi.responses import JSONResponse   # noqa: E402
+from fastapi import Request as _Req          # noqa: E402
+
+@app.exception_handler(Exception)
+async def _global_exc_handler(_req: _Req, exc: Exception):
+    import traceback, logging                # noqa: E401
+    logging.getLogger("orchid").error("Unhandled: %s\n%s", exc, traceback.format_exc())
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 # --- Routers ---
 from app.auth.router import router as auth_router          # noqa: E402
 from app.ingestion.router import router as ingestion_router  # noqa: E402

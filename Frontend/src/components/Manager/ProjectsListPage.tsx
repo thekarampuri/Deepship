@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -271,13 +271,28 @@ const ProjectsListPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  useEffect(() => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadProjects = useCallback((isBackground = false) => {
+    if (!isBackground) setLoading(true);
+    else setRefreshing(true);
+
     api
       .getProjects()
       .then(setProjects)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((e: Error) => { if (!isBackground) setError(e.message); })
+      .finally(() => { setLoading(false); setRefreshing(false); });
   }, []);
+
+  useEffect(() => {
+    loadProjects(false);
+  }, [loadProjects]);
+
+  // Auto-refresh every 30s to pick up admin approval changes
+  useEffect(() => {
+    const interval = setInterval(() => loadProjects(true), 30_000);
+    return () => clearInterval(interval);
+  }, [loadProjects]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -321,13 +336,23 @@ const ProjectsListPage: React.FC = () => {
             {projects.length}
           </span>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
-        >
-          <span className="material-symbols-outlined text-sm">add</span>
-          New Project
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => loadProjects(true)}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary border border-outline-variant/20 hover:border-primary/20 text-sm font-bold rounded-lg transition-all disabled:opacity-50"
+            title="Refresh projects"
+          >
+            <span className={`material-symbols-outlined text-sm ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            New Project
+          </button>
+        </div>
       </header>
 
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">

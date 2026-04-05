@@ -539,41 +539,67 @@ async def get_project_logs(
     """Get logs for a project with optional level filter and search.
 
     Includes the developer (assigned_to) info from the api_key used to ingest each log.
+    Falls back gracefully if the api_key_id column hasn't been migrated yet.
     """
     pool = get_pool()
     await _get_project_or_404(pool, project_id)
 
-    conditions = ["l.project_id = $1"]
+    # ── Build dynamic WHERE filters ──────────────────────────────────────
+    conditions_aliased = ["l.project_id = $1"]     # for the JOIN query
+    conditions_plain   = ["project_id = $1"]       # for the fallback query
     params: list = [project_id]
     idx = 2
 
     if level and level != "ALL":
-        conditions.append(f"l.level = ${idx}::log_level")
+        conditions_aliased.append(f"l.level = ${idx}::log_level")
+        conditions_plain.append(f"level = ${idx}::log_level")
         params.append(level)
         idx += 1
 
     if search:
-        conditions.append(f"(l.message ILIKE ${idx} OR l.service ILIKE ${idx} OR l.error_type ILIKE ${idx})")
+        conditions_aliased.append(
+            f"(l.message ILIKE ${idx} OR l.service ILIKE ${idx} OR l.error_type ILIKE ${idx})"
+        )
+        conditions_plain.append(
+            f"(message ILIKE ${idx} OR service ILIKE ${idx} OR error_type ILIKE ${idx})"
+        )
         params.append(f"%{search}%")
         idx += 1
 
-    where_clause = " AND ".join(conditions)
     params.extend([limit, offset])
 
-    rows = await pool.fetch(
-        f"""SELECT l.id, l.module, l.level, l.message, l.timestamp, l.service,
-                   l.environment, l.host, l.error_type, l.stack_trace, l.trace_id,
-                   l.extra, l.ingested_at, l.error_message,
-                   ak.assigned_to AS developer_id,
-                   u.full_name    AS developer_name
-            FROM logs l
-            LEFT JOIN api_keys ak ON ak.id = l.api_key_id
-            LEFT JOIN users    u  ON u.id  = ak.assigned_to
-            WHERE {where_clause}
-            ORDER BY l.timestamp DESC
-            LIMIT ${idx} OFFSET ${idx + 1}""",
-        *params,
-    )
+    # ── Try enhanced query (with developer info via api_key_id JOIN) ─────
+    has_dev_info = False
+    try:
+        where_a = " AND ".join(conditions_aliased)
+        rows = await pool.fetch(
+            f"""SELECT l.id, l.module, l.level, l.message, l.timestamp, l.service,
+                       l.environment, l.host, l.error_type, l.stack_trace, l.trace_id,
+                       l.extra, l.ingested_at, l.error_message,
+                       ak.assigned_to AS developer_id,
+                       u.full_name    AS developer_name
+                FROM logs l
+                LEFT JOIN api_keys ak ON ak.id = l.api_key_id
+                LEFT JOIN users    u  ON u.id  = ak.assigned_to
+                WHERE {where_a}
+                ORDER BY l.timestamp DESC
+                LIMIT ${idx} OFFSET ${idx + 1}""",
+            *params,
+        )
+        has_dev_info = True
+    except Exception:
+        # Fallback: api_key_id column may not exist yet (migration pending)
+        where_p = " AND ".join(conditions_plain)
+        rows = await pool.fetch(
+            f"""SELECT id, module, level, message, timestamp, service, environment,
+                       host, error_type, stack_trace, trace_id, extra, ingested_at,
+                       error_message
+                FROM logs
+                WHERE {where_p}
+                ORDER BY timestamp DESC
+                LIMIT ${idx} OFFSET ${idx + 1}""",
+            *params,
+        )
 
     return [
         {
@@ -586,13 +612,13 @@ async def get_project_logs(
             "environment": r["environment"],
             "host": r["host"],
             "error_type": r["error_type"],
-            "error_message": r["error_message"],
+            "error_message": r.get("error_message"),
             "stack_trace": r["stack_trace"],
             "trace_id": r["trace_id"],
             "extra": r["extra"] if isinstance(r["extra"], dict) else None,
             "ingested_at": r["ingested_at"].isoformat(),
-            "developer_id": str(r["developer_id"]) if r["developer_id"] else None,
-            "developer_name": r["developer_name"],
+            "developer_id": str(r["developer_id"]) if has_dev_info and r.get("developer_id") else None,
+            "developer_name": r["developer_name"] if has_dev_info else None,
         }
         for r in rows
     ]

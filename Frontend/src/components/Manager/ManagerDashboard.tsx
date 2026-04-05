@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -42,7 +42,12 @@ const ManagerDashboard: React.FC = () => {
   const [newProjectDesc, setNewProjectDesc] = useState('');
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback((isBackground = false) => {
+    if (!isBackground) setLoading(true);
+    else setRefreshing(true);
+
     Promise.allSettled([api.getProjects(), api.getJoinRequests(), api.searchDevelopers('')])
       .then(([projectsRes, requestsRes, devsRes]) => {
         if (projectsRes.status === 'fulfilled') setProjects(projectsRes.value);
@@ -50,8 +55,22 @@ const ManagerDashboard: React.FC = () => {
         if (devsRes.status === 'fulfilled') setDevProfiles(devsRes.value);
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, []);
+
+  // Initial load
+  useEffect(() => {
+    loadData(false);
+  }, [loadData]);
+
+  // Auto-refresh every 30s to pick up approval changes
+  useEffect(() => {
+    const interval = setInterval(() => loadData(true), 30_000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const devSkillsMap = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -129,6 +148,14 @@ const ManagerDashboard: React.FC = () => {
           <span className="text-on-surface-variant text-sm">/ {user?.organization_name || 'Organization'}</span>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => loadData(true)}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-2 text-on-surface-variant hover:text-primary border border-outline-variant/20 hover:border-primary/20 text-sm font-bold rounded-lg transition-all disabled:opacity-50"
+            title="Refresh dashboard"
+          >
+            <span className={`material-symbols-outlined text-sm ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+          </button>
           <button
             onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary to-primary-container text-on-primary text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
