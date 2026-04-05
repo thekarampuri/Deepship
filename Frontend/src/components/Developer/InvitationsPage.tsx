@@ -87,7 +87,7 @@ const InvitationsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-on-surface tracking-tight">Invitations</span>
           {pending.length > 0 && (
@@ -109,7 +109,7 @@ const InvitationsPage: React.FC = () => {
 
         {/* Empty state */}
         {invitations.length === 0 && !error && (
-          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-16 text-center">
+          <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-16 text-center">
             <span className="material-symbols-outlined text-5xl text-on-surface-variant/60 mb-4 block">mail</span>
             <p className="text-on-surface font-semibold mb-1">No invitations yet</p>
             <p className="text-sm text-on-surface-variant">
@@ -194,7 +194,7 @@ const InvitationsPage: React.FC = () => {
               Past Invitations
             </h3>
 
-            <div className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 overflow-hidden">
               <div className="divide-y divide-gray-200">
                 {resolved.map((inv) => (
                   <div key={inv.id} className="px-5 py-4 flex items-center justify-between">

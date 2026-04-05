@@ -71,7 +71,7 @@ const AdminDashboard: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-4">
           <span className="text-lg font-bold text-on-surface tracking-tight">Admin Dashboard</span>
           <span className="text-on-surface-variant text-sm">/ Platform Overview</span>
@@ -96,7 +96,7 @@ const AdminDashboard: React.FC = () => {
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Projects</p>
               <div className="flex items-baseline gap-2">
@@ -108,7 +108,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Managers</p>
               <div className="flex items-baseline gap-2">
@@ -120,7 +120,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Developers</p>
               <div className="flex items-baseline gap-2">
@@ -132,7 +132,7 @@ const AdminDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <div className="flex items-baseline gap-2">
@@ -148,8 +148,8 @@ const AdminDashboard: React.FC = () => {
         {/* Two Column Layout */}
         <motion.div {...fadeUp(0.2)} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Projects Column */}
-          <div className="bg-surface-container-low rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="bg-surface-container-low rounded-lg border border-outline-variant/20 overflow-hidden">
+            <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Projects</h3>
               <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">{filteredProjects.length}</span>
             </div>
@@ -161,7 +161,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               ) : (
                 filteredProjects.map((project) => (
-                  <div key={project.id} className="bg-surface-container-high p-4 rounded-lg border border-gray-200 hover:border-primary/20 transition-all cursor-pointer group">
+                  <div key={project.id} className="bg-surface-container-high p-4 rounded-lg border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{project.name}</span>
                       <div className="w-2 h-2 rounded-full bg-secondary" />
@@ -182,8 +182,8 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Members Column */}
-          <div className="bg-surface-container-low rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="bg-surface-container-low rounded-lg border border-outline-variant/20 overflow-hidden">
+            <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Team Members</h3>
               <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">{filteredMembers.length}</span>
             </div>
@@ -195,7 +195,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
               ) : (
                 filteredMembers.map((member) => (
-                  <div key={member.id} className="bg-surface-container-high p-4 rounded-lg border border-gray-200 hover:border-primary/20 transition-all cursor-pointer group">
+                  <div key={member.id} className="bg-surface-container-high p-4 rounded-lg border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary font-bold text-sm">
                         {member.full_name.charAt(0)}

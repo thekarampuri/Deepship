@@ -26,10 +26,10 @@ const LogExplorer: React.FC = () => {
 
       <div className="flex-1 ml-64 flex flex-col min-h-screen h-screen">
         {/* TopAppBar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between px-8 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 shrink-0">
+        <header className="sticky top-0 z-40 flex items-center justify-between px-8 h-16 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/20 shrink-0">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-bold text-on-surface tracking-tight">Log Explorer</h2>
-            <div className="h-4 w-px bg-gray-200"></div>
+            <div className="h-4 w-px bg-outline-variant/30"></div>
             <div className="flex items-center gap-2 text-xs font-medium text-on-surface-variant">
               <span>Production</span>
               <span className="material-symbols-outlined text-xs">chevron_right</span>
@@ -51,7 +51,7 @@ const LogExplorer: React.FC = () => {
               <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">notifications</button>
               <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">apps</button>
               <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">help</button>
-              <div className="h-8 w-8 rounded-full bg-surface-container-highest border border-gray-300 overflow-hidden ml-2 shadow-sm">
+              <div className="h-8 w-8 rounded-full bg-surface-container-highest border border-outline-variant/30 overflow-hidden ml-2 shadow-sm">
                 <img alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTNAeTOmrkz8ckSkjKaweN5-1EVf0M9vqmMyq2Lyot453jtRHfWM9Zjhmg61U4jSBDRaHQcKOGS7c8xDpqfbftzKPNiadmIzuT-xu_8kGHK6b7WpM58-f1bPxQ6stCeMREOxgWFdcXLWe9DbqABt6hA78WYCpZe6XWmfhEOmm3eHbM76qJZgMCQzlN1ZicfRrVgfhp0gcaNab48IvRT7gCLAdsVbCnJfVWHeeDjnphfakJuV4dAWTm-TviXL5gcMhMhlkxwXdR0QA"/>
               </div>
             </div>
@@ -60,8 +60,8 @@ const LogExplorer: React.FC = () => {
 
         <main className="flex-1 flex flex-col overflow-hidden">
           {/* Filter Bar */}
-          <div className="bg-surface-container-low px-8 py-3 flex items-center gap-4 border-b border-gray-200 shrink-0">
-            <div className="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-gray-200">
+          <div className="bg-surface-container-low px-8 py-3 flex items-center gap-4 border-b border-outline-variant/20 shrink-0">
+            <div className="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant/20">
               <span className="material-symbols-outlined text-sm text-on-surface-variant">calendar_today</span>
               <select className="bg-transparent border-none text-xs font-medium focus:ring-0 py-0 cursor-pointer text-on-surface-variant">
                 <option>Last 24 hours</option>
@@ -70,7 +70,7 @@ const LogExplorer: React.FC = () => {
                 <option>Custom Range</option>
               </select>
             </div>
-            <div className="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-gray-200">
+            <div className="flex items-center gap-2 bg-surface-container-lowest px-3 py-1.5 rounded-lg border border-outline-variant/20">
               <span className="material-symbols-outlined text-sm text-on-surface-variant">category</span>
               <select className="bg-transparent border-none text-xs font-medium focus:ring-0 py-0 cursor-pointer text-on-surface-variant">
                 <option>All Modules</option>
@@ -81,19 +81,19 @@ const LogExplorer: React.FC = () => {
             </div>
             <div className="flex items-center gap-4 ml-2">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input defaultChecked className="rounded border-gray-300 bg-surface-container-highest text-secondary focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
+                <input defaultChecked className="rounded border-outline-variant/30 bg-surface-container-highest text-secondary focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
                 <span className="text-[10px] font-black tracking-widest text-on-surface-variant group-hover:text-secondary transition-colors uppercase">INFO</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input defaultChecked className="rounded border-gray-300 bg-surface-container-highest text-tertiary focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
+                <input defaultChecked className="rounded border-outline-variant/30 bg-surface-container-highest text-tertiary focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
                 <span className="text-[10px] font-black tracking-widest text-on-surface-variant group-hover:text-tertiary transition-colors uppercase">WARN</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input defaultChecked className="rounded border-gray-300 bg-surface-container-highest text-error focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
+                <input defaultChecked className="rounded border-outline-variant/30 bg-surface-container-highest text-error focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
                 <span className="text-[10px] font-black tracking-widest text-on-surface-variant group-hover:text-error transition-colors uppercase">ERROR</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input className="rounded border-gray-300 bg-surface-container-highest text-error-container focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
+                <input className="rounded border-outline-variant/30 bg-surface-container-highest text-error-container focus:ring-0 focus:ring-offset-0 transition-colors" type="checkbox"/>
                 <span className="text-[10px] font-black tracking-widest text-on-surface-variant group-hover:text-on-surface transition-colors uppercase">FATAL</span>
               </label>
             </div>
@@ -102,7 +102,7 @@ const LogExplorer: React.FC = () => {
                 <span className="material-symbols-outlined text-sm">refresh</span>
                 Refresh
               </button>
-              <button className="flex items-center gap-2 bg-surface-container-highest border border-gray-200 text-on-surface px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-bright transition-all active:scale-95">
+              <button className="flex items-center gap-2 bg-surface-container-highest border border-outline-variant/20 text-on-surface px-4 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-bright transition-all active:scale-95">
                 <span className="material-symbols-outlined text-sm">download</span>
                 Export CSV
               </button>
@@ -114,7 +114,7 @@ const LogExplorer: React.FC = () => {
             <div className="max-w-[1400px] mx-auto space-y-4">
               {/* Summary Bento Grid */}
               <div className="grid grid-cols-12 gap-4 mb-8">
-                <div className="col-span-3 p-5 rounded-xl bg-surface-container-low border border-gray-200 relative overflow-hidden group shadow-sm transition-all hover:bg-surface-container-high/50">
+                <div className="col-span-3 p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 relative overflow-hidden group shadow-sm transition-all hover:bg-surface-container-high/50">
                   <div className="relative z-10">
                     <p className="text-[10px] font-black text-on-surface-variant tracking-[0.2em] mb-1 uppercase">TOTAL EVENTS</p>
                     <h3 className="text-2xl font-black text-on-surface tracking-tighter">1,284,012</h3>
@@ -126,7 +126,7 @@ const LogExplorer: React.FC = () => {
                     <span className="material-symbols-outlined text-8xl">analytics</span>
                   </div>
                 </div>
-                <div className="col-span-3 p-5 rounded-xl bg-surface-container-low border border-gray-200 relative overflow-hidden group shadow-sm transition-all hover:bg-surface-container-high/50">
+                <div className="col-span-3 p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 relative overflow-hidden group shadow-sm transition-all hover:bg-surface-container-high/50">
                   <div className="relative z-10">
                     <p className="text-[10px] font-black text-on-surface-variant tracking-[0.2em] mb-1 uppercase">ERROR RATE</p>
                     <h3 className="text-2xl font-black text-error tracking-tighter">0.42%</h3>
@@ -138,7 +138,7 @@ const LogExplorer: React.FC = () => {
                     <span className="material-symbols-outlined text-8xl">error</span>
                   </div>
                 </div>
-                <div className="col-span-6 p-5 rounded-xl bg-surface-container-low border border-gray-200 flex flex-col justify-between group transition-all hover:bg-surface-container-high/50">
+                <div className="col-span-6 p-5 rounded-xl bg-surface-container-low border border-outline-variant/20 flex flex-col justify-between group transition-all hover:bg-surface-container-high/50">
                   <div className="flex justify-between items-start">
                     <p className="text-[10px] font-black text-on-surface-variant tracking-[0.2em] mb-1 uppercase">REAL-TIME THROUGHPUT</p>
                     <div className="flex items-center gap-1">
@@ -159,7 +159,7 @@ const LogExplorer: React.FC = () => {
               </div>
 
               {/* Log Table */}
-              <div className="rounded-xl overflow-hidden border border-gray-200 bg-surface-container-low shadow-xl">
+              <div className="rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container-low shadow-xl">
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-surface-container-lowest text-on-surface-variant">
@@ -178,7 +178,7 @@ const LogExplorer: React.FC = () => {
                     >
                       <td className="py-4 px-6 text-[11px] font-mono text-on-surface-variant">2023-10-27 14:22:01.442</td>
                       <td className="py-4 px-4">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-gray-200 uppercase tracking-tight">AUTH_SVC</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 uppercase tracking-tight">AUTH_SVC</span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded bg-error-container/80 text-on-error-container uppercase tracking-tight border border-error/20">ERROR</span>
@@ -195,7 +195,7 @@ const LogExplorer: React.FC = () => {
                             <div className="grid grid-cols-2 gap-8">
                               <div>
                                 <h4 className="text-[10px] font-black text-on-surface-variant tracking-[0.2em] mb-3 uppercase">Stack Trace</h4>
-                                <div className="bg-surface-container-lowest p-4 rounded-lg border border-gray-200 font-mono text-xs text-error/80 leading-relaxed overflow-x-auto whitespace-pre custom-scrollbar max-h-48">
+                                <div className="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20 font-mono text-xs text-error/80 leading-relaxed overflow-x-auto whitespace-pre custom-scrollbar max-h-48">
                                   at com.acme.auth.TokenValidator.process(TokenValidator.java:142)
                                   {"\n"}at com.acme.auth.AuthHandler.handle(AuthHandler.java:56)
                                   {"\n"}at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:379)
@@ -205,14 +205,14 @@ const LogExplorer: React.FC = () => {
                               </div>
                               <div>
                                 <h4 className="text-[10px] font-black text-on-surface-variant tracking-[0.2em] mb-3 uppercase">Metadata Explorer</h4>
-                                <div className="bg-surface-container-lowest p-4 rounded-lg border border-gray-200 font-mono text-xs text-secondary/90 leading-relaxed group">
+                                <div className="bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/20 font-mono text-xs text-secondary/90 leading-relaxed group">
                                   {[
                                     { key: 'request_id', value: 'req_9x2j4k1l' },
                                     { key: 'user_id', value: 'usr_8821' },
                                     { key: 'api_version', value: 'v2.4.0' },
                                     { key: 'region', value: 'us-east-1' }
                                   ].map((row, i) => (
-                                    <div key={i} className={`flex justify-between py-1.5 ${i !== 3 ? 'border-b border-gray-200' : ''}`}>
+                                    <div key={i} className={`flex justify-between py-1.5 ${i !== 3 ? 'border-b border-outline-variant/20' : ''}`}>
                                       <span className="text-on-surface-variant uppercase tracking-widest">{row.key}:</span>
                                       <span className="text-on-surface-variant">{row.value}</span>
                                     </div>
@@ -229,7 +229,7 @@ const LogExplorer: React.FC = () => {
                     <tr className="hover:bg-gray-50 cursor-pointer transition-colors border-l-2 border-secondary group">
                       <td className="py-4 px-6 text-[11px] font-mono text-on-surface-variant">2023-10-27 14:21:58.910</td>
                       <td className="py-4 px-4">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-gray-200 uppercase tracking-tight">PAY_GW</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 uppercase tracking-tight">PAY_GW</span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded bg-secondary-container/30 text-secondary uppercase tracking-tight border border-secondary/20">INFO</span>
@@ -242,7 +242,7 @@ const LogExplorer: React.FC = () => {
                     <tr className="hover:bg-gray-50 cursor-pointer transition-colors border-l-2 border-tertiary group">
                       <td className="py-4 px-6 text-[11px] font-mono text-on-surface-variant">2023-10-27 14:21:55.002</td>
                       <td className="py-4 px-4">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-gray-200 uppercase tracking-tight">DB_PROXY</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 uppercase tracking-tight">DB_PROXY</span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary uppercase tracking-tight border border-tertiary/20">WARN</span>
@@ -255,7 +255,7 @@ const LogExplorer: React.FC = () => {
                     <tr className="hover:bg-gray-50 cursor-pointer transition-colors border-l-2 border-secondary group">
                       <td className="py-4 px-6 text-[11px] font-mono text-on-surface-variant">2023-10-27 14:21:49.221</td>
                       <td className="py-4 px-4">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-gray-200 uppercase tracking-tight">WORKER_A1</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant border border-outline-variant/20 uppercase tracking-tight">WORKER_A1</span>
                       </td>
                       <td className="py-4 px-4 text-center">
                         <span className="text-[10px] font-black px-2 py-0.5 rounded bg-secondary-container/30 text-secondary uppercase tracking-tight border border-secondary/20">INFO</span>
@@ -267,22 +267,22 @@ const LogExplorer: React.FC = () => {
                 </table>
                 
                 {/* Table Footer / Pagination */}
-                <div className="bg-surface-container-lowest px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                <div className="bg-surface-container-lowest px-6 py-4 flex items-center justify-between border-t border-outline-variant/20">
                   <span className="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Showing 1-50 of 12,842 results</span>
                   <div className="flex items-center gap-2">
-                    <button className="p-1.5 rounded hover:bg-gray-100 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+                    <button className="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
                       <span className="material-symbols-outlined text-sm">first_page</span>
                     </button>
-                    <button className="p-1.5 rounded hover:bg-gray-100 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+                    <button className="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
                       <span className="material-symbols-outlined text-sm">chevron_left</span>
                     </button>
                     <span className="px-3 py-1 bg-primary/20 text-primary text-xs font-black rounded border border-primary/20">1</span>
-                    <span className="px-3 py-1 hover:bg-gray-100 text-on-surface-variant text-xs font-bold rounded cursor-pointer transition-all border border-transparent hover:border-gray-200">2</span>
-                    <span className="px-3 py-1 hover:bg-gray-100 text-on-surface-variant text-xs font-bold rounded cursor-pointer transition-all border border-transparent hover:border-gray-200">3</span>
-                    <button className="p-1.5 rounded hover:bg-gray-100 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+                    <span className="px-3 py-1 hover:bg-surface-container-high text-on-surface-variant text-xs font-bold rounded cursor-pointer transition-all border border-transparent hover:border-outline-variant/20">2</span>
+                    <span className="px-3 py-1 hover:bg-surface-container-high text-on-surface-variant text-xs font-bold rounded cursor-pointer transition-all border border-transparent hover:border-outline-variant/20">3</span>
+                    <button className="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
                       <span className="material-symbols-outlined text-sm">chevron_right</span>
                     </button>
-                    <button className="p-1.5 rounded hover:bg-gray-100 text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
+                    <button className="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-all cursor-pointer">
                       <span className="material-symbols-outlined text-sm">last_page</span>
                     </button>
                   </div>
@@ -295,7 +295,7 @@ const LogExplorer: React.FC = () => {
         {/* Floating Help Button */}
         <button className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container rounded-full shadow-2xl flex items-center justify-center text-on-primary hover:scale-110 active:scale-90 transition-all group z-50 animate-bounce hover:animate-none">
           <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>support_agent</span>
-          <span className="absolute right-16 bg-surface-container-highest px-4 py-2 rounded-xl text-xs font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 shadow-2xl border border-gray-200">
+          <span className="absolute right-16 bg-surface-container-highest px-4 py-2 rounded-xl text-xs font-bold text-white whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 shadow-2xl border border-outline-variant/20">
             Expert Support Agent
           </span>
         </button>

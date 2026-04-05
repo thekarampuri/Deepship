@@ -61,7 +61,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-surface-container-high rounded-xl border border-gray-300 p-8 w-full max-w-md shadow-2xl">
+      <div className="bg-surface-container-high rounded-xl border border-outline-variant/30 p-8 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-bold text-on-surface">Create New Project</h3>
           <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface transition-colors">
@@ -105,7 +105,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose, onCrea
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
+              className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-outline-variant/30 rounded-lg hover:bg-surface-container-highest transition-colors"
             >
               Cancel
             </button>
@@ -156,7 +156,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
           ? 'border-amber-500/20 opacity-75'
           : isRejected
             ? 'border-error/20 opacity-60'
-            : 'border-gray-200 hover:border-primary/20 cursor-pointer group'
+            : 'border-outline-variant/20 hover:border-primary/20 cursor-pointer group'
       }`}
       onClick={() => !isPending && !isRejected && onClick()}
     >
@@ -217,7 +217,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+        <div className="flex items-center justify-between pt-3 border-t border-outline-variant/20">
           <span className="text-[10px] text-on-surface-variant/60 font-medium">
             Created {formatDate(project.created_at)}
           </span>
@@ -308,7 +308,7 @@ const ProjectsListPage: React.FC = () => {
       <Sidebar />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/manager/dashboard')}
@@ -349,7 +349,7 @@ const ProjectsListPage: React.FC = () => {
             placeholder="Search projects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-sm pl-11 pr-4 py-2.5 bg-surface-container-low border border-gray-200 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/20 transition-all"
+            className="w-full max-w-sm pl-11 pr-4 py-2.5 bg-surface-container-low border border-outline-variant/20 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40 focus:border-primary/20 transition-all"
           />
           {search && (
             <button
@@ -364,7 +364,7 @@ const ProjectsListPage: React.FC = () => {
         {/* Grid or empty state */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container-low border border-gray-200 flex items-center justify-center mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-low border border-outline-variant/20 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/60">folder_open</span>
             </div>
             {search ? (

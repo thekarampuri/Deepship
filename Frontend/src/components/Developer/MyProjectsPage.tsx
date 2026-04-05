@@ -96,7 +96,7 @@ const MyProjectsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/developer/dashboard')}
@@ -122,7 +122,7 @@ const MyProjectsPage: React.FC = () => {
 
         {/* Stats Row */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Assigned</p>
               <span className="text-3xl font-black text-on-surface tracking-tighter">{projects.length}</span>
@@ -132,7 +132,7 @@ const MyProjectsPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Logs</p>
               <span className="text-3xl font-black text-on-surface tracking-tighter">{totalLogs.toLocaleString()}</span>
@@ -142,7 +142,7 @@ const MyProjectsPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Errors</p>
               <span className={`text-3xl font-black tracking-tighter ${totalErrors > 0 ? 'text-error' : 'text-on-surface'}`}>
@@ -154,7 +154,7 @@ const MyProjectsPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Fatal</p>
               <span className={`text-3xl font-black tracking-tighter ${totalFatals > 0 ? 'text-error' : 'text-on-surface'}`}>
@@ -173,7 +173,7 @@ const MyProjectsPage: React.FC = () => {
             search
           </span>
           <input
-            className="w-full max-w-sm bg-surface-container-low border border-gray-200 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-on-surface-variant/40 focus:outline-none"
+            className="w-full max-w-sm bg-surface-container-low border border-outline-variant/20 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-1 focus:ring-primary/40 transition-all placeholder-on-surface-variant/40 focus:outline-none"
             placeholder="Search by project or organization name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -190,7 +190,7 @@ const MyProjectsPage: React.FC = () => {
 
         {/* Empty state */}
         {!error && projects.length === 0 && (
-          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-16 text-center">
+          <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-16 text-center">
             <span className="material-symbols-outlined text-5xl text-on-surface-variant/60 mb-4 block">folder_open</span>
             <p className="text-on-surface font-semibold mb-1">No projects assigned yet</p>
             <p className="text-sm text-on-surface-variant mb-4">
@@ -208,7 +208,7 @@ const MyProjectsPage: React.FC = () => {
 
         {/* No results from search */}
         {projects.length > 0 && filtered.length === 0 && (
-          <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 text-center">
+          <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-12 text-center">
             <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2 block">search_off</span>
             <p className="text-sm text-on-surface-variant mb-3">No projects match "{search}"</p>
             <button
@@ -242,10 +242,10 @@ const MyProjectsPage: React.FC = () => {
                   onClick={() => navigate(`/developer/projects/${project.id}/logs`)}
                   className={`bg-surface-container-low p-5 rounded-xl border transition-all group flex flex-col cursor-pointer ${
                     hasFatals
-                      ? 'border-l-2 border-l-error border-gray-200 hover:border-error/20'
+                      ? 'border-l-2 border-l-error border-outline-variant/20 hover:border-error/20'
                       : hasErrors
-                        ? 'border-l-2 border-l-tertiary border-gray-200 hover:border-tertiary/20'
-                        : 'border-gray-200 hover:border-primary/20'
+                        ? 'border-l-2 border-l-tertiary border-outline-variant/20 hover:border-tertiary/20'
+                        : 'border-outline-variant/20 hover:border-primary/20'
                   }`}
                 >
                   {/* Header */}
@@ -304,7 +304,7 @@ const MyProjectsPage: React.FC = () => {
                   )}
 
                   {/* Meta row */}
-                  <div className="mt-auto pt-3 border-t border-gray-200">
+                  <div className="mt-auto pt-3 border-t border-outline-variant/20">
                     <div className="flex items-center justify-between text-[10px] text-on-surface-variant">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">

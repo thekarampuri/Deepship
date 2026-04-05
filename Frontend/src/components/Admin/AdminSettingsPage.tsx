@@ -104,7 +104,7 @@ const AdminSettingsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-on-surface tracking-tight">Settings</span>
           <span className="text-on-surface-variant/40">/</span>
@@ -121,7 +121,7 @@ const AdminSettingsPage: React.FC = () => {
         )}
 
         {/* Tab Switcher */}
-        <motion.div {...fadeUp(0)} className="flex items-center gap-1 mb-8 p-1 bg-surface-container-low rounded-xl border border-gray-200 w-fit">
+        <motion.div {...fadeUp(0)} className="flex items-center gap-1 mb-8 p-1 bg-surface-container-low rounded-xl border border-outline-variant/20 w-fit">
           {tabs.map((t) => (
             <button
               key={t.key}
@@ -129,7 +129,7 @@ const AdminSettingsPage: React.FC = () => {
               className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 tab === t.key
                   ? 'bg-primary/15 text-primary shadow-sm'
-                  : 'text-on-surface-variant hover:text-on-surface hover:bg-gray-100'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high'
               }`}
             >
               <span className="material-symbols-outlined text-base">{t.icon}</span>
@@ -145,7 +145,7 @@ const AdminSettingsPage: React.FC = () => {
 
         {/* Projects Tab */}
         {tab === 'projects' && (
-          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
@@ -190,7 +190,7 @@ const AdminSettingsPage: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setConfirmDelete(null)}
-                              className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
+                              className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-surface-container-high transition-colors"
                             >
                               Cancel
                             </button>
@@ -215,7 +215,7 @@ const AdminSettingsPage: React.FC = () => {
 
         {/* Managers Tab */}
         {tab === 'managers' && (
-          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
@@ -264,7 +264,7 @@ const AdminSettingsPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(null)}
-                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
+                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-surface-container-high transition-colors"
                               >
                                 Cancel
                               </button>
@@ -290,7 +290,7 @@ const AdminSettingsPage: React.FC = () => {
 
         {/* Developers Tab */}
         {tab === 'developers' && (
-          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+          <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
@@ -339,7 +339,7 @@ const AdminSettingsPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => setConfirmDelete(null)}
-                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-gray-100 transition-colors"
+                                className="text-[10px] font-bold text-on-surface-variant px-3 py-1.5 rounded hover:bg-surface-container-high transition-colors"
                               >
                                 Cancel
                               </button>

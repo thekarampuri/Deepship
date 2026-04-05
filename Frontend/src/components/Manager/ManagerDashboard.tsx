@@ -95,7 +95,7 @@ const ManagerDashboard: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-4">
           <span className="text-lg font-bold text-on-surface tracking-tight">Manager Dashboard</span>
           <span className="text-on-surface-variant text-sm">/ {user?.organization_name || 'Organization'}</span>
@@ -117,7 +117,7 @@ const ManagerDashboard: React.FC = () => {
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">My Projects</p>
               <div className="flex items-baseline gap-2">
@@ -129,7 +129,7 @@ const ManagerDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Developers</p>
               <div className="flex items-baseline gap-2">
@@ -141,7 +141,7 @@ const ManagerDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <div className="flex items-baseline gap-2">
@@ -156,7 +156,7 @@ const ManagerDashboard: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Active API Keys</p>
               <div className="flex items-baseline gap-2">
@@ -173,7 +173,7 @@ const ManagerDashboard: React.FC = () => {
         <motion.div {...fadeUp(0.2)} className="mb-8">
           <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-4">My Projects</h3>
           {projects.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-gray-200">
+            <div className="flex flex-col items-center justify-center py-16 gap-3 bg-surface-container-low rounded-lg border border-outline-variant/20">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/60">folder_open</span>
               <p className="text-sm text-on-surface-variant">No projects yet. Create your first project.</p>
               <button
@@ -192,7 +192,7 @@ const ManagerDashboard: React.FC = () => {
                   className={`bg-surface-container-low p-5 rounded-lg border transition-all group ${
                     project.status === 'PENDING'
                       ? 'border-amber-500/20 opacity-75'
-                      : 'border-gray-200 hover:border-primary/20 cursor-pointer'
+                      : 'border-outline-variant/20 hover:border-primary/20 cursor-pointer'
                   }`}
                   onClick={() => project.status === 'APPROVED' && navigate(`/manager/projects/${project.id}`)}
                 >
@@ -233,7 +233,7 @@ const ManagerDashboard: React.FC = () => {
                       {new Date(project.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="mt-3 pt-3 border-t border-outline-variant/20">
                     {project.status === 'PENDING' ? (
                       <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">
                         Awaiting Admin Approval
@@ -255,8 +255,8 @@ const ManagerDashboard: React.FC = () => {
         </motion.div>
 
         {/* Pending Join Requests */}
-        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg border border-outline-variant/20 overflow-hidden">
+          <div className="px-6 py-4 border-b border-outline-variant/20 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Pending Join Requests</h3>
             <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded">{pendingRequests.length}</span>
           </div>
@@ -319,7 +319,7 @@ const ManagerDashboard: React.FC = () => {
       {/* Create Project Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-surface-container-high rounded-xl border border-gray-300 p-8 w-full max-w-md shadow-2xl">
+          <div className="bg-surface-container-high rounded-xl border border-outline-variant/30 p-8 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-on-surface">Create New Project</h3>
               <button
@@ -364,7 +364,7 @@ const ManagerDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-gray-300 rounded-lg hover:bg-surface-container-highest transition-colors"
+                  className="flex-1 py-2.5 text-sm font-bold text-on-surface-variant border border-outline-variant/30 rounded-lg hover:bg-surface-container-highest transition-colors"
                 >
                   Cancel
                 </button>

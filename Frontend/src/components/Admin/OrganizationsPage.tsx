@@ -56,7 +56,7 @@ const OrganizationsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-on-surface tracking-tight">Organizations</span>
           <span className="text-on-surface-variant/60">/</span>
@@ -76,7 +76,7 @@ const OrganizationsPage: React.FC = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-gray-100 rounded-md transition-colors">
+          <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-md transition-colors">
             <span className="material-symbols-outlined text-xl">notifications</span>
           </button>
         </div>
@@ -85,7 +85,7 @@ const OrganizationsPage: React.FC = () => {
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
         <motion.div variants={stagger} initial="hidden" animate="visible" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Orgs</p>
               <div className="flex items-baseline gap-2">
@@ -97,7 +97,7 @@ const OrganizationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-secondary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-secondary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Members</p>
               <div className="flex items-baseline gap-2">
@@ -109,7 +109,7 @@ const OrganizationsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-tertiary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Projects</p>
               <div className="flex items-baseline gap-2">
@@ -120,7 +120,7 @@ const OrganizationsPage: React.FC = () => {
               <span className="material-symbols-outlined text-7xl text-tertiary">folder</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Search result count */}
         {search && (
@@ -132,7 +132,7 @@ const OrganizationsPage: React.FC = () => {
         {/* Empty State */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-gray-200">
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-outline-variant/20">
               <span className="material-symbols-outlined text-3xl text-on-surface-variant">corporate_fare</span>
             </div>
             <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">
@@ -153,7 +153,7 @@ const OrganizationsPage: React.FC = () => {
             {filtered.map((org) => (
               <div
                 key={org.id}
-                className="bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 hover:bg-surface-container-high hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer group"
+                className="bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/20 hover:bg-surface-container-high hover:-translate-y-1 hover:shadow-xl transition-all duration-300 overflow-hidden cursor-pointer group"
               >
                 {/* Top accent bar */}
                 <div className="h-1 w-full bg-gradient-to-r from-primary/60 to-secondary/40" />
@@ -186,14 +186,14 @@ const OrganizationsPage: React.FC = () => {
 
                   {/* Stats */}
                   <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-gray-200">
+                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-outline-variant/20">
                       <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Members</p>
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm text-secondary">group</span>
                         <span className="text-lg font-black text-on-surface">{org.member_count}</span>
                       </div>
                     </div>
-                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-gray-200">
+                    <div className="bg-surface-container-lowest rounded-lg p-3 border border-outline-variant/20">
                       <p className="text-[9px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Projects</p>
                       <div className="flex items-center gap-1.5">
                         <span className="material-symbols-outlined text-sm text-tertiary">folder</span>
@@ -203,7 +203,7 @@ const OrganizationsPage: React.FC = () => {
                   </div>
 
                   {/* Footer */}
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                  <div className="flex items-center justify-between pt-3 border-t border-outline-variant/20">
                     <div className="flex items-center gap-1.5 text-on-surface-variant">
                       <span className="material-symbols-outlined text-xs">calendar_today</span>
                       <span className="text-[10px] font-medium">{formatDate(org.created_at)}</span>

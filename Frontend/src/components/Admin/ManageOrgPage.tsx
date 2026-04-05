@@ -99,7 +99,7 @@ const ManageOrgPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-on-surface tracking-tight">Manage Organization</span>
           <span className="text-on-surface-variant/40">/</span>
@@ -117,7 +117,7 @@ const ManageOrgPage: React.FC = () => {
 
         {/* Stats Row */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-amber-500/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-amber-500/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Requests</p>
               <span className="text-3xl font-black text-amber-400 tracking-tighter">{pendingRequests.length}</span>
@@ -127,7 +127,7 @@ const ManageOrgPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Pending Projects</p>
               <span className="text-3xl font-black text-primary tracking-tighter">{pendingProjects.length}</span>
@@ -137,7 +137,7 @@ const ManageOrgPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-secondary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-secondary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Managers</p>
               <span className="text-3xl font-black text-secondary tracking-tighter">{managers.length}</span>
@@ -147,7 +147,7 @@ const ManageOrgPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/20 transition-all">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-tertiary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Developers</p>
               <span className="text-3xl font-black text-tertiary tracking-tighter">{developers.length}</span>
@@ -171,7 +171,7 @@ const ManageOrgPage: React.FC = () => {
           </div>
 
           {pendingRequests.length === 0 ? (
-            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 flex flex-col items-center gap-3">
+            <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-12 flex flex-col items-center gap-3">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">check_circle</span>
               <p className="text-sm text-on-surface-variant font-medium">No pending requests</p>
             </div>
@@ -180,7 +180,7 @@ const ManageOrgPage: React.FC = () => {
               {pendingRequests.map((req) => (
                 <div
                   key={req.id}
-                  className="bg-surface-container-low rounded-xl border border-gray-200 p-5 flex items-center justify-between hover:border-amber-500/20 transition-all"
+                  className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-5 flex items-center justify-between hover:border-amber-500/20 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-amber-400/10 flex items-center justify-center text-amber-400 font-bold text-sm">
@@ -240,7 +240,7 @@ const ManageOrgPage: React.FC = () => {
           </div>
 
           {pendingProjects.length === 0 ? (
-            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-12 flex flex-col items-center gap-3">
+            <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-12 flex flex-col items-center gap-3">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/40">check_circle</span>
               <p className="text-sm text-on-surface-variant font-medium">No pending project approvals</p>
             </div>
@@ -249,7 +249,7 @@ const ManageOrgPage: React.FC = () => {
               {pendingProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-surface-container-low rounded-xl border border-gray-200 p-5 flex items-center justify-between hover:border-primary/20 transition-all"
+                  className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-5 flex items-center justify-between hover:border-primary/20 transition-all"
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
@@ -300,7 +300,7 @@ const ManageOrgPage: React.FC = () => {
             </span>
           </div>
 
-          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+          <div className="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">

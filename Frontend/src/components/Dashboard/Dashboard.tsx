@@ -23,7 +23,7 @@ const Dashboard: React.FC = () => {
       <Sidebar />
 
       {/* TopAppBar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200 no-shadows">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20 no-shadows">
         <div className="flex items-center gap-4">
           <span className="text-lg font-bold text-on-surface tracking-tight">Dashboard</span>
           <span className="text-on-surface-variant/60 text-sm">/ Overview</span>
@@ -38,9 +38,9 @@ const Dashboard: React.FC = () => {
             <span className="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">apps</span>
             <span className="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">help</span>
           </div>
-          <div className="h-8 w-[1px] bg-gray-200"></div>
+          <div className="h-8 w-[1px] bg-outline-variant/30"></div>
           <div className="flex items-center gap-3 cursor-pointer group">
-            <img alt="User Profile" className="w-8 h-8 rounded-full border border-gray-300 group-hover:border-primary transition-colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6ib7GayVbaiGyEc40_sBCKaKkDm4cOuD-sz0kWs_dHFH62KPnqzvCrh0ciF40Ch4WvIUkfNUxYIHKZ0-_56eB5OfLuVKYc7o2mlteMmfJmHi0hA0D9UPS5AFtp3p07-OF-GZX_m12zkjzF_BKmLoJclLCzoQjRbhh8eYR02Ss6KAoS8wklXvDwAtl9u65gOiysz-ZnNC3SJaIQNEAUTxGg0YHSHe-VxrYE_fplVrapoaz381FG9xj0kl6w4LqxdwjqIym_acrEsY"/>
+            <img alt="User Profile" className="w-8 h-8 rounded-full border border-outline-variant/30 group-hover:border-primary transition-colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6ib7GayVbaiGyEc40_sBCKaKkDm4cOuD-sz0kWs_dHFH62KPnqzvCrh0ciF40Ch4WvIUkfNUxYIHKZ0-_56eB5OfLuVKYc7o2mlteMmfJmHi0hA0D9UPS5AFtp3p07-OF-GZX_m12zkjzF_BKmLoJclLCzoQjRbhh8eYR02Ss6KAoS8wklXvDwAtl9u65gOiysz-ZnNC3SJaIQNEAUTxGg0YHSHe-VxrYE_fplVrapoaz381FG9xj0kl6w4LqxdwjqIym_acrEsY"/>
           </div>
         </div>
       </header>
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
         {/* (1) Key Metrics Cards */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Total Logs */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Logs (7d)</p>
               <div className="flex items-baseline gap-2">
@@ -63,7 +63,7 @@ const Dashboard: React.FC = () => {
             </div>
           </motion.div>
           {/* New Issues */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">New Issues</p>
               <div className="flex items-baseline gap-2">
@@ -76,7 +76,7 @@ const Dashboard: React.FC = () => {
             </div>
           </motion.div>
           {/* Avg Response Time */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Avg Response</p>
               <div className="flex items-baseline gap-2">
@@ -89,7 +89,7 @@ const Dashboard: React.FC = () => {
             </div>
           </motion.div>
           {/* Error Rate */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-gray-200">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-6 rounded-lg relative overflow-hidden group border border-outline-variant/20">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Error Rate %</p>
               <div className="flex items-baseline gap-2">
@@ -105,7 +105,7 @@ const Dashboard: React.FC = () => {
 
         <motion.div {...fadeUp(0.2)} className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* (2) Logs vs. Time Area Chart */}
-          <div className="lg:col-span-2 bg-surface-container-low rounded-lg p-6 border border-gray-200">
+          <div className="lg:col-span-2 bg-surface-container-low rounded-lg p-6 border border-outline-variant/20">
             <div className="flex justify-between items-center mb-8">
               <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Log Density Stream</h3>
               <div className="flex gap-4">
@@ -155,7 +155,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
           {/* (4) Top Error-Prone Sub-modules Bar Chart */}
-          <div className="bg-surface-container-low rounded-lg p-6 border border-gray-200">
+          <div className="bg-surface-container-low rounded-lg p-6 border border-outline-variant/20">
             <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider mb-8">Volatility by Module</h3>
             <div className="space-y-6">
               <div>
@@ -208,7 +208,7 @@ const Dashboard: React.FC = () => {
         </motion.div>
 
         {/* (3) Recent Critical Issues List */}
-        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg overflow-hidden border border-gray-200">
+        <motion.div {...fadeUp(0.3)} className="bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/20">
           <div className="px-8 py-6 flex justify-between items-center bg-surface-container-lowest/30">
             <h3 className="text-sm font-semibold text-on-surface uppercase tracking-wider">Recent Critical Incidents</h3>
             <button className="text-[10px] font-bold text-primary uppercase border border-primary/20 px-3 py-1.5 rounded hover:bg-primary/5 transition-colors">Export Report</button>
@@ -336,7 +336,7 @@ const Dashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <div className="px-8 py-4 text-center border-t border-gray-200">
+          <div className="px-8 py-4 text-center border-t border-outline-variant/20">
             <button className="text-[10px] font-black uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">View All Incidents (142)</button>
           </div>
         </motion.div>

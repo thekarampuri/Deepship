@@ -163,7 +163,7 @@ const DeveloperDashboard: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-4">
           <span className="text-lg font-bold text-on-surface tracking-tight">Developer Dashboard</span>
           <span className="text-on-surface-variant/60 text-sm">
@@ -195,7 +195,7 @@ const DeveloperDashboard: React.FC = () => {
         {/* ── Stats Row ─────────────────────────────────────────────────────── */}
         <motion.div {...staggerContainer} initial="initial" animate="animate" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {/* Assigned Projects */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/15 transition-colors">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 My Projects
@@ -213,7 +213,7 @@ const DeveloperDashboard: React.FC = () => {
           </motion.div>
 
           {/* Total Logs */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/15 transition-colors">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Total Logs
@@ -231,7 +231,7 @@ const DeveloperDashboard: React.FC = () => {
           </motion.div>
 
           {/* Errors */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-error/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-error/15 transition-colors">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Errors
@@ -253,7 +253,7 @@ const DeveloperDashboard: React.FC = () => {
           </motion.div>
 
           {/* Invitations */}
-          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-tertiary/15 transition-colors">
+          <motion.div {...staggerItem} className="bg-surface-container-high p-5 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-tertiary/15 transition-colors">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">
                 Invitations
@@ -294,7 +294,7 @@ const DeveloperDashboard: React.FC = () => {
               </div>
 
               {projects.length === 0 ? (
-                <div className="bg-surface-container-low rounded-xl border border-gray-200 p-10 text-center">
+                <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-10 text-center">
                   <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3 block">
                     folder_open
                   </span>
@@ -324,7 +324,7 @@ const DeveloperDashboard: React.FC = () => {
                       <div
                         key={ph.project.id}
                         onClick={() => navigate(`/developer/projects/${ph.project.id}/logs`)}
-                        className={`bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all cursor-pointer group border-l-2 ${healthColor}`}
+                        className={`bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/20 transition-all cursor-pointer group border-l-2 ${healthColor}`}
                       >
                         <div className="p-5">
                           <div className="flex items-start justify-between mb-3">
@@ -394,7 +394,7 @@ const DeveloperDashboard: React.FC = () => {
 
                           {/* Latest error preview */}
                           {ph.recentErrors.length > 0 && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
+                            <div className="mt-3 pt-3 border-t border-outline-variant/20">
                               <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                                 Latest Error
                               </p>
@@ -429,7 +429,7 @@ const DeveloperDashboard: React.FC = () => {
                   </h3>
                 </div>
 
-                <div className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
+                <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 overflow-hidden">
                   <div className="divide-y divide-gray-200">
                     {allRecentErrors.map((log) => (
                       <div
@@ -473,7 +473,7 @@ const DeveloperDashboard: React.FC = () => {
               <div className="space-y-2">
                 <Link
                   to="/developer/projects"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-primary text-lg">folder_open</span>
@@ -489,7 +489,7 @@ const DeveloperDashboard: React.FC = () => {
 
                 <Link
                   to="/developer/invitations"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-tertiary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-tertiary text-lg">mail</span>
@@ -505,7 +505,7 @@ const DeveloperDashboard: React.FC = () => {
 
                 <Link
                   to="/developer/profile"
-                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/20 transition-all group"
+                  className="flex items-center gap-3 px-4 py-3 bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/20 transition-all group"
                 >
                   <div className="w-9 h-9 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="material-symbols-outlined text-secondary text-lg">person</span>
@@ -593,7 +593,7 @@ const DeveloperDashboard: React.FC = () => {
             )}
 
             {/* API Key info */}
-            <div className="bg-surface-container-low rounded-xl border border-gray-200 p-4">
+            <div className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-primary text-lg">vpn_key</span>

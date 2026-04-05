@@ -8,7 +8,7 @@ import type { Log, LogLevel, ProjectDetail, ApiKey } from '../../services/api';
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const levelStyles: Record<LogLevel, { badge: string; row: string }> = {
-  DEBUG: { badge: 'bg-gray-200 text-gray-600', row: '' },
+  DEBUG: { badge: 'bg-outline-variant/30 text-gray-600', row: '' },
   INFO: { badge: 'bg-primary/10 text-primary', row: '' },
   WARN: { badge: 'bg-tertiary/15 text-tertiary', row: 'border-l-2 border-l-tertiary/30' },
   ERROR: { badge: 'bg-error/15 text-error', row: 'border-l-2 border-l-error/30' },
@@ -209,7 +209,7 @@ const ProjectLogs: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/developer/projects')}
@@ -255,7 +255,7 @@ const ProjectLogs: React.FC = () => {
           <motion.div {...fadeUp(0)} className="mb-6">
             <button
               onClick={() => setShowApiKeys(!showApiKeys)}
-              className="w-full bg-surface-container-low rounded-xl border border-gray-200 hover:border-primary/15 transition-all"
+              className="w-full bg-surface-container-low rounded-xl border border-outline-variant/20 hover:border-primary/15 transition-all"
             >
               <div className="px-5 py-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -285,7 +285,7 @@ const ProjectLogs: React.FC = () => {
                 {apiKeys.map((key) => (
                   <div
                     key={key.id}
-                    className="bg-surface-container-low rounded-xl border border-gray-200 p-4"
+                    className="bg-surface-container-low rounded-xl border border-outline-variant/20 p-4"
                   >
                     <div className="flex items-center justify-between mb-2.5">
                       <div className="flex items-center gap-2.5">
@@ -343,7 +343,7 @@ const ProjectLogs: React.FC = () => {
         )}
 
         {/* Filters */}
-        <motion.div {...fadeUp(0.05)} className="bg-surface-container-low rounded-lg p-4 border border-gray-200 mb-6 flex items-center gap-4 flex-wrap">
+        <motion.div {...fadeUp(0.05)} className="bg-surface-container-low rounded-lg p-4 border border-outline-variant/20 mb-6 flex items-center gap-4 flex-wrap">
           {/* Level filter pills */}
           <div className="flex gap-1 bg-surface-container-lowest rounded-lg p-1">
             {levels.map((level) => (
@@ -413,7 +413,7 @@ const ProjectLogs: React.FC = () => {
                 <div key={log.id}>
                   {/* Log Row */}
                   <div
-                    className={`bg-surface-container-low rounded-lg border border-gray-200 hover:border-gray-300 transition-all cursor-pointer ${
+                    className={`bg-surface-container-low rounded-lg border border-outline-variant/20 hover:border-outline-variant/30 transition-all cursor-pointer ${
                       isExpanded ? 'border-primary/20' : ''
                     } ${style.row}`}
                     onClick={() => setExpandedLog(isExpanded ? null : log.id)}
@@ -451,7 +451,7 @@ const ProjectLogs: React.FC = () => {
                   {isExpanded && (
                     <div className="mt-1 bg-surface-container-high rounded-lg border border-primary/10 overflow-hidden">
                       {/* Basic Details Grid */}
-                      <div className="p-5 border-b border-gray-200">
+                      <div className="p-5 border-b border-outline-variant/20">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
                           <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
@@ -489,7 +489,7 @@ const ProjectLogs: React.FC = () => {
 
                         {/* Environment / host row */}
                         {(log.environment || log.host || log.error_type) && (
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-4 pt-4 border-t border-gray-200">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs mt-4 pt-4 border-t border-outline-variant/20">
                             {log.environment && (
                               <div>
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
@@ -521,7 +521,7 @@ const ProjectLogs: React.FC = () => {
 
                         {/* Extra Fields */}
                         {log.extra && Object.keys(log.extra).length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="mt-4 pt-4 border-t border-outline-variant/20">
                             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                               Extra Fields
                             </p>
@@ -542,7 +542,7 @@ const ProjectLogs: React.FC = () => {
 
                       {/* Stack Trace */}
                       {log.stack_trace && (
-                        <div className="p-5 border-b border-gray-200">
+                        <div className="p-5 border-b border-outline-variant/20">
                           <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                             Stack Trace
                           </p>
@@ -603,7 +603,7 @@ const ProjectLogs: React.FC = () => {
 
             {/* Empty state */}
             {logs.length === 0 && (
-              <div className="bg-surface-container-low rounded-lg border border-gray-200 p-12 text-center">
+              <div className="bg-surface-container-low rounded-lg border border-outline-variant/20 p-12 text-center">
                 <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-2 block">
                   filter_alt_off
                 </span>

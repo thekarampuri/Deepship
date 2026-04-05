@@ -195,7 +195,7 @@ const JoinRequestsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/manager/dashboard')}
@@ -271,10 +271,10 @@ const JoinRequestsPage: React.FC = () => {
         </motion.div>
 
         {/* Request list */}
-        <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl border border-gray-200 overflow-hidden">
+        <motion.div {...fadeUp(0.1)} className="bg-surface-container-low rounded-xl border border-outline-variant/20 overflow-hidden">
           {filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-gray-200 flex items-center justify-center mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center mb-4">
                 <span className="material-symbols-outlined text-3xl text-on-surface-variant/60">
                   {activeTab === 'PENDING' ? 'inbox' : activeTab === 'APPROVED' ? 'check_circle' : 'cancel'}
                 </span>

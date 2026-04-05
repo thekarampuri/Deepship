@@ -68,7 +68,7 @@ const AdminProjectsPage: React.FC = () => {
       <Sidebar />
 
       {/* Top Bar */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-white/80 backdrop-blur-md h-16 border-b border-gray-200">
+      <header className="sticky top-0 z-50 flex items-center justify-between px-8 ml-64 w-[calc(100%-16rem)] bg-surface-container-lowest/80 backdrop-blur-md h-16 border-b border-outline-variant/20">
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold text-on-surface tracking-tight">All Projects</span>
           <span className="text-on-surface-variant/40">/</span>
@@ -88,7 +88,7 @@ const AdminProjectsPage: React.FC = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-gray-100 rounded-md transition-colors">
+          <button className="p-2 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-md transition-colors">
             <span className="material-symbols-outlined text-xl">notifications</span>
           </button>
         </div>
@@ -97,7 +97,7 @@ const AdminProjectsPage: React.FC = () => {
       <main className="ml-64 p-8 min-h-[calc(100vh-4rem)] bg-surface">
         {/* Stats Row */}
         <motion.div {...fadeUp(0)} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-primary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-primary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Total Projects</p>
               <span className="text-3xl font-black text-primary tracking-tighter">{projects.length}</span>
@@ -107,7 +107,7 @@ const AdminProjectsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-gray-200 hover:border-secondary/20 transition-all">
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-outline-variant/20 hover:border-secondary/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase mb-1">Avg Developers / Project</p>
               <span className="text-3xl font-black text-secondary tracking-tighter">{avgDevs}</span>
@@ -138,7 +138,7 @@ const AdminProjectsPage: React.FC = () => {
         {/* Empty State */}
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-gray-200">
+            <div className="w-16 h-16 rounded-2xl bg-surface-container-high flex items-center justify-center border border-outline-variant/20">
               <span className="material-symbols-outlined text-3xl text-on-surface-variant">folder_off</span>
             </div>
             <p className="text-sm font-bold text-on-surface-variant uppercase tracking-widest">No projects match your filters</p>
@@ -151,7 +151,7 @@ const AdminProjectsPage: React.FC = () => {
           </div>
         ) : (
           /* Projects Table */
-          <motion.div {...fadeUp(0.15)} className="bg-surface-container-low rounded-xl overflow-hidden border border-gray-200 shadow-2xl">
+          <motion.div {...fadeUp(0.15)} className="bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/20 shadow-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-surface-container-lowest/50">
@@ -210,7 +210,7 @@ const AdminProjectsPage: React.FC = () => {
             </table>
 
             {/* Table Footer */}
-            <div className="px-6 py-3 bg-surface-container-lowest/30 border-t border-gray-200 flex items-center justify-between">
+            <div className="px-6 py-3 bg-surface-container-lowest/30 border-t border-outline-variant/20 flex items-center justify-between">
               <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
                 Showing {filtered.length} project{filtered.length !== 1 ? 's' : ''}
               </span>
