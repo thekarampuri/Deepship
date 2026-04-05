@@ -16,8 +16,6 @@ from app.admin.schemas import (
     ModuleAssignRequest,
     ModuleCreate,
     ModuleOut,
-    ProjectCreate,
-    ProjectOut,
     TeamCreate,
     TeamMemberAdd,
     TeamOut,
@@ -151,17 +149,7 @@ async def remove_team_member(team_id: UUID, member_id: UUID, user: AdminUser):
     await service.remove_team_member(get_pool(), team_id, member_id)
 
 
-# ── Projects ──────────────────────────────────────────────────────────────
-
-@router.post("/projects", response_model=ProjectOut, status_code=status.HTTP_201_CREATED)
-async def create_project(body: ProjectCreate, user: ManagerUser):
-    return await service.create_project(get_pool(), body)
-
-
-@router.get("/projects", response_model=list[ProjectOut])
-async def list_projects(user: ManagerUser, team_id: UUID | None = None):
-    return await service.list_projects(get_pool(), team_id)
-
+# ── Projects (create & list are handled by app.projects.router) ──────────
 
 # ── Modules ───────────────────────────────────────────────────────────────
 
