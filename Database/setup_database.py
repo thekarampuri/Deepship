@@ -178,6 +178,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id  UUID         NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     key_hash    VARCHAR(255) NOT NULL UNIQUE,
+    key_value   VARCHAR(255),          -- plain key for display (hidden by default)
     label       VARCHAR(100),
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
     created_by  UUID         REFERENCES users(id) ON DELETE SET NULL,
@@ -368,6 +369,7 @@ CREATE INDEX IF NOT EXISTS idx_users_fullname_trgm ON users USING GIN (full_name
 CREATE INDEX IF NOT EXISTS idx_users_skills ON users USING GIN (skills);
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'APPROVED' NOT NULL;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS key_value VARCHAR(255);
 """
 
 

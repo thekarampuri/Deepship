@@ -422,6 +422,8 @@ interface ApiKeysTabProps {
   showToast: (msg: string, type: 'success' | 'error') => void;
 }
 
+const hideKey = (key: string) => key.slice(0, 6) + '•'.repeat(Math.max(0, key.length - 10)) + key.slice(-4);
+
 const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers, onApiKeysChange, showToast }) => {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [labelInput, setLabelInput] = useState('');
@@ -429,6 +431,15 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
   const [generating, setGenerating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+
+  const toggleKeyVisibility = (id: string) => {
+    setVisibleKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const handleGenerate = async () => {
     if (!selectedDevId) {
@@ -443,7 +454,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
       const newKey: ApiKey = {
         id: result.id,
         label: result.label,
-        key_masked: result.api_key.slice(0, 8) + '••••••••••••••••••••' + result.api_key.slice(-4),
+        api_key: result.api_key,
         is_active: true,
         assigned_to: selectedDevId,
         assigned_to_name: selectedDev?.full_name,
@@ -528,20 +539,31 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <code className="flex-1 px-4 py-2.5 bg-surface-container-lowest rounded-lg font-mono text-xs text-on-surface-variant truncate">
-                    {key.key_masked}
-                  </code>
-                  <button
-                    onClick={() => handleCopy(key.key_masked, key.id)}
-                    className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-slate-400 hover:text-white rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      {copiedKey === key.id ? 'check' : 'content_copy'}
-                    </span>
-                    {copiedKey === key.id ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
+                {key.api_key && (
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 px-4 py-2.5 bg-surface-container-lowest rounded-lg font-mono text-xs text-on-surface-variant truncate select-all">
+                      {visibleKeys.has(key.id) ? key.api_key : hideKey(key.api_key)}
+                    </code>
+                    <button
+                      onClick={() => toggleKeyVisibility(key.id)}
+                      className="px-2.5 py-2.5 text-slate-400 hover:text-white transition-colors rounded-lg bg-surface-container-highest flex-shrink-0"
+                      title={visibleKeys.has(key.id) ? 'Hide key' : 'Show key'}
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {visibleKeys.has(key.id) ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => handleCopy(key.api_key!, key.id)}
+                      className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-slate-400 hover:text-white rounded-lg transition-colors flex items-center gap-1 flex-shrink-0"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {copiedKey === key.id ? 'check' : 'content_copy'}
+                      </span>
+                      {copiedKey === key.id ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

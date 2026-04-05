@@ -107,6 +107,7 @@ const ProjectLogs: React.FC = () => {
   const [apiKeysLoading, setApiKeysLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [showApiKeys, setShowApiKeys] = useState(false);
+  const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   // ── UI state ──────────────────────────────────────────────────────────────
   const [levelFilter, setLevelFilter] = useState<FilterLevel>('ALL');
@@ -139,6 +140,16 @@ const ProjectLogs: React.FC = () => {
     setCopiedKey(keyId);
     setTimeout(() => setCopiedKey(null), 2000);
   };
+
+  const toggleKeyVisibility = (keyId: string) => {
+    setVisibleKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(keyId)) next.delete(keyId); else next.add(keyId);
+      return next;
+    });
+  };
+
+  const hideKey = (key: string) => key.slice(0, 6) + '•'.repeat(Math.max(0, key.length - 10)) + key.slice(-4);
 
   // ── Fetch logs (re-run when filter or search changes) ─────────────────────
   const fetchLogs = useCallback(() => {
@@ -275,23 +286,37 @@ const ProjectLogs: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 px-4 py-2.5 bg-surface-container-highest rounded-lg font-mono text-xs text-on-surface-variant truncate">
-                        {key.key_masked}
-                      </code>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyKey(key.key_masked, key.id);
-                        }}
-                        className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1 flex-shrink-0"
-                      >
-                        <span className="material-symbols-outlined text-sm">
-                          {copiedKey === key.id ? 'check' : 'content_copy'}
-                        </span>
-                        {copiedKey === key.id ? 'Copied!' : 'Copy'}
-                      </button>
-                    </div>
+                    {key.api_key && (
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 px-4 py-2.5 bg-surface-container-highest rounded-lg font-mono text-xs text-on-surface-variant truncate select-all">
+                          {visibleKeys.has(key.id) ? key.api_key : hideKey(key.api_key)}
+                        </code>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleKeyVisibility(key.id);
+                          }}
+                          className="px-2.5 py-2.5 text-slate-400 hover:text-white transition-colors rounded-lg bg-surface-container-lowest flex-shrink-0"
+                          title={visibleKeys.has(key.id) ? 'Hide key' : 'Show key'}
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            {visibleKeys.has(key.id) ? 'visibility_off' : 'visibility'}
+                          </span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyKey(key.api_key!, key.id);
+                          }}
+                          className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1 flex-shrink-0"
+                        >
+                          <span className="material-symbols-outlined text-sm">
+                            {copiedKey === key.id ? 'check' : 'content_copy'}
+                          </span>
+                          {copiedKey === key.id ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

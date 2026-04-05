@@ -53,7 +53,7 @@ export interface Member {
 export interface ApiKey {
   id: string;
   label?: string;
-  key_masked: string;
+  api_key?: string;
   is_active: boolean;
   created_by?: string;
   assigned_to?: string;

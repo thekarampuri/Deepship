@@ -419,7 +419,7 @@ async def list_project_api_keys(
     if user.role == "DEVELOPER":
         # Developer sees only keys assigned to them
         rows = await pool.fetch(
-            """SELECT ak.id, ak.label, ak.is_active, ak.created_by, ak.assigned_to,
+            """SELECT ak.id, ak.label, ak.key_value, ak.is_active, ak.created_by, ak.assigned_to,
                       ak.created_at, u.full_name AS assigned_to_name, u.email AS assigned_to_email
                FROM api_keys ak
                LEFT JOIN users u ON u.id = ak.assigned_to
@@ -429,7 +429,7 @@ async def list_project_api_keys(
         )
     else:
         rows = await pool.fetch(
-            """SELECT ak.id, ak.label, ak.is_active, ak.created_by, ak.assigned_to,
+            """SELECT ak.id, ak.label, ak.key_value, ak.is_active, ak.created_by, ak.assigned_to,
                       ak.created_at, u.full_name AS assigned_to_name, u.email AS assigned_to_email
                FROM api_keys ak
                LEFT JOIN users u ON u.id = ak.assigned_to
@@ -442,7 +442,7 @@ async def list_project_api_keys(
         {
             "id": str(r["id"]),
             "label": r["label"],
-            "key_masked": "••••••••••••••••••••••••••••••••",
+            "api_key": r["key_value"],
             "is_active": r["is_active"],
             "created_by": str(r["created_by"]) if r["created_by"] else None,
             "assigned_to": str(r["assigned_to"]) if r["assigned_to"] else None,
@@ -492,11 +492,12 @@ async def generate_api_key(
     key_hash = hashlib.sha256(plain_key.encode()).hexdigest()
 
     row = await pool.fetchrow(
-        """INSERT INTO api_keys (project_id, key_hash, label, created_by, assigned_to)
-           VALUES ($1, $2, $3, $4, $5)
+        """INSERT INTO api_keys (project_id, key_hash, key_value, label, created_by, assigned_to)
+           VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING id, created_at""",
         project_id,
         key_hash,
+        plain_key,
         body.label,
         user.id,
         body.assigned_to,
