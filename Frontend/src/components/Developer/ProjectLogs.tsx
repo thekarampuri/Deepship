@@ -17,74 +17,36 @@ const levelStyles: Record<LogLevel, { badge: string; row: string }> = {
 
 type FilterLevel = LogLevel | 'ALL';
 
-// ── Root Cause Analysis helpers ───────────────────────────────────────────────
+// ── Simple Markdown Renderer ─────────────────────────────────────────────────
 
-interface RcaContent {
-  rootCause: string;
-  fix: string;
+function renderInlineBold(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <strong key={i} className="font-bold text-on-surface">{part.slice(2, -2)}</strong>;
+    return <span key={i}>{part}</span>;
+  });
 }
 
-function deriveRca(log: Log): RcaContent {
-  const errorType = log.error_type ?? '';
-  const message = log.message ?? '';
-
-  if (errorType.includes('NullPointer') || errorType.includes('NullReference')) {
-    return {
-      rootCause:
-        'A null reference was accessed. The code attempted to use an object that was never initialized or was already garbage-collected. This often occurs due to missing null checks, race conditions between initialization and usage, or an upstream call returning null unexpectedly.',
-      fix:
-        'Add null guards before accessing the object. Use optional chaining (?.) or null-safe operators, initialize objects eagerly where possible, and add unit tests for null/empty input paths.',
-    };
-  }
-
-  if (
-    errorType.includes('Connection') ||
-    errorType.includes('Network') ||
-    message.toLowerCase().includes('connection') ||
-    message.toLowerCase().includes('unreachable') ||
-    message.toLowerCase().includes('refused')
-  ) {
-    return {
-      rootCause:
-        'Network connectivity issue detected. A downstream service, database, or external dependency was unreachable. This may be caused by a service restart, network partition, firewall rule change, or connection pool exhaustion.',
-      fix:
-        'Implement retry logic with exponential back-off and jitter. Add a circuit breaker to prevent cascading failures. Verify network routes and firewall rules. Monitor connection pool metrics and set appropriate pool size limits.',
-    };
-  }
-
-  if (errorType.includes('OutOfMemory') || errorType.includes('MemoryError') || errorType.includes('heap')) {
-    return {
-      rootCause:
-        'Memory exhaustion detected. The process consumed all available heap space. Common causes include memory leaks (retained object references), unbounded caches, processing very large payloads in memory, or insufficient heap allocation for the current load.',
-      fix:
-        'Profile heap usage with a memory profiler to locate the leak. Reduce batch sizes when processing large datasets. Implement streaming or pagination instead of loading everything into memory. Consider increasing the JVM/runtime heap limit as a temporary measure while the root leak is fixed.',
-    };
-  }
-
-  if (errorType.includes('Timeout') || message.toLowerCase().includes('timeout') || message.toLowerCase().includes('timed out')) {
-    return {
-      rootCause:
-        'An operation exceeded its allowed time budget. This can be caused by slow database queries (missing indices, lock contention), slow external API responses, or overloaded downstream services.',
-      fix:
-        'Add query indices and analyze slow query logs. Set appropriate timeout values and implement fallback behavior. Use caching where idempotent reads are repeated. Consider async processing for long-running operations.',
-    };
-  }
-
-  if (errorType.includes('Auth') || errorType.includes('Permission') || errorType.includes('Unauthorized') || errorType.includes('Forbidden')) {
-    return {
-      rootCause:
-        'An authorization or authentication failure occurred. The caller lacked the required credentials or permissions, or a token/certificate has expired or been revoked.',
-      fix:
-        'Verify token expiry settings and refresh logic. Check service account permissions and role bindings. Implement automatic credential rotation. Add alerting for repeated auth failures to detect credential compromise early.',
-    };
-  }
-
-  return {
-    rootCause:
-      'An unhandled error occurred. Review the stack trace for the full call chain and identify the first frame that originates from application code (rather than framework or library code).',
-    fix:
-      'Identify the outermost application frame in the stack trace and add error handling at that boundary. Log sufficient context (user ID, request payload, environment) to reproduce the issue. Add a regression test once the fix is confirmed.',
-  };
+function renderGeminiResponse(text: string): React.ReactNode[] {
+  return text.split('\n').map((line, i) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('### '))
+      return <h4 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(4)}</h4>;
+    if (trimmed.startsWith('## '))
+      return <h3 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(3)}</h3>;
+    if (trimmed.startsWith('# '))
+      return <h3 key={i} className="text-base font-bold text-on-surface mt-4 mb-1">{trimmed.slice(2)}</h3>;
+    if (trimmed.startsWith('**') && trimmed.endsWith('**'))
+      return <p key={i} className="text-sm font-bold text-on-surface mt-2">{trimmed.slice(2, -2)}</p>;
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* '))
+      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-disc">{renderInlineBold(trimmed.slice(2))}</li>;
+    if (/^\d+\.\s/.test(trimmed))
+      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-decimal">{renderInlineBold(trimmed.replace(/^\d+\.\s/, ''))}</li>;
+    if (trimmed.startsWith('```') || trimmed === '```') return null;
+    if (trimmed === '') return <div key={i} className="h-1.5" />;
+    return <p key={i} className="text-sm text-on-surface-variant leading-relaxed">{renderInlineBold(trimmed)}</p>;
+  });
 }
 
 // ── Animation helpers ────────────────────────────────────────────────────────
@@ -131,6 +93,8 @@ const ProjectLogs: React.FC = () => {
   const [levelFilter, setLevelFilter] = useState<FilterLevel>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
+  const [solutionLoading, setSolutionLoading] = useState<string | null>(null);
+  const [solutions, setSolutions] = useState<Record<string, string>>({});
 
   // ── Fetch project info ────────────────────────────────────────────────────
   useEffect(() => {
@@ -184,6 +148,19 @@ const ProjectLogs: React.FC = () => {
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
+
+  const handleGetSolution = async (log: Log) => {
+    if (solutions[log.id]) return;
+    setSolutionLoading(log.id);
+    try {
+      const solution = await api.getGeminiSolution(log);
+      setSolutions((prev) => ({ ...prev, [log.id]: solution }));
+    } catch {
+      setLogsError('Failed to generate AI solution');
+    } finally {
+      setSolutionLoading(null);
+    }
+  };
 
   const levels: FilterLevel[] = ['ALL', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
 
@@ -407,7 +384,6 @@ const ProjectLogs: React.FC = () => {
               const style = levelStyles[log.level] ?? levelStyles['INFO'];
               const isExpanded = expandedLog === log.id;
               const isErrorOrFatal = log.level === 'ERROR' || log.level === 'FATAL';
-              const rca = isErrorOrFatal ? deriveRca(log) : null;
 
               return (
                 <div key={log.id}>
@@ -574,47 +550,54 @@ const ProjectLogs: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Root Cause Analysis — always shown for ERROR / FATAL */}
-                      {isErrorOrFatal && rca && (
+                      {/* AI-Powered Solution — for ERROR / FATAL */}
+                      {isErrorOrFatal && (
                         <div className="p-5 space-y-4">
-                          <div className="flex items-center gap-3 mb-2">
+                          <div className="flex items-center gap-3">
                             <span className="material-symbols-outlined text-primary text-xl">
                               psychology
                             </span>
                             <span className="text-base font-bold text-on-surface">
-                              Root Cause Analysis
+                              AI-Powered Solution
                             </span>
                           </div>
 
-                          {/* Root Cause */}
-                          <div className="bg-error/5 border border-error/10 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="material-symbols-outlined text-error text-sm">
-                                target
-                              </span>
-                              <span className="text-sm font-bold text-error">
-                                Identified Root Cause
-                              </span>
+                          {!solutions[log.id] ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleGetSolution(log);
+                              }}
+                              disabled={solutionLoading === log.id}
+                              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 shadow-lg shadow-primary/10"
+                            >
+                              {solutionLoading === log.id ? (
+                                <>
+                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                  Analyzing with AI...
+                                </>
+                              ) : (
+                                <>
+                                  <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                                  Get Solution
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <div className="bg-secondary/5 border border-secondary/10 rounded-lg p-5">
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="material-symbols-outlined text-secondary text-lg">
+                                  auto_awesome
+                                </span>
+                                <span className="text-sm font-bold text-secondary">
+                                  AI-Generated Solution
+                                </span>
+                              </div>
+                              <div className="space-y-0.5">
+                                {renderGeminiResponse(solutions[log.id])}
+                              </div>
                             </div>
-                            <p className="text-sm text-on-surface-variant leading-relaxed">
-                              {rca.rootCause}
-                            </p>
-                          </div>
-
-                          {/* Recommended Fix */}
-                          <div className="bg-secondary/5 border border-secondary/10 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="material-symbols-outlined text-secondary text-sm">
-                                build
-                              </span>
-                              <span className="text-sm font-bold text-secondary">
-                                Recommended Fix
-                              </span>
-                            </div>
-                            <p className="text-sm text-on-surface-variant leading-relaxed">
-                              {rca.fix}
-                            </p>
-                          </div>
+                          )}
                         </div>
                       )}
                     </div>

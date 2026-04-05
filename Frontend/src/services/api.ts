@@ -311,3 +311,42 @@ export const getMyInvitations = () =>
 
 export const getUserProjects = (userId: string) =>
   apiFetch<Project[]>(`/api/v1/users/${userId}/projects`);
+
+// ─── Gemini AI Solution ─────────────────────────────────────────────────────
+
+const GEMINI_API_KEY = 'AIzaSyAmmQPAI1TKmcrrUMGG9GkFus-kbjt64hE';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+export async function getGeminiSolution(log: Log): Promise<string> {
+  const prompt = `You are a senior software engineer analyzing a production error log. Provide a detailed, well-formatted solution.
+
+Error Details:
+- Level: ${log.level}
+- Message: ${log.message}
+- Error Type: ${log.error_type || 'Unknown'}
+- Error Message: ${log.error_message || 'N/A'}
+- Service: ${log.service || 'Unknown'}
+- Module: ${log.module || 'Unknown'}
+- Environment: ${log.environment || 'Unknown'}
+- Stack Trace: ${log.stack_trace || 'Not available'}
+
+Provide a detailed response with the following sections:
+1. Root Cause Analysis - What exactly caused this error
+2. Step-by-Step Solution - How to fix this issue with code examples if applicable
+3. Prevention Strategy - How to prevent this from happening again
+4. Related Best Practices - Any relevant best practices to follow
+
+Format your response clearly with section headers and bullet points.`;
+
+  const res = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+    }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message ?? 'Gemini API request failed');
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Unable to generate solution. Please try again.';
+}

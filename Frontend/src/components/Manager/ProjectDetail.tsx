@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -21,101 +21,6 @@ const levelStyles: Record<string, { badge: string }> = {
 };
 
 const LOG_LEVELS: LogLevel[] = ['ALL', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'];
-
-// ─── Root Cause Analysis helper ───────────────────────────────────────────────
-
-function getRCAContent(log: Log): { rootCause: string; suggestedFix: string } | null {
-  if (log.level !== 'ERROR' && log.level !== 'FATAL') return null;
-
-  const et = (log.error_type || '').toLowerCase();
-  const msg = (log.message || '').toLowerCase();
-  const combined = et + ' ' + msg;
-
-  if (combined.includes('nullpointer') || combined.includes('null reference') || combined.includes('cannot invoke') || combined.includes('null')) {
-    return {
-      rootCause:
-        'A NullPointerException indicates a null reference was accessed where an object was expected. ' +
-        'This typically occurs when an optional field, uninitialized variable, or expired session token is used ' +
-        'without a prior null-check.',
-      suggestedFix:
-        'Add a null guard before the operation. Verify that upstream data sources (auth tokens, session state, ' +
-        'database results) are validated before being passed into methods that dereference them. ' +
-        'Consider using Optional<T> or equivalent defensive wrappers.',
-    };
-  }
-
-  if (combined.includes('outofmemory') || combined.includes('heap') || combined.includes('memory')) {
-    return {
-      rootCause:
-        'An OutOfMemoryError means the JVM heap (or equivalent runtime heap) is exhausted. ' +
-        'This is often caused by a memory leak — objects being retained in collections, caches, or listeners ' +
-        'that are never released.',
-      suggestedFix:
-        'Profile heap usage with a tool such as VisualVM or async-profiler. Check for unbounded caches, ' +
-        'forgotten event listeners, or large object graphs. Consider increasing heap size as a short-term fix, ' +
-        'and implement proper eviction policies for caches.',
-    };
-  }
-
-  if (combined.includes('connection refused') || combined.includes('unreachable') || combined.includes('timeout') || combined.includes('connect')) {
-    return {
-      rootCause:
-        'A connection refused / timeout error means the client could not establish a TCP connection to the ' +
-        'target service. The target may be down, overloaded, or blocked by a firewall rule.',
-      suggestedFix:
-        'Verify the target service is running and listening on the expected port. Implement retry logic with ' +
-        'exponential back-off. Add circuit-breaker patterns to prevent cascading failures, and ensure health ' +
-        'checks are configured for dependent services.',
-    };
-  }
-
-  if (combined.includes('permission') || combined.includes('access denied') || combined.includes('forbidden') || combined.includes('unauthorized')) {
-    return {
-      rootCause:
-        'An access-denied / permission error indicates the calling principal does not have the required ' +
-        'privileges for the requested resource or operation.',
-      suggestedFix:
-        'Review IAM roles, ACLs, and file/resource permissions. Ensure the service account used at runtime ' +
-        'has the minimum necessary permissions. Audit recent permission changes and check that credentials ' +
-        'have not expired.',
-    };
-  }
-
-  if (combined.includes('classnotfound') || combined.includes('nosuchmethod') || combined.includes('nosuchfield')) {
-    return {
-      rootCause:
-        'A ClassNotFoundException or NoSuchMethodError points to a classpath or dependency version mismatch. ' +
-        'A class or method that was available at compile time is missing at runtime.',
-      suggestedFix:
-        'Check dependency versions in your build descriptor (pom.xml, build.gradle, package.json). Look for ' +
-        'conflicting transitive dependencies and pin versions explicitly. Verify the deployed artifact includes ' +
-        'all required dependencies.',
-    };
-  }
-
-  if (combined.includes('database') || combined.includes('sql') || combined.includes('query') || combined.includes('constraint')) {
-    return {
-      rootCause:
-        'A database error typically signals a constraint violation, a slow query, a connection pool exhaustion, ' +
-        'or a schema mismatch between the application and the database.',
-      suggestedFix:
-        'Inspect the full SQL statement and associated parameters. Check database server logs for lock contention ' +
-        'or constraint violations. Ensure connection pool settings are tuned for the expected load and that ' +
-        'database migrations have been applied.',
-    };
-  }
-
-  // Generic fallback for unknown error types
-  return {
-    rootCause:
-      `The error "${log.error_type || log.level}" was detected in service "${log.service || 'unknown'}". ` +
-      'Inspect the stack trace for the exact call site where the exception originated. ' +
-      'Cross-reference recent deployments and configuration changes around the time of this log entry.',
-    suggestedFix:
-      'Enable verbose logging for the affected service and reproduce the error in a staging environment. ' +
-      'Add structured error handling and alerting around this code path to catch future occurrences early.',
-  };
-}
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -688,19 +593,56 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
   );
 };
 
+// ─── Simple Markdown Renderer ────────────────────────────────────────────────
+
+function renderGeminiResponse(text: string): React.ReactNode[] {
+  return text.split('\n').map((line, i) => {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('### '))
+      return <h4 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(4)}</h4>;
+    if (trimmed.startsWith('## '))
+      return <h3 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(3)}</h3>;
+    if (trimmed.startsWith('# '))
+      return <h3 key={i} className="text-base font-bold text-on-surface mt-4 mb-1">{trimmed.slice(2)}</h3>;
+    if (trimmed.startsWith('**') && trimmed.endsWith('**'))
+      return <p key={i} className="text-sm font-bold text-on-surface mt-2">{trimmed.slice(2, -2)}</p>;
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* '))
+      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-disc">{renderInlineBold(trimmed.slice(2))}</li>;
+    if (/^\d+\.\s/.test(trimmed))
+      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-decimal">{renderInlineBold(trimmed.replace(/^\d+\.\s/, ''))}</li>;
+    if (trimmed.startsWith('```') || trimmed === '```') return null;
+    if (trimmed === '') return <div key={i} className="h-1.5" />;
+    return <p key={i} className="text-sm text-on-surface-variant leading-relaxed">{renderInlineBold(trimmed)}</p>;
+  });
+}
+
+function renderInlineBold(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <strong key={i} className="font-bold text-on-surface">{part.slice(2, -2)}</strong>;
+    return <span key={i}>{part}</span>;
+  });
+}
+
 // ─── Logs Tab ─────────────────────────────────────────────────────────────────
 
 interface LogsTabProps {
   projectId: string;
+  developers: Member[];
   showToast: (msg: string, type: 'success' | 'error') => void;
 }
 
-const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
+const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDevId, setSelectedDevId] = useState<string | null>(null);
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
   const [levelFilter, setLevelFilter] = useState<LogLevel>('ALL');
   const [search, setSearch] = useState('');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [solutionLoading, setSolutionLoading] = useState<string | null>(null);
+  const [solutions, setSolutions] = useState<Record<string, string>>({});
 
   const fetchLogs = useCallback(
     (level: LogLevel, searchTerm: string) => {
@@ -711,7 +653,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
         .catch((e: Error) => showToast(e.message, 'error'))
         .finally(() => setLoading(false));
     },
-    [projectId, showToast]
+    [projectId, showToast],
   );
 
   useEffect(() => {
@@ -724,20 +666,165 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
     fetchLogs(level, search);
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-  };
-
-  // Debounced search submit on Enter or blur
   const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') fetchLogs(levelFilter, search);
   };
 
+  // Derive unique modules from logs
+  const modules = useMemo(
+    () => [...new Set(logs.map((l) => l.module || 'General'))],
+    [logs],
+  );
+
+  // Map developers to modules (round-robin distribution)
+  const devModuleMap = useMemo(() => {
+    const map = new Map<string, string[]>();
+    if (developers.length === 0) return map;
+    developers.forEach((dev) => map.set(dev.id, []));
+    modules.forEach((mod, i) => {
+      const devId = developers[i % developers.length].id;
+      const arr = map.get(devId);
+      if (arr) arr.push(mod);
+    });
+    return map;
+  }, [developers, modules]);
+
+  const getDevModules = useCallback(
+    (devId: string) => devModuleMap.get(devId) || [],
+    [devModuleMap],
+  );
+
+  // Filter logs for selected developer's modules
+  const filteredLogs = useMemo(() => {
+    if (!selectedDevId) return logs;
+    const devMods = getDevModules(selectedDevId);
+    return logs.filter((l) => devMods.includes(l.module || 'General'));
+  }, [logs, selectedDevId, getDevModules]);
+
+  // Group filtered logs by module
+  const logsByModule = useMemo(() => {
+    const grouped = new Map<string, Log[]>();
+    filteredLogs.forEach((log) => {
+      const mod = log.module || 'General';
+      if (!grouped.has(mod)) grouped.set(mod, []);
+      grouped.get(mod)!.push(log);
+    });
+    return grouped;
+  }, [filteredLogs]);
+
+  const toggleModule = (mod: string) => {
+    setExpandedModules((prev) => {
+      const next = new Set(prev);
+      if (next.has(mod)) next.delete(mod); else next.add(mod);
+      return next;
+    });
+  };
+
+  const handleGetSolution = async (log: Log) => {
+    if (solutions[log.id]) return;
+    setSolutionLoading(log.id);
+    try {
+      const solution = await api.getGeminiSolution(log);
+      setSolutions((prev) => ({ ...prev, [log.id]: solution }));
+    } catch {
+      showToast('Failed to generate AI solution', 'error');
+    } finally {
+      setSolutionLoading(null);
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Controls */}
+    <div className="space-y-6">
+      {/* Developer Cards */}
+      {developers.length > 0 && (
+        <div>
+          <h3 className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">
+            Team Members
+          </h3>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {/* All Developers card */}
+            <button
+              onClick={() => { setSelectedDevId(null); setExpandedModules(new Set()); }}
+              className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-left ${
+                selectedDevId === null
+                  ? 'bg-primary/10 border-primary/30'
+                  : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/30'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary text-sm">groups</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-on-surface">All Developers</p>
+                  <p className="text-[10px] text-on-surface-variant">{logs.length} total logs</p>
+                </div>
+              </div>
+            </button>
+
+            {/* Individual developer cards */}
+            {developers.map((dev) => {
+              const devMods = getDevModules(dev.id);
+              const isSelected = selectedDevId === dev.id;
+              const devLogCount = devMods.reduce(
+                (sum, mod) => sum + (logsByModule.get(mod)?.length ?? logs.filter((l) => (l.module || 'General') === mod).length),
+                0,
+              );
+              const devErrorCount = devMods.reduce(
+                (sum, mod) =>
+                  sum +
+                  (logs
+                    .filter((l) => (l.module || 'General') === mod)
+                    .filter((l) => l.level === 'ERROR' || l.level === 'FATAL').length),
+                0,
+              );
+
+              return (
+                <button
+                  key={dev.id}
+                  onClick={() => {
+                    setSelectedDevId(isSelected ? null : dev.id);
+                    setExpandedModules(new Set());
+                    setExpandedLogId(null);
+                  }}
+                  className={`flex-shrink-0 px-4 py-3 rounded-xl border transition-all text-left min-w-[200px] ${
+                    isSelected
+                      ? 'bg-primary/10 border-primary/30'
+                      : 'bg-surface-container-low border-outline-variant/20 hover:border-outline-variant/30'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+                      {dev.full_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-on-surface truncate">{dev.full_name}</p>
+                      <p className="text-[10px] text-on-surface-variant truncate">
+                        {devMods.length > 0
+                          ? devMods.join(' / ')
+                          : 'No active modules'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-[10px] font-bold text-on-surface-variant">
+                      {devLogCount} logs
+                    </span>
+                    {devErrorCount > 0 && (
+                      <span className="text-[10px] font-bold text-[#ffb4ab]">
+                        {devErrorCount} errors
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Level filter */}
         <div className="flex gap-1 bg-surface-container-lowest rounded-xl p-1 w-fit flex-wrap">
           {LOG_LEVELS.map((level) => (
             <button
@@ -755,148 +842,286 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, showToast }) => {
             </button>
           ))}
         </div>
-
-        {/* Search */}
         <div className="relative flex-1 max-w-sm">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base pointer-events-none">search</span>
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base pointer-events-none">
+            search
+          </span>
           <input
             type="text"
             placeholder="Search logs... (press Enter)"
             value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             className="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant/20 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all"
           />
         </div>
       </div>
 
-      {/* Logs list */}
+      {/* Hierarchical Logs: Module → Logs */}
       {loading ? (
         <div className="flex justify-center py-16">
           <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
-      ) : logs.length === 0 ? (
+      ) : filteredLogs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-outline-variant/20 text-center">
           <span className="material-symbols-outlined text-4xl text-on-surface-variant/60 mb-3">receipt_long</span>
           <p className="text-on-surface font-semibold mb-1">No logs found</p>
           <p className="text-sm text-on-surface-variant">Try adjusting the filters</p>
         </div>
       ) : (
-        <div className="space-y-1.5">
-          {logs.map((log) => {
-            const isExpanded = expandedId === log.id;
-            const rca = getRCAContent(log);
+        <div className="space-y-3">
+          {[...logsByModule.entries()].map(([moduleName, moduleLogs]) => {
+            const isModuleExpanded = expandedModules.has(moduleName);
+            const errorCount = moduleLogs.filter(
+              (l) => l.level === 'ERROR' || l.level === 'FATAL',
+            ).length;
 
             return (
-              <div key={log.id}>
-                {/* Log row */}
-                <div
-                  className={`bg-surface-container-low rounded-xl border transition-all cursor-pointer ${
-                    isExpanded
-                      ? 'border-primary/20 rounded-b-none'
-                      : 'border-outline-variant/20 hover:border-outline-variant/30'
-                  }`}
-                  onClick={() => setExpandedId(isExpanded ? null : log.id)}
+              <div
+                key={moduleName}
+                className="bg-surface-container-low rounded-xl border border-outline-variant/20 overflow-hidden"
+              >
+                {/* Module Header */}
+                <button
+                  onClick={() => toggleModule(moduleName)}
+                  className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-surface-container-high/30 transition-colors"
                 >
-                  <div className="px-5 py-3 flex items-center gap-4">
-                    <span className="font-mono text-[10px] text-on-surface-variant w-36 flex-shrink-0 hidden md:block">
-                      {formatTimestamp(log.timestamp)}
-                    </span>
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tight flex-shrink-0 ${levelStyles[log.level]?.badge ?? ''}`}
-                    >
-                      {log.level}
-                    </span>
-                    <span className="text-sm text-on-surface flex-1 truncate">{log.message}</span>
-                    {log.service && (
-                      <span className="text-[10px] text-on-surface-variant flex-shrink-0 hidden lg:block">{log.service}</span>
-                    )}
-                    {rca && (
-                      <span className="material-symbols-outlined text-primary text-sm flex-shrink-0" title="Root Cause Analysis available">
-                        psychology
-                      </span>
-                    )}
-                    <span className="material-symbols-outlined text-on-surface-variant text-sm flex-shrink-0">
-                      {isExpanded ? 'expand_less' : 'expand_more'}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary text-sm">folder</span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-on-surface">{moduleName}</p>
+                      <p className="text-[10px] text-on-surface-variant">
+                        {moduleLogs.length} logs
+                        {errorCount > 0 && (
+                          <span className="text-[#ffb4ab] ml-2">
+                            {errorCount} {errorCount === 1 ? 'error' : 'errors'}
+                          </span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                  <span className="material-symbols-outlined text-on-surface-variant text-sm">
+                    {isModuleExpanded ? 'expand_less' : 'expand_more'}
+                  </span>
+                </button>
 
-                {/* Expanded panel */}
-                {isExpanded && (
-                  <div className="bg-surface-container-high rounded-b-xl border border-t-0 border-primary/10 p-6 space-y-5">
-                    {/* Metadata grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {[
-                        { label: 'Trace ID', value: log.trace_id || '—', mono: true },
-                        { label: 'Service',  value: log.service  || '—', mono: false },
-                        { label: 'Level',    value: log.level,            mono: false, isLevel: true },
-                        { label: 'Timestamp', value: formatTimestamp(log.timestamp), mono: true },
-                      ].map(({ label, value, mono, isLevel }) => (
-                        <div key={label}>
-                          <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">{label}</p>
-                          {isLevel ? (
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${levelStyles[value]?.badge ?? ''}`}>
-                              {value}
-                            </span>
-                          ) : (
-                            <p className={`text-xs text-on-surface-variant ${mono ? 'font-mono' : ''}`}>{value}</p>
+                {/* Module Logs */}
+                {isModuleExpanded && (
+                  <div className="border-t border-outline-variant/20 px-3 py-2 space-y-1.5">
+                    {moduleLogs.map((log) => {
+                      const isExpanded = expandedLogId === log.id;
+                      const isErrorOrFatal = log.level === 'ERROR' || log.level === 'FATAL';
+
+                      return (
+                        <div key={log.id}>
+                          {/* Log Row */}
+                          <div
+                            className={`rounded-lg border transition-all cursor-pointer ${
+                              isExpanded
+                                ? 'border-primary/20 rounded-b-none bg-surface-container-high/50'
+                                : 'border-outline-variant/10 hover:border-outline-variant/20 bg-surface-container-lowest/50'
+                            }`}
+                            onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
+                          >
+                            <div className="px-4 py-2.5 flex items-center gap-3">
+                              <span className="font-mono text-[10px] text-on-surface-variant w-36 flex-shrink-0 hidden md:block">
+                                {formatTimestamp(log.timestamp)}
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tight flex-shrink-0 ${
+                                  levelStyles[log.level]?.badge ?? ''
+                                }`}
+                              >
+                                {log.level}
+                              </span>
+                              <span className="text-sm text-on-surface flex-1 truncate">
+                                {log.message}
+                              </span>
+                              {log.service && (
+                                <span className="text-[10px] text-on-surface-variant flex-shrink-0 hidden lg:block">
+                                  {log.service}
+                                </span>
+                              )}
+                              {isErrorOrFatal && (
+                                <span
+                                  className="material-symbols-outlined text-primary text-sm flex-shrink-0"
+                                  title="AI Solution available"
+                                >
+                                  psychology
+                                </span>
+                              )}
+                              <span className="material-symbols-outlined text-on-surface-variant text-sm flex-shrink-0">
+                                {isExpanded ? 'expand_less' : 'expand_more'}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Expanded Panel */}
+                          {isExpanded && (
+                            <div className="bg-surface-container-high rounded-b-lg border border-t-0 border-primary/10 p-5 space-y-4">
+                              {/* Metadata grid */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {[
+                                  { label: 'Trace ID', value: log.trace_id || '\u2014', mono: true },
+                                  { label: 'Service', value: log.service || '\u2014', mono: false },
+                                  { label: 'Level', value: log.level, mono: false, isLevel: true },
+                                  { label: 'Timestamp', value: formatTimestamp(log.timestamp), mono: true },
+                                ].map(({ label, value, mono, isLevel }) => (
+                                  <div key={label}>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                      {label}
+                                    </p>
+                                    {isLevel ? (
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                                          levelStyles[value]?.badge ?? ''
+                                        }`}
+                                      >
+                                        {value}
+                                      </span>
+                                    ) : (
+                                      <p className={`text-xs text-on-surface-variant ${mono ? 'font-mono' : ''}`}>
+                                        {value}
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Environment / host row */}
+                              {(log.environment || log.host || log.error_type || log.module) && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-outline-variant/20">
+                                  {log.environment && (
+                                    <div>
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                        Environment
+                                      </p>
+                                      <span className="text-xs text-on-surface-variant">{log.environment}</span>
+                                    </div>
+                                  )}
+                                  {log.host && (
+                                    <div>
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                        Host
+                                      </p>
+                                      <span className="text-xs text-on-surface-variant">{log.host}</span>
+                                    </div>
+                                  )}
+                                  {log.error_type && (
+                                    <div>
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                        Error Type
+                                      </p>
+                                      <span className="font-mono text-[#ffb4ab] text-[11px]">{log.error_type}</span>
+                                    </div>
+                                  )}
+                                  {log.module && (
+                                    <div>
+                                      <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">
+                                        Module
+                                      </p>
+                                      <span className="text-xs text-on-surface-variant">{log.module}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Error message */}
+                              {log.error_message && (
+                                <div className="pt-4 border-t border-outline-variant/20">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                                    Error Message
+                                  </p>
+                                  <div className="bg-[#ffb4ab]/5 border border-[#ffb4ab]/10 rounded-lg px-4 py-3">
+                                    <span className="font-mono text-sm text-[#ffb4ab] leading-relaxed">
+                                      {log.error_message}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Extra fields */}
+                              {log.extra && Object.keys(log.extra).length > 0 && (
+                                <div className="pt-4 border-t border-outline-variant/20">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                                    Extra Fields
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {Object.entries(log.extra).map(([k, v]) => (
+                                      <span
+                                        key={k}
+                                        className="px-2.5 py-1 bg-surface-container-highest rounded-lg text-[10px] font-mono text-on-surface-variant"
+                                      >
+                                        <span className="text-primary">{k}</span>
+                                        <span className="text-on-surface-variant/60">:</span>{' '}
+                                        <span>{String(v)}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Stack trace */}
+                              {log.stack_trace && (
+                                <div className="pt-4 border-t border-outline-variant/20">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                                    Stack Trace
+                                  </p>
+                                  <pre className="bg-surface-container-lowest rounded-xl p-4 font-mono text-xs text-on-surface-variant overflow-x-auto leading-relaxed whitespace-pre-wrap">
+                                    {log.stack_trace}
+                                  </pre>
+                                </div>
+                              )}
+
+                              {/* AI Solution — for ERROR / FATAL */}
+                              {isErrorOrFatal && (
+                                <div className="pt-4 border-t border-outline-variant/20 space-y-3">
+                                  <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-primary text-xl">psychology</span>
+                                    <span className="text-base font-bold text-on-surface">AI-Powered Solution</span>
+                                  </div>
+
+                                  {!solutions[log.id] ? (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleGetSolution(log);
+                                      }}
+                                      disabled={solutionLoading === log.id}
+                                      className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 shadow-lg shadow-primary/10"
+                                    >
+                                      {solutionLoading === log.id ? (
+                                        <>
+                                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                          Analyzing with AI...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="material-symbols-outlined text-sm">auto_awesome</span>
+                                          Get Solution
+                                        </>
+                                      )}
+                                    </button>
+                                  ) : (
+                                    <div className="bg-[#4edea3]/5 border border-[#4edea3]/15 rounded-xl p-5">
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <span className="material-symbols-outlined text-[#4edea3] text-lg">auto_awesome</span>
+                                        <span className="text-sm font-bold text-[#4edea3]">AI-Generated Solution</span>
+                                      </div>
+                                      <div className="space-y-0.5">
+                                        {renderGeminiResponse(solutions[log.id])}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Extra fields */}
-                    {log.extra && Object.keys(log.extra).length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Extra Fields</p>
-                        <div className="flex flex-wrap gap-2">
-                          {Object.entries(log.extra).map(([k, v]) => (
-                            <span
-                              key={k}
-                              className="px-2.5 py-1 bg-surface-container-highest rounded-lg text-[10px] font-mono text-on-surface-variant"
-                            >
-                              <span className="text-primary">{k}</span>
-                              <span className="text-on-surface-variant/60">:</span>{' '}
-                              <span>{String(v)}</span>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Stack trace */}
-                    {log.stack_trace && (
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Stack Trace</p>
-                        <pre className="bg-surface-container-lowest rounded-xl p-4 font-mono text-xs text-on-surface-variant overflow-x-auto leading-relaxed whitespace-pre-wrap">
-                          {log.stack_trace}
-                        </pre>
-                      </div>
-                    )}
-
-                    {/* Root Cause Analysis */}
-                    {rca && (
-                      <div className="space-y-3">
-                        {/* Root cause */}
-                        <div className="bg-[#ffb4ab]/5 border border-[#ffb4ab]/15 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="material-symbols-outlined text-[#ffb4ab] text-lg">error</span>
-                            <span className="text-sm font-bold text-[#ffb4ab]">Identified Root Cause</span>
-                          </div>
-                          <p className="text-sm text-on-surface-variant leading-relaxed">{rca.rootCause}</p>
-                        </div>
-
-                        {/* Suggested fix */}
-                        <div className="bg-[#4edea3]/5 border border-[#4edea3]/15 rounded-xl p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="material-symbols-outlined text-[#4edea3] text-lg">build</span>
-                            <span className="text-sm font-bold text-[#4edea3]">Recommended Fix</span>
-                          </div>
-                          <p className="text-sm text-on-surface-variant leading-relaxed">{rca.suggestedFix}</p>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1131,6 +1356,7 @@ const ProjectDetail: React.FC = () => {
         {activeTab === 'logs' && (
           <LogsTab
             projectId={id!}
+            developers={developers}
             showToast={showToast}
           />
         )}
