@@ -20,8 +20,6 @@ const roleNavItems: Record<UserRole, NavItem[]> = {
     { name: 'Dashboard', icon: 'dashboard', path: '/manager/dashboard' },
     { name: 'My Projects', icon: 'folder', path: '/manager/projects' },
     { name: 'Join Requests', icon: 'person_add', path: '/manager/requests' },
-    { name: 'Team', icon: 'groups', path: '/manager/team' },
-    { name: 'Settings', icon: 'settings', path: '/manager/settings' },
   ],
   DEVELOPER: [
     { name: 'Dashboard', icon: 'dashboard', path: '/developer/dashboard' },

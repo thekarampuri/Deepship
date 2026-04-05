@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import { useAuth } from '../../context/AuthContext';
 import * as api from '../../services/api';
-import type { JoinRequest, OrgMember } from '../../services/api';
+import type { JoinRequest, OrgMember, Project } from '../../services/api';
 
 const ManageOrgPage: React.FC = () => {
   const { user } = useAuth();
@@ -10,21 +10,25 @@ const ManageOrgPage: React.FC = () => {
 
   const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
   const [members, setMembers] = useState<OrgMember[]>([]);
+  const [pendingProjects, setPendingProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
-      // Load independently so one failure doesn't block the other
-      const [requests, membersList] = await Promise.allSettled([
+      const [requests, membersList, projects] = await Promise.allSettled([
         api.getOrgPendingRequests(),
         api.getOrgMembers(),
+        orgId ? api.getOrgProjects(orgId) : Promise.resolve([]),
       ]);
       if (requests.status === 'fulfilled') setPendingRequests(requests.value);
       else console.warn('Failed to load pending requests:', requests.reason);
       if (membersList.status === 'fulfilled') setMembers(membersList.value);
       else console.warn('Failed to load members:', membersList.reason);
+      if (projects.status === 'fulfilled') {
+        setPendingProjects(projects.value.filter((p: Project) => p.status === 'PENDING'));
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load data');
     } finally {
@@ -32,7 +36,7 @@ const ManageOrgPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [orgId]);
 
   const handleResolve = async (requestId: string, status: 'APPROVED' | 'REJECTED') => {
     setActionLoading(requestId);
@@ -44,6 +48,18 @@ const ManageOrgPage: React.FC = () => {
         const updated = await api.getOrgMembers();
         setMembers(updated);
       }
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Action failed');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleProjectApproval = async (projectId: string, status: 'APPROVED' | 'REJECTED') => {
+    setActionLoading(projectId);
+    try {
+      await api.updateProjectStatus(projectId, status);
+      setPendingProjects((prev) => prev.filter((p) => p.id !== projectId));
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Action failed');
     } finally {
@@ -84,7 +100,7 @@ const ManageOrgPage: React.FC = () => {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-amber-500/20 transition-all">
             <div className="relative z-10">
               <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Requests</p>
@@ -92,6 +108,16 @@ const ManageOrgPage: React.FC = () => {
             </div>
             <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
               <span className="material-symbols-outlined text-7xl text-amber-400">pending_actions</span>
+            </div>
+          </div>
+
+          <div className="bg-surface-container-high p-6 rounded-xl relative overflow-hidden group border border-white/5 hover:border-primary/20 transition-all">
+            <div className="relative z-10">
+              <p className="text-[10px] font-bold text-slate-500 tracking-widest uppercase mb-1">Pending Projects</p>
+              <span className="text-3xl font-black text-primary tracking-tighter">{pendingProjects.length}</span>
+            </div>
+            <div className="absolute bottom-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+              <span className="material-symbols-outlined text-7xl text-primary">folder_open</span>
             </div>
           </div>
 
@@ -173,6 +199,69 @@ const ManageOrgPage: React.FC = () => {
                     <button
                       onClick={() => handleResolve(req.id, 'REJECTED')}
                       disabled={actionLoading === req.id}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-error/10 text-error text-xs font-bold rounded-lg hover:bg-error/20 transition-colors disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-sm">close</span>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Pending Projects */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="material-symbols-outlined text-primary">folder_open</span>
+            <h2 className="text-base font-bold text-white uppercase tracking-wider">Pending Project Approvals</h2>
+            {pendingProjects.length > 0 && (
+              <span className="px-2 py-0.5 bg-primary/15 text-primary text-[10px] font-black rounded uppercase tracking-widest">
+                {pendingProjects.length} pending
+              </span>
+            )}
+          </div>
+
+          {pendingProjects.length === 0 ? (
+            <div className="bg-surface-container-low rounded-xl border border-white/5 p-12 flex flex-col items-center gap-3">
+              <span className="material-symbols-outlined text-4xl text-slate-600">check_circle</span>
+              <p className="text-sm text-slate-500 font-medium">No pending project approvals</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {pendingProjects.map((project) => (
+                <div
+                  key={project.id}
+                  className="bg-surface-container-low rounded-xl border border-white/5 p-5 flex items-center justify-between hover:border-primary/20 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                      <span className="material-symbols-outlined">folder</span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">{project.name}</p>
+                      {project.description && (
+                        <p className="text-xs text-slate-500 line-clamp-1 max-w-md">{project.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-slate-500">
+                      {new Date(project.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    <button
+                      onClick={() => handleProjectApproval(project.id, 'APPROVED')}
+                      disabled={actionLoading === project.id}
+                      className="flex items-center gap-1.5 px-4 py-2 bg-secondary/15 text-secondary text-xs font-bold rounded-lg hover:bg-secondary/25 transition-colors disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined text-sm">check</span>
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleProjectApproval(project.id, 'REJECTED')}
+                      disabled={actionLoading === project.id}
                       className="flex items-center gap-1.5 px-4 py-2 bg-error/10 text-error text-xs font-bold rounded-lg hover:bg-error/20 transition-colors disabled:opacity-50"
                     >
                       <span className="material-symbols-outlined text-sm">close</span>

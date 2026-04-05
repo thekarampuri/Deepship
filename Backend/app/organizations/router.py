@@ -150,7 +150,7 @@ async def list_organization_projects(org_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organization not found")
 
     rows = await pool.fetch(
-        """SELECT p.id, p.name, p.description, p.created_at,
+        """SELECT p.id, p.name, p.description, p.created_at, p.status,
                   COUNT(DISTINCT pm.user_id) AS developer_count
            FROM projects p
            LEFT JOIN project_members pm ON pm.project_id = p.id
@@ -166,6 +166,7 @@ async def list_organization_projects(org_id: str):
             "description": r["description"],
             "created_at": r["created_at"].isoformat(),
             "developer_count": r["developer_count"],
+            "status": r["status"],
         }
         for r in rows
     ]

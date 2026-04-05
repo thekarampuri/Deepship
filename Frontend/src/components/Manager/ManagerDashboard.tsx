@@ -32,10 +32,15 @@ const ManagerDashboard: React.FC = () => {
 
   const totalDevelopers = projects.reduce((sum, p) => sum + (p.developer_count ?? 0), 0);
 
+  const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
+
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProjectName.trim()) return;
     setCreating(true);
+    setCreateError('');
+    setCreateSuccess('');
     api
       .createProject({ name: newProjectName.trim(), description: newProjectDesc.trim() || undefined })
       .then((created) => {
@@ -43,8 +48,10 @@ const ManagerDashboard: React.FC = () => {
         setShowCreateModal(false);
         setNewProjectName('');
         setNewProjectDesc('');
+        setCreateSuccess('Project created! Waiting for admin approval.');
+        setTimeout(() => setCreateSuccess(''), 5000);
       })
-      .catch(console.error)
+      .catch((err: Error) => setCreateError(err.message))
       .finally(() => setCreating(false));
   };
 
@@ -166,14 +173,34 @@ const ManagerDashboard: React.FC = () => {
               {projects.map((project) => (
                 <div
                   key={project.id}
-                  className="bg-surface-container-low p-5 rounded-lg border border-white/5 hover:border-primary/20 transition-all cursor-pointer group"
-                  onClick={() => navigate(`/manager/projects/${project.id}`)}
+                  className={`bg-surface-container-low p-5 rounded-lg border transition-all group ${
+                    project.status === 'PENDING'
+                      ? 'border-amber-500/20 opacity-75'
+                      : 'border-white/5 hover:border-primary/20 cursor-pointer'
+                  }`}
+                  onClick={() => project.status === 'APPROVED' && navigate(`/manager/projects/${project.id}`)}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-bold text-white group-hover:text-primary transition-colors">{project.name}</h4>
+                    <h4 className={`text-sm font-bold transition-colors ${
+                      project.status === 'PENDING' ? 'text-slate-400' : 'text-white group-hover:text-primary'
+                    }`}>{project.name}</h4>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-secondary" />
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Active</span>
+                      {project.status === 'PENDING' ? (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">Pending</span>
+                        </>
+                      ) : project.status === 'REJECTED' ? (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-error" />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-error">Rejected</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 rounded-full bg-secondary" />
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Active</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-on-surface-variant mb-4 line-clamp-2">
@@ -191,9 +218,19 @@ const ManagerDashboard: React.FC = () => {
                     </span>
                   </div>
                   <div className="mt-3 pt-3 border-t border-white/5">
-                    <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
-                      Manage
-                    </button>
+                    {project.status === 'PENDING' ? (
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">
+                        Awaiting Admin Approval
+                      </span>
+                    ) : project.status === 'REJECTED' ? (
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-error/60">
+                        Project Rejected
+                      </span>
+                    ) : (
+                      <button className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary-fixed-dim transition-colors">
+                        Manage
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -252,6 +289,17 @@ const ManagerDashboard: React.FC = () => {
         </div>
       </main>
 
+      {/* Success Toast */}
+      {createSuccess && (
+        <div className="fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border bg-surface-container-high border-secondary/30 text-secondary text-sm font-semibold animate-fade-in">
+          <span className="material-symbols-outlined text-base">check_circle</span>
+          {createSuccess}
+          <button onClick={() => setCreateSuccess('')} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">
+            <span className="material-symbols-outlined text-sm">close</span>
+          </button>
+        </div>
+      )}
+
       {/* Create Project Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -259,12 +307,18 @@ const ManagerDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-white">Create New Project</h3>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => { setShowCreateModal(false); setCreateError(''); }}
                 className="text-slate-400 hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
+            <p className="text-xs text-slate-500 mb-4 -mt-2">Project will be sent to admin for approval.</p>
+            {createError && (
+              <div className="mb-4 px-4 py-3 rounded-lg bg-error/10 border border-error/20 text-error text-xs font-semibold">
+                {createError}
+              </div>
+            )}
             <form onSubmit={handleCreateProject} className="space-y-5">
               <div>
                 <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">

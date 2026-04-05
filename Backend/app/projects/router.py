@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.database import get_pool
-from app.dependencies import UserContext, get_current_user, require_approved_role
+from app.dependencies import UserContext, get_current_user, require_approved_role, require_role
 
 router = APIRouter()
 
@@ -130,14 +130,18 @@ async def create_project(
     else:
         team_id = await _get_or_create_team(pool, user.organization_id, user.id)
 
+    # ADMIN creates projects directly as APPROVED; MANAGER's projects need admin approval
+    project_status = "APPROVED" if user.role == "ADMIN" else "PENDING"
+
     row = await pool.fetchrow(
-        """INSERT INTO projects (team_id, organization_id, name, description)
-           VALUES ($1, $2, $3, $4)
-           RETURNING id, name, description, created_at""",
+        """INSERT INTO projects (team_id, organization_id, name, description, status)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id, name, description, created_at, status""",
         team_id,
         user.organization_id,
         body.name,
         body.description,
+        project_status,
     )
     return {
         "id": str(row["id"]),
@@ -146,6 +150,8 @@ async def create_project(
         "organization_id": user.organization_id,
         "team_id": team_id,
         "created_at": row["created_at"].isoformat(),
+        "status": row["status"],
+        "developer_count": 0,
     }
 
 
@@ -162,20 +168,24 @@ async def list_projects(
     pool = get_pool()
 
     if user.role == "ADMIN":
+        # ADMIN sees all projects in their org (including PENDING for approval)
         rows = await pool.fetch(
             """SELECT p.id, p.name, p.description, p.organization_id, p.created_at,
-                      o.name AS organization_name,
+                      p.status, o.name AS organization_name,
                       COUNT(DISTINCT pm.user_id) AS developer_count
                FROM projects p
                LEFT JOIN organizations o ON o.id = p.organization_id
                LEFT JOIN project_members pm ON pm.project_id = p.id
+               WHERE p.organization_id = $1
                GROUP BY p.id, o.name
-               ORDER BY p.created_at DESC"""
+               ORDER BY p.created_at DESC""",
+            user.organization_id,
         )
     elif user.role == "MANAGER":
+        # MANAGER sees their org's APPROVED projects + their own PENDING ones
         rows = await pool.fetch(
             """SELECT p.id, p.name, p.description, p.organization_id, p.created_at,
-                      o.name AS organization_name,
+                      p.status, o.name AS organization_name,
                       COUNT(DISTINCT pm.user_id) AS developer_count
                FROM projects p
                LEFT JOIN organizations o ON o.id = p.organization_id
@@ -186,15 +196,16 @@ async def list_projects(
             user.organization_id,
         )
     else:
-        # DEVELOPER: sees only assigned projects
+        # DEVELOPER: sees only assigned APPROVED projects
         rows = await pool.fetch(
             """SELECT p.id, p.name, p.description, p.organization_id, p.created_at,
-                      o.name AS organization_name,
+                      p.status, o.name AS organization_name,
                       COUNT(DISTINCT pm2.user_id) AS developer_count
                FROM projects p
                JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = $1
                LEFT JOIN organizations o ON o.id = p.organization_id
                LEFT JOIN project_members pm2 ON pm2.project_id = p.id
+               WHERE p.status = 'APPROVED'
                GROUP BY p.id, o.name
                ORDER BY p.created_at DESC""",
             user.id,
@@ -209,6 +220,7 @@ async def list_projects(
             "organization_name": r["organization_name"],
             "developer_count": r["developer_count"],
             "created_at": r["created_at"].isoformat(),
+            "status": r["status"],
         }
         for r in rows
     ]
@@ -518,3 +530,46 @@ async def get_project_logs(
         }
         for r in rows
     ]
+
+
+# ---------------------------------------------------------------------------
+# Project approval (ADMIN only)
+# ---------------------------------------------------------------------------
+
+class UpdateProjectStatus(BaseModel):
+    status: str  # "APPROVED" or "REJECTED"
+
+
+@router.patch("/projects/{project_id}/status")
+async def update_project_status(
+    project_id: str,
+    body: UpdateProjectStatus,
+    user: Annotated[UserContext, Depends(require_role("ADMIN"))],
+):
+    """Approve or reject a pending project (ADMIN only)."""
+    if body.status not in ("APPROVED", "REJECTED"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status must be APPROVED or REJECTED",
+        )
+
+    pool = get_pool()
+    project = await _get_project_or_404(pool, project_id)
+
+    if str(project["organization_id"]) != user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Project does not belong to your organization",
+        )
+
+    await pool.execute(
+        "UPDATE projects SET status = $1 WHERE id = $2",
+        body.status,
+        project_id,
+    )
+
+    return {
+        "id": str(project["id"]),
+        "name": project["name"],
+        "status": body.status,
+    }

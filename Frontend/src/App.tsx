@@ -139,22 +139,6 @@ function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/manager/team"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <JoinRequestsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/manager/settings"
-        element={
-          <ProtectedRoute allowedRoles={['MANAGER']}>
-            <ManagerDashboard />
-          </ProtectedRoute>
-        }
-      />
 
       {/* ── Developer routes ────────────────────────────────────────────────── */}
       <Route

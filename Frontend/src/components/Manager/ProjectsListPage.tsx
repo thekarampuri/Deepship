@@ -145,10 +145,19 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
     }
   };
 
+  const isPending = project.status === 'PENDING';
+  const isRejected = project.status === 'REJECTED';
+
   return (
     <div
-      className="bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/20 transition-all cursor-pointer group flex flex-col"
-      onClick={onClick}
+      className={`bg-surface-container-low rounded-xl border transition-all flex flex-col ${
+        isPending
+          ? 'border-amber-500/20 opacity-75'
+          : isRejected
+            ? 'border-error/20 opacity-60'
+            : 'border-white/5 hover:border-primary/20 cursor-pointer group'
+      }`}
+      onClick={() => !isPending && !isRejected && onClick()}
     >
       <div className="p-5 flex-1 flex flex-col">
         {/* Card header */}
@@ -163,10 +172,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
               </p>
             )}
           </div>
-          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-1 bg-surface-container-highest rounded text-[10px] font-bold text-on-surface-variant">
-            <span className="material-symbols-outlined text-xs">person</span>
-            {project.developer_count}
-          </span>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isPending && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-400/10 rounded text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+                Pending
+              </span>
+            )}
+            {isRejected && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-error/10 rounded text-[9px] font-bold text-error uppercase tracking-wider">
+                Rejected
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-surface-container-highest rounded text-[10px] font-bold text-on-surface-variant">
+              <span className="material-symbols-outlined text-xs">person</span>
+              {project.developer_count}
+            </span>
+          </div>
         </div>
 
         {/* Description */}
@@ -199,13 +220,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onClick }) => {
           <span className="text-[10px] text-slate-600 font-medium">
             Created {formatDate(project.created_at)}
           </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
-          >
-            View Details
-            <span className="material-symbols-outlined text-xs">arrow_forward</span>
-          </button>
+          {isPending ? (
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400/60">
+              Awaiting Approval
+            </span>
+          ) : isRejected ? (
+            <span className="text-[10px] font-bold uppercase tracking-widest text-error/60">
+              Rejected
+            </span>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); onClick(); }}
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors"
+            >
+              View Details
+              <span className="material-symbols-outlined text-xs">arrow_forward</span>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -240,7 +271,7 @@ const ProjectsListPage: React.FC = () => {
   const handleProjectCreated = (project: Project) => {
     setProjects((prev) => [project, ...prev]);
     setShowCreateModal(false);
-    showToast(`Project "${project.name}" created successfully`, 'success');
+    showToast(`Project "${project.name}" created! Waiting for admin approval.`, 'success');
   };
 
   const filtered = projects.filter((p) =>

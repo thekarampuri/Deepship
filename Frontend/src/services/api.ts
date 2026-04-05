@@ -24,6 +24,7 @@ export interface Project {
   organization_name?: string;
   developer_count: number;
   created_at: string;
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface ProjectDetail extends Project {
@@ -176,6 +177,12 @@ export const createProject = (data: { name: string; description?: string }) =>
 
 export const deleteProject = (projectId: string) =>
   apiFetch<void>(`/api/v1/projects/${projectId}`, { method: 'DELETE' });
+
+export const updateProjectStatus = (projectId: string, newStatus: 'APPROVED' | 'REJECTED') =>
+  apiFetch<{ id: string; name: string; status: string }>(`/api/v1/projects/${projectId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: newStatus }),
+  });
 
 export const getProjectDevelopers = (projectId: string) =>
   apiFetch<Member[]>(`/api/v1/projects/${projectId}/developers`);
