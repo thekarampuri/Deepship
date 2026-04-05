@@ -17,36 +17,83 @@ const levelStyles: Record<LogLevel, { badge: string; row: string }> = {
 
 type FilterLevel = LogLevel | 'ALL';
 
-// ── Simple Markdown Renderer ─────────────────────────────────────────────────
+// ── AI Solution Renderer ─────────────────────────────────────────────────────
+
+const SECTION_META: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+  'root cause':  { icon: 'target',       color: 'text-error',     bg: 'bg-error/5',     border: 'border-error/10' },
+  'fix':         { icon: 'build',        color: 'text-secondary', bg: 'bg-secondary/5', border: 'border-secondary/10' },
+  'prevention':  { icon: 'shield',       color: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/10' },
+};
 
 function renderInlineBold(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
+  const parts = text.split(/(\*\*[^*]+\*\*)|(`[^`]+`)/g);
+  return parts.filter(Boolean).map((part, i) => {
     if (part.startsWith('**') && part.endsWith('**'))
-      return <strong key={i} className="font-bold text-on-surface">{part.slice(2, -2)}</strong>;
+      return <strong key={i} className="font-semibold text-on-surface">{part.slice(2, -2)}</strong>;
+    if (part.startsWith('`') && part.endsWith('`'))
+      return <code key={i} className="px-1 py-0.5 rounded bg-surface-container-highest font-mono text-[11px] text-primary">{part.slice(1, -1)}</code>;
     return <span key={i}>{part}</span>;
   });
 }
 
-function renderGeminiResponse(text: string): React.ReactNode[] {
-  return text.split('\n').map((line, i) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('### '))
-      return <h4 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(4)}</h4>;
-    if (trimmed.startsWith('## '))
-      return <h3 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(3)}</h3>;
-    if (trimmed.startsWith('# '))
-      return <h3 key={i} className="text-base font-bold text-on-surface mt-4 mb-1">{trimmed.slice(2)}</h3>;
-    if (trimmed.startsWith('**') && trimmed.endsWith('**'))
-      return <p key={i} className="text-sm font-bold text-on-surface mt-2">{trimmed.slice(2, -2)}</p>;
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* '))
-      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-disc">{renderInlineBold(trimmed.slice(2))}</li>;
-    if (/^\d+\.\s/.test(trimmed))
-      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-decimal">{renderInlineBold(trimmed.replace(/^\d+\.\s/, ''))}</li>;
-    if (trimmed.startsWith('```') || trimmed === '```') return null;
-    if (trimmed === '') return <div key={i} className="h-1.5" />;
-    return <p key={i} className="text-sm text-on-surface-variant leading-relaxed">{renderInlineBold(trimmed)}</p>;
-  });
+function renderAISolution(text: string): React.ReactNode {
+  const sections: { title: string; lines: string[] }[] = [];
+  let current: { title: string; lines: string[] } | null = null;
+
+  for (const raw of text.split('\n')) {
+    const trimmed = raw.trim();
+    const headerMatch = trimmed.match(/^#{1,3}\s+(.+)/);
+    if (headerMatch) {
+      current = { title: headerMatch[1].replace(/\*\*/g, ''), lines: [] };
+      sections.push(current);
+    } else if (current) {
+      if (trimmed) current.lines.push(trimmed);
+    } else if (trimmed) {
+      if (!sections.length || sections[0].title !== '_intro') {
+        current = { title: '_intro', lines: [] };
+        sections.unshift(current);
+      }
+      sections[0].lines.push(trimmed);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {sections.map((section, si) => {
+        if (section.title === '_intro') {
+          return (
+            <p key={si} className="text-sm text-on-surface-variant leading-relaxed">
+              {section.lines.map((l, li) => <span key={li}>{renderInlineBold(l)} </span>)}
+            </p>
+          );
+        }
+        const key = section.title.toLowerCase();
+        const meta = Object.entries(SECTION_META).find(([k]) => key.includes(k))?.[1]
+          ?? { icon: 'info', color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/10' };
+
+        return (
+          <div key={si} className={`${meta.bg} border ${meta.border} rounded-lg p-4`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`material-symbols-outlined text-base ${meta.color}`}>{meta.icon}</span>
+              <span className={`text-xs font-bold uppercase tracking-wider ${meta.color}`}>{section.title}</span>
+            </div>
+            <ul className="space-y-1.5">
+              {section.lines.map((line, li) => {
+                const bullet = line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '');
+                if (line.startsWith('```')) return null;
+                return (
+                  <li key={li} className="flex items-start gap-2 text-[13px] text-on-surface-variant leading-relaxed">
+                    <span className="mt-1.5 w-1 h-1 rounded-full bg-on-surface-variant/40 flex-shrink-0" />
+                    <span>{renderInlineBold(bullet)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 // ── Animation helpers ────────────────────────────────────────────────────────
@@ -90,7 +137,7 @@ const ProjectLogs: React.FC = () => {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   // ── UI state ──────────────────────────────────────────────────────────────
-  const [levelFilter, setLevelFilter] = useState<FilterLevel>('ALL');
+  const [levelFilter, setLevelFilter] = useState<FilterLevel>('WARN');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLog, setExpandedLog] = useState<string | null>(null);
   const [solutionLoading, setSolutionLoading] = useState<string | null>(null);
@@ -574,7 +621,7 @@ const ProjectLogs: React.FC = () => {
                               {solutionLoading === log.id ? (
                                 <>
                                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                  Analyzing with AI...
+                                  Analyzing...
                                 </>
                               ) : (
                                 <>
@@ -584,19 +631,7 @@ const ProjectLogs: React.FC = () => {
                               )}
                             </button>
                           ) : (
-                            <div className="bg-secondary/5 border border-secondary/10 rounded-lg p-5">
-                              <div className="flex items-center gap-2 mb-3">
-                                <span className="material-symbols-outlined text-secondary text-lg">
-                                  auto_awesome
-                                </span>
-                                <span className="text-sm font-bold text-secondary">
-                                  AI-Generated Solution
-                                </span>
-                              </div>
-                              <div className="space-y-0.5">
-                                {renderGeminiResponse(solutions[log.id])}
-                              </div>
-                            </div>
+                            renderAISolution(solutions[log.id])
                           )}
                         </div>
                       )}

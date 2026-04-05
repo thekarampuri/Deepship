@@ -15,6 +15,20 @@ class LogLevel(str, enum.Enum):
     ERROR = "ERROR"
     FATAL = "FATAL"
 
+    @property
+    def severity(self) -> int:
+        """Numeric severity for level comparison (higher = more severe)."""
+        return _SEVERITY[self]
+
+
+_SEVERITY = {
+    LogLevel.DEBUG: 0,
+    LogLevel.INFO: 1,
+    LogLevel.WARN: 2,
+    LogLevel.ERROR: 3,
+    LogLevel.FATAL: 4,
+}
+
 
 @dataclass
 class LogEntry:

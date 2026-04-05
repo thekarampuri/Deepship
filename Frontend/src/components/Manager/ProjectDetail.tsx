@@ -593,36 +593,87 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers,
   );
 };
 
-// ─── Simple Markdown Renderer ────────────────────────────────────────────────
+// ─── AI Solution Renderer ────────────────────────────────────────────────────
 
-function renderGeminiResponse(text: string): React.ReactNode[] {
-  return text.split('\n').map((line, i) => {
-    const trimmed = line.trim();
-    if (trimmed.startsWith('### '))
-      return <h4 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(4)}</h4>;
-    if (trimmed.startsWith('## '))
-      return <h3 key={i} className="text-sm font-bold text-on-surface mt-3 mb-1">{trimmed.slice(3)}</h3>;
-    if (trimmed.startsWith('# '))
-      return <h3 key={i} className="text-base font-bold text-on-surface mt-4 mb-1">{trimmed.slice(2)}</h3>;
-    if (trimmed.startsWith('**') && trimmed.endsWith('**'))
-      return <p key={i} className="text-sm font-bold text-on-surface mt-2">{trimmed.slice(2, -2)}</p>;
-    if (trimmed.startsWith('- ') || trimmed.startsWith('* '))
-      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-disc">{renderInlineBold(trimmed.slice(2))}</li>;
-    if (/^\d+\.\s/.test(trimmed))
-      return <li key={i} className="text-sm text-on-surface-variant ml-4 list-decimal">{renderInlineBold(trimmed.replace(/^\d+\.\s/, ''))}</li>;
-    if (trimmed.startsWith('```') || trimmed === '```') return null;
-    if (trimmed === '') return <div key={i} className="h-1.5" />;
-    return <p key={i} className="text-sm text-on-surface-variant leading-relaxed">{renderInlineBold(trimmed)}</p>;
+const SECTION_META: Record<string, { icon: string; color: string; bg: string; border: string }> = {
+  'root cause':  { icon: 'target',       color: 'text-[#ffb4ab]', bg: 'bg-[#ffb4ab]/5', border: 'border-[#ffb4ab]/15' },
+  'fix':         { icon: 'build',        color: 'text-[#4edea3]', bg: 'bg-[#4edea3]/5', border: 'border-[#4edea3]/15' },
+  'prevention':  { icon: 'shield',       color: 'text-primary',   bg: 'bg-primary/5',   border: 'border-primary/15' },
+};
+
+function renderInlineBold(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*[^*]+\*\*)|(`[^`]+`)/g);
+  return parts.filter(Boolean).map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**'))
+      return <strong key={i} className="font-semibold text-on-surface">{part.slice(2, -2)}</strong>;
+    if (part.startsWith('`') && part.endsWith('`'))
+      return <code key={i} className="px-1 py-0.5 rounded bg-surface-container-highest font-mono text-[11px] text-primary">{part.slice(1, -1)}</code>;
+    return <span key={i}>{part}</span>;
   });
 }
 
-function renderInlineBold(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**'))
-      return <strong key={i} className="font-bold text-on-surface">{part.slice(2, -2)}</strong>;
-    return <span key={i}>{part}</span>;
-  });
+function renderAISolution(text: string): React.ReactNode {
+  // Split by markdown ## headers into sections
+  const sections: { title: string; lines: string[] }[] = [];
+  let current: { title: string; lines: string[] } | null = null;
+
+  for (const raw of text.split('\n')) {
+    const trimmed = raw.trim();
+    const headerMatch = trimmed.match(/^#{1,3}\s+(.+)/);
+    if (headerMatch) {
+      current = { title: headerMatch[1].replace(/\*\*/g, ''), lines: [] };
+      sections.push(current);
+    } else if (current) {
+      if (trimmed) current.lines.push(trimmed);
+    } else if (trimmed) {
+      // Text before any header → put in an intro section
+      if (!sections.length || sections[0].title !== '_intro') {
+        current = { title: '_intro', lines: [] };
+        sections.unshift(current);
+      }
+      sections[0].lines.push(trimmed);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      {sections.map((section, si) => {
+        if (section.title === '_intro') {
+          return (
+            <p key={si} className="text-sm text-on-surface-variant leading-relaxed">
+              {section.lines.map((l, li) => <span key={li}>{renderInlineBold(l)} </span>)}
+            </p>
+          );
+        }
+
+        const key = section.title.toLowerCase();
+        const meta = Object.entries(SECTION_META).find(([k]) => key.includes(k))?.[1]
+          ?? { icon: 'info', color: 'text-primary', bg: 'bg-primary/5', border: 'border-primary/15' };
+
+        return (
+          <div key={si} className={`${meta.bg} border ${meta.border} rounded-xl p-4`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`material-symbols-outlined text-base ${meta.color}`}>{meta.icon}</span>
+              <span className={`text-xs font-bold uppercase tracking-wider ${meta.color}`}>{section.title}</span>
+            </div>
+            <ul className="space-y-1.5">
+              {section.lines.map((line, li) => {
+                const bullet = line.replace(/^[-*]\s+/, '').replace(/^\d+\.\s+/, '');
+                const isCode = line.startsWith('```');
+                if (isCode) return null;
+                return (
+                  <li key={li} className="flex items-start gap-2 text-[13px] text-on-surface-variant leading-relaxed">
+                    <span className="mt-1.5 w-1 h-1 rounded-full bg-on-surface-variant/40 flex-shrink-0" />
+                    <span>{renderInlineBold(bullet)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 // ─── Logs Tab ─────────────────────────────────────────────────────────────────
@@ -639,7 +690,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
   const [selectedDevId, setSelectedDevId] = useState<string | null>(null);
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
-  const [levelFilter, setLevelFilter] = useState<LogLevel>('ALL');
+  const [levelFilter, setLevelFilter] = useState<LogLevel>('WARN');
   const [search, setSearch] = useState('');
   const [solutionLoading, setSolutionLoading] = useState<string | null>(null);
   const [solutions, setSolutions] = useState<Record<string, string>>({});
@@ -1080,7 +1131,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
                                       {solutionLoading === log.id ? (
                                         <>
                                           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                          Analyzing with AI...
+                                          Analyzing...
                                         </>
                                       ) : (
                                         <>
@@ -1090,15 +1141,7 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
                                       )}
                                     </button>
                                   ) : (
-                                    <div className="bg-[#4edea3]/5 border border-[#4edea3]/15 rounded-xl p-5">
-                                      <div className="flex items-center gap-2 mb-3">
-                                        <span className="material-symbols-outlined text-[#4edea3] text-lg">auto_awesome</span>
-                                        <span className="text-sm font-bold text-[#4edea3]">AI-Generated Solution</span>
-                                      </div>
-                                      <div className="space-y-0.5">
-                                        {renderGeminiResponse(solutions[log.id])}
-                                      </div>
-                                    </div>
+                                    renderAISolution(solutions[log.id])
                                   )}
                                 </div>
                               )}

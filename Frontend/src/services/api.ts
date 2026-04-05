@@ -314,32 +314,42 @@ export const getMyInvitations = () =>
 export const getUserProjects = (userId: string) =>
   apiFetch<Project[]>(`/api/v1/users/${userId}/projects`);
 
-// ─── Gemini AI Solution ─────────────────────────────────────────────────────
+// ─── AI Solution (OpenRouter) ───────────────────────────────────────────────
 
-const GEMINI_API_KEY = 'AIzaSyAmmQPAI1TKmcrrUMGG9GkFus-kbjt64hE';
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const OPENROUTER_API_KEY = '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';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
 
-async function callGeminiWithRetry(prompt: string, maxRetries = 3): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+async function callOpenRouterWithRetry(prompt: string, maxRetries = 3): Promise<string> {
   const body = JSON.stringify({
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+    model: OPENROUTER_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a concise senior software engineer. Give short, actionable answers. Use markdown headers (##) and bullet points. No filler text.',
+      },
+      { role: 'user', content: prompt },
+    ],
+    temperature: 0.4,
+    max_tokens: 700,
   });
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     if (attempt > 0) {
-      // Exponential backoff: 2s, 4s, 8s ...
       await new Promise((r) => setTimeout(r, 2000 * Math.pow(2, attempt)));
     }
 
-    const res = await fetch(url, {
+    const res = await fetch(OPENROUTER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': window.location.origin,
+      },
       body,
     });
 
     if (res.status === 429) {
-      // Rate limited — retry after backoff
       if (attempt < maxRetries - 1) continue;
       throw new Error('AI service is busy. Please wait a moment and try again.');
     }
@@ -347,10 +357,10 @@ async function callGeminiWithRetry(prompt: string, maxRetries = 3): Promise<stri
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data.error?.message ?? `Gemini API error (${res.status})`);
+      throw new Error(data.error?.message ?? `AI API error (${res.status})`);
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = data.choices?.[0]?.message?.content;
     if (text) return text;
     throw new Error('No response generated. Please try again.');
   }
@@ -359,25 +369,28 @@ async function callGeminiWithRetry(prompt: string, maxRetries = 3): Promise<stri
 }
 
 export async function getGeminiSolution(log: Log): Promise<string> {
-  const prompt = `You are a senior software engineer analyzing a production error log. Provide a detailed, well-formatted solution.
+  const stackSnippet = log.stack_trace
+    ? log.stack_trace.split('\n').slice(0, 6).join('\n')
+    : 'N/A';
 
-Error Details:
-- Level: ${log.level}
-- Message: ${log.message}
-- Error Type: ${log.error_type || 'Unknown'}
-- Error Message: ${log.error_message || 'N/A'}
-- Service: ${log.service || 'Unknown'}
-- Module: ${log.module || 'Unknown'}
-- Environment: ${log.environment || 'Unknown'}
-- Stack Trace: ${log.stack_trace || 'Not available'}
+  const prompt = `Analyze this error log and give a concise fix.
 
-Provide a detailed response with the following sections:
-1. Root Cause Analysis - What exactly caused this error
-2. Step-by-Step Solution - How to fix this issue with code examples if applicable
-3. Prevention Strategy - How to prevent this from happening again
-4. Related Best Practices - Any relevant best practices to follow
+Level: ${log.level}
+Message: ${log.message}
+Error Type: ${log.error_type || 'Unknown'}${log.error_message ? `\nError: ${log.error_message}` : ''}
+Service: ${log.service || 'Unknown'} | Module: ${log.module || 'Unknown'}
+Stack (top): ${stackSnippet}
 
-Format your response clearly with markdown section headers and bullet points.`;
+Reply with EXACTLY these 3 sections (keep each short, 2-4 bullets max):
 
-  return callGeminiWithRetry(prompt);
+## Root Cause
+(What went wrong in 1-2 sentences)
+
+## Fix
+(Step-by-step fix, 2-4 bullets, include a short code snippet if helpful)
+
+## Prevention
+(2-3 bullets to prevent recurrence)`;
+
+  return callOpenRouterWithRetry(prompt);
 }

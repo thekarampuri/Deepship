@@ -27,6 +27,14 @@ class SentinelLogger:
             environment="production",
         )
 
+        # Only ship WARN and above (skip DEBUG/INFO page-load noise)
+        logger = SentinelLogger(
+            api_key="th_abc123",
+            service="auth-service",
+            environment="production",
+            min_level="WARN",
+        )
+
         logger.info("user logged in", module="auth")
 
         try:
@@ -42,6 +50,7 @@ class SentinelLogger:
         environment: str,
         endpoint: str = "",
         *,
+        min_level: str = "DEBUG",
         batch_size: int = 50,
         flush_interval: float = 5.0,
         max_buffer: int = 10_000,
@@ -54,6 +63,14 @@ class SentinelLogger:
             raise SentinelConfigError("api_key is required")
 
         endpoint = endpoint or sentinel_sdk.DEFAULT_ENDPOINT
+
+        # Minimum severity threshold — logs below this level are silently dropped.
+        try:
+            self._min_level = LogLevel(min_level.upper())
+        except ValueError:
+            raise SentinelConfigError(
+                f"Invalid min_level '{min_level}'. Use one of: DEBUG, INFO, WARN, ERROR, FATAL"
+            )
 
         self._enricher = Enricher(service=service, environment=environment)
         self._buffer = RingBuffer(capacity=max_buffer)
@@ -134,6 +151,10 @@ class SentinelLogger:
         module: str = "",
         extra: Optional[dict] = None,
     ) -> None:
+        # Drop logs below the configured minimum severity
+        if level.severity < self._min_level.severity:
+            return
+
         entry = self._enricher.enrich(
             level=level,
             message=message,
