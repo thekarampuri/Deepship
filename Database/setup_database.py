@@ -181,6 +181,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     label       VARCHAR(100),
     is_active   BOOLEAN      NOT NULL DEFAULT TRUE,
     created_by  UUID         REFERENCES users(id) ON DELETE SET NULL,
+    assigned_to UUID         REFERENCES users(id) ON DELETE SET NULL,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -357,8 +358,21 @@ def create_partitions(cur, year: int):
 # Main entry point
 # ---------------------------------------------------------------------------
 
+MIGRATIONS_SQL = """
+-- ==========================================================================
+-- MIGRATIONS (safe to re-run on existing databases)
+-- ==========================================================================
+ALTER TABLE users ADD COLUMN IF NOT EXISTS skills TEXT[] DEFAULT '{}';
+ALTER TABLE join_requests ADD COLUMN IF NOT EXISTS invited_by UUID REFERENCES users(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_users_fullname_trgm ON users USING GIN (full_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_users_skills ON users USING GIN (skills);
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'APPROVED' NOT NULL;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL;
+"""
+
+
 def setup_database():
-    """Connect, run DDL, and create partitions for the current & next year."""
+    """Connect, run DDL, migrations, and create partitions for the current & next year."""
     from datetime import datetime
 
     conn = get_connection()
@@ -367,6 +381,9 @@ def setup_database():
 
     print("[orchid] Running schema DDL …")
     cur.execute(SCHEMA_SQL)
+
+    print("[orchid] Running migrations …")
+    cur.execute(MIGRATIONS_SQL)
 
     current_year = datetime.now().year
     for year in (current_year, current_year + 1):

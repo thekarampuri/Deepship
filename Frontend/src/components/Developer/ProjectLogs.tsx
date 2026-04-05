@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar/Sidebar';
 import * as api from '../../services/api';
-import type { Log, LogLevel, ProjectDetail } from '../../services/api';
+import type { Log, LogLevel, ProjectDetail, ApiKey } from '../../services/api';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -102,6 +102,12 @@ const ProjectLogs: React.FC = () => {
   const [logsLoading, setLogsLoading] = useState(true);
   const [logsError, setLogsError] = useState('');
 
+  // ── API Keys state ────────────────────────────────────────────────────────
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(true);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [showApiKeys, setShowApiKeys] = useState(false);
+
   // ── UI state ──────────────────────────────────────────────────────────────
   const [levelFilter, setLevelFilter] = useState<FilterLevel>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -117,6 +123,22 @@ const ProjectLogs: React.FC = () => {
       .catch((e: Error) => setProjectError(e.message))
       .finally(() => setProjectLoading(false));
   }, [id]);
+
+  // ── Fetch API keys assigned to this developer ─────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+    api
+      .getProjectApiKeys(id)
+      .then(setApiKeys)
+      .catch(() => {})
+      .finally(() => setApiKeysLoading(false));
+  }, [id]);
+
+  const handleCopyKey = (text: string, keyId: string) => {
+    navigator.clipboard.writeText(text).catch(() => null);
+    setCopiedKey(keyId);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   // ── Fetch logs (re-run when filter or search changes) ─────────────────────
   const fetchLogs = useCallback(() => {
@@ -196,6 +218,84 @@ const ProjectLogs: React.FC = () => {
           <div className="mb-4 bg-error/10 border border-error/20 rounded-lg px-4 py-3 flex items-center gap-3">
             <span className="material-symbols-outlined text-error text-sm">error</span>
             <span className="text-sm text-error">Failed to load project: {projectError}</span>
+          </div>
+        )}
+
+        {/* API Keys Section */}
+        {!apiKeysLoading && apiKeys.length > 0 && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowApiKeys(!showApiKeys)}
+              className="w-full bg-surface-container-low rounded-xl border border-white/5 hover:border-primary/15 transition-all"
+            >
+              <div className="px-5 py-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <span className="material-symbols-outlined text-primary text-lg">vpn_key</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-bold text-white">
+                      API Keys
+                      <span className="ml-2 text-[10px] font-bold bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+                        {apiKeys.length}
+                      </span>
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Keys assigned to you for this project
+                    </p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-slate-400 text-lg">
+                  {showApiKeys ? 'expand_less' : 'expand_more'}
+                </span>
+              </div>
+            </button>
+
+            {showApiKeys && (
+              <div className="mt-2 space-y-2">
+                {apiKeys.map((key) => (
+                  <div
+                    key={key.id}
+                    className="bg-surface-container-low rounded-xl border border-white/5 p-4"
+                  >
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-primary text-base">vpn_key</span>
+                        <div>
+                          <p className="text-sm font-bold text-white">{key.label || 'API Key'}</p>
+                          <p className="text-[10px] text-slate-500">
+                            Created {new Date(key.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-secondary' : 'bg-slate-600'}`} />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          {key.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 px-4 py-2.5 bg-surface-container-highest rounded-lg font-mono text-xs text-on-surface-variant truncate">
+                        {key.key_masked}
+                      </code>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyKey(key.key_masked, key.id);
+                        }}
+                        className="px-3 py-2.5 text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1 flex-shrink-0"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          {copiedKey === key.id ? 'check' : 'content_copy'}
+                        </span>
+                        {copiedKey === key.id ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

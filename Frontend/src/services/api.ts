@@ -56,6 +56,9 @@ export interface ApiKey {
   key_masked: string;
   is_active: boolean;
   created_by?: string;
+  assigned_to?: string;
+  assigned_to_name?: string;
+  assigned_to_email?: string;
   created_at: string;
 }
 
@@ -212,10 +215,13 @@ export const removeDeveloperFromProject = (projectId: string, userId: string) =>
 export const getProjectApiKeys = (projectId: string) =>
   apiFetch<ApiKey[]>(`/api/v1/projects/${projectId}/api-keys`);
 
-export const generateApiKey = (projectId: string, label?: string) =>
+export const generateApiKey = (projectId: string, label?: string, assignedTo?: string) =>
   apiFetch<GeneratedApiKey>(`/api/v1/projects/${projectId}/api-keys`, {
     method: 'POST',
-    body: JSON.stringify({ label: label ?? 'API Key' }),
+    body: JSON.stringify({
+      label: label ?? 'API Key',
+      ...(assignedTo ? { assigned_to: assignedTo } : {}),
+    }),
   });
 
 export const getProjectLogs = (

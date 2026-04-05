@@ -417,28 +417,37 @@ const DevelopersTab: React.FC<DevelopersTabProps> = ({ projectId, developers, on
 interface ApiKeysTabProps {
   projectId: string;
   apiKeys: ApiKey[];
+  developers: Member[];
   onApiKeysChange: (keys: ApiKey[]) => void;
   showToast: (msg: string, type: 'success' | 'error') => void;
 }
 
-const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysChange, showToast }) => {
+const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, developers, onApiKeysChange, showToast }) => {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [labelInput, setLabelInput] = useState('');
+  const [selectedDevId, setSelectedDevId] = useState('');
   const [generating, setGenerating] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const handleGenerate = async () => {
+    if (!selectedDevId) {
+      showToast('Please select a developer to assign this key to', 'error');
+      return;
+    }
     setGenerating(true);
     try {
-      const result = await api.generateApiKey(projectId, labelInput.trim() || undefined);
+      const result = await api.generateApiKey(projectId, labelInput.trim() || undefined, selectedDevId);
       setGeneratedKey(result.api_key);
-      // Add masked version to the list
+      const selectedDev = developers.find((d) => d.id === selectedDevId);
       const newKey: ApiKey = {
         id: result.id,
         label: result.label,
         key_masked: result.api_key.slice(0, 8) + '••••••••••••••••••••' + result.api_key.slice(-4),
         is_active: true,
+        assigned_to: selectedDevId,
+        assigned_to_name: selectedDev?.full_name,
+        assigned_to_email: selectedDev?.email,
         created_at: result.created_at,
       };
       onApiKeysChange([newKey, ...apiKeys]);
@@ -459,6 +468,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
   const closeGenerateModal = () => {
     setShowGenerateModal(false);
     setLabelInput('');
+    setSelectedDevId('');
     setGeneratedKey(null);
   };
 
@@ -468,18 +478,28 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
         <div className="flex justify-end">
           <button
             onClick={() => setShowGenerateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10"
+            disabled={developers.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-[#0b1326] text-sm font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="material-symbols-outlined text-sm">add</span>
             Generate New Key
           </button>
         </div>
 
+        {developers.length === 0 && apiKeys.length === 0 && (
+          <div className="flex items-start gap-3 p-4 bg-[#ffb95f]/10 border border-[#ffb95f]/20 rounded-xl mb-4">
+            <span className="material-symbols-outlined text-[#ffb95f] flex-shrink-0">info</span>
+            <p className="text-xs font-semibold text-[#ffb95f] leading-relaxed">
+              Invite developers to this project first. API keys must be assigned to a project member.
+            </p>
+          </div>
+        )}
+
         {apiKeys.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-surface-container-low rounded-xl border border-white/5 text-center">
             <span className="material-symbols-outlined text-4xl text-slate-600 mb-3">vpn_key</span>
             <p className="text-white font-semibold mb-1">No API keys yet</p>
-            <p className="text-sm text-slate-500">Generate a key to allow access to this project</p>
+            <p className="text-sm text-slate-500">Generate a key and assign it to a developer</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -493,11 +513,19 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
                       <p className="text-[10px] text-slate-500">Created {formatDate(key.created_at)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-[#4edea3]' : 'bg-slate-600'}`} />
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                      {key.is_active ? 'Active' : 'Inactive'}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    {key.assigned_to_name && (
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-highest rounded-lg">
+                        <span className="material-symbols-outlined text-xs text-primary">person</span>
+                        <span className="text-[10px] font-bold text-slate-300">{key.assigned_to_name}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${key.is_active ? 'bg-[#4edea3]' : 'bg-slate-600'}`} />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                        {key.is_active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -537,7 +565,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
                 <div className="flex items-start gap-3 p-4 bg-[#ffb95f]/10 border border-[#ffb95f]/20 rounded-xl">
                   <span className="material-symbols-outlined text-[#ffb95f] flex-shrink-0">warning</span>
                   <p className="text-xs font-semibold text-[#ffb95f] leading-relaxed">
-                    Save this key now. It will not be shown again.
+                    Save this key now. It will not be shown again. The developer will see the masked version in their dashboard.
                   </p>
                 </div>
                 <div>
@@ -567,8 +595,31 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
                 </button>
               </div>
             ) : (
-              /* ── Label form ── */
+              /* ── Form: label + developer selection ── */
               <div className="space-y-5">
+                {/* Assign to Developer (required) */}
+                <div>
+                  <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                    Assign to Developer <span className="text-error">*</span>
+                  </label>
+                  <select
+                    value={selectedDevId}
+                    onChange={(e) => setSelectedDevId(e.target.value)}
+                    className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="">Select a developer...</option>
+                    {developers.map((dev) => (
+                      <option key={dev.id} value={dev.id}>
+                        {dev.full_name} ({dev.email})
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1.5 text-[10px] text-slate-500">
+                    The developer will see this key in their project dashboard.
+                  </p>
+                </div>
+
+                {/* Key Label */}
                 <div>
                   <label className="block text-[0.6875rem] font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                     Key Label <span className="normal-case tracking-normal text-slate-600">(optional)</span>
@@ -579,9 +630,9 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
                     value={labelInput}
                     onChange={(e) => setLabelInput(e.target.value)}
                     className="block w-full py-3 px-4 bg-surface-container-lowest border-0 text-on-surface text-sm rounded-lg focus:ring-1 focus:ring-primary/40 focus:outline-none placeholder:text-slate-600"
-                    autoFocus
                   />
                 </div>
+
                 <div className="flex gap-3">
                   <button
                     type="button"
@@ -592,7 +643,7 @@ const ApiKeysTab: React.FC<ApiKeysTabProps> = ({ projectId, apiKeys, onApiKeysCh
                   </button>
                   <button
                     onClick={handleGenerate}
-                    disabled={generating}
+                    disabled={generating || !selectedDevId}
                     className="flex-1 py-2.5 text-sm font-bold text-[#0b1326] bg-primary rounded-lg hover:opacity-90 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {generating ? (
@@ -1034,6 +1085,7 @@ const ProjectDetail: React.FC = () => {
           <ApiKeysTab
             projectId={id!}
             apiKeys={apiKeys}
+            developers={developers}
             onApiKeysChange={setApiKeys}
             showToast={showToast}
           />

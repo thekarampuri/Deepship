@@ -34,6 +34,7 @@ class AssignDeveloper(BaseModel):
 
 class GenerateApiKey(BaseModel):
     label: str | None = None
+    assigned_to: str | None = None  # user_id of the developer this key is for
 
 
 # ---------------------------------------------------------------------------
@@ -407,17 +408,36 @@ async def list_project_api_keys(
     project_id: str,
     user: Annotated[UserContext, Depends(get_current_user)],
 ):
-    """List API keys for a project (keys are masked — plain key shown only once on creation)."""
+    """List API keys for a project.
+
+    - ADMIN / MANAGER: sees all keys for the project
+    - DEVELOPER: sees only keys assigned to them
+    """
     pool = get_pool()
     await _get_project_or_404(pool, project_id)
 
-    rows = await pool.fetch(
-        """SELECT id, label, is_active, created_by, created_at
-           FROM api_keys
-           WHERE project_id = $1
-           ORDER BY created_at DESC""",
-        project_id,
-    )
+    if user.role == "DEVELOPER":
+        # Developer sees only keys assigned to them
+        rows = await pool.fetch(
+            """SELECT ak.id, ak.label, ak.is_active, ak.created_by, ak.assigned_to,
+                      ak.created_at, u.full_name AS assigned_to_name, u.email AS assigned_to_email
+               FROM api_keys ak
+               LEFT JOIN users u ON u.id = ak.assigned_to
+               WHERE ak.project_id = $1 AND ak.assigned_to = $2
+               ORDER BY ak.created_at DESC""",
+            project_id, user.id,
+        )
+    else:
+        rows = await pool.fetch(
+            """SELECT ak.id, ak.label, ak.is_active, ak.created_by, ak.assigned_to,
+                      ak.created_at, u.full_name AS assigned_to_name, u.email AS assigned_to_email
+               FROM api_keys ak
+               LEFT JOIN users u ON u.id = ak.assigned_to
+               WHERE ak.project_id = $1
+               ORDER BY ak.created_at DESC""",
+            project_id,
+        )
+
     return [
         {
             "id": str(r["id"]),
@@ -425,6 +445,9 @@ async def list_project_api_keys(
             "key_masked": "••••••••••••••••••••••••••••••••",
             "is_active": r["is_active"],
             "created_by": str(r["created_by"]) if r["created_by"] else None,
+            "assigned_to": str(r["assigned_to"]) if r["assigned_to"] else None,
+            "assigned_to_name": r["assigned_to_name"],
+            "assigned_to_email": r["assigned_to_email"],
             "created_at": r["created_at"].isoformat(),
         }
         for r in rows
@@ -451,17 +474,32 @@ async def generate_api_key(
             detail="Project does not belong to your organization",
         )
 
+    # Validate assigned_to developer is a project member
+    if body.assigned_to:
+        member = await pool.fetchrow(
+            """SELECT pm.user_id FROM project_members pm
+               JOIN users u ON u.id = pm.user_id
+               WHERE pm.project_id = $1 AND pm.user_id = $2 AND u.is_active = TRUE""",
+            project_id, body.assigned_to,
+        )
+        if not member:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Developer is not a member of this project",
+            )
+
     plain_key = "th_" + secrets.token_hex(32)
     key_hash = hashlib.sha256(plain_key.encode()).hexdigest()
 
     row = await pool.fetchrow(
-        """INSERT INTO api_keys (project_id, key_hash, label, created_by)
-           VALUES ($1, $2, $3, $4)
+        """INSERT INTO api_keys (project_id, key_hash, label, created_by, assigned_to)
+           VALUES ($1, $2, $3, $4, $5)
            RETURNING id, created_at""",
         project_id,
         key_hash,
         body.label,
         user.id,
+        body.assigned_to,
     )
 
     return {
@@ -469,6 +507,7 @@ async def generate_api_key(
         "project_id": project_id,
         "api_key": plain_key,
         "label": body.label,
+        "assigned_to": body.assigned_to,
         "created_at": row["created_at"].isoformat(),
         "message": "Store this API key securely. It will not be shown again.",
     }
