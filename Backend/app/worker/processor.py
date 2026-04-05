@@ -59,17 +59,20 @@ async def _insert_single_log(conn: asyncpg.Connection, entry: dict) -> None:
     log_id = uuid.uuid4()
     project_id = uuid.UUID(entry["project_id"])
     ts = _parse_timestamp(entry.get("timestamp", ""))
+    api_key_id = uuid.UUID(entry["api_key_id"]) if entry.get("api_key_id") else None
 
     await conn.execute(
         """
         INSERT INTO logs (
             id, project_id, module, level, message, timestamp,
             service, environment, host, pid, thread_id,
-            sdk_version, trace_id, stack_trace, error_type, error_message, extra
+            sdk_version, trace_id, stack_trace, error_type, error_message, extra,
+            api_key_id
         ) VALUES (
             $1, $2, $3, $4::log_level, $5, $6,
             $7, $8, $9, $10, $11,
-            $12, $13, $14, $15, $16, $17::jsonb
+            $12, $13, $14, $15, $16, $17::jsonb,
+            $18
         )
         """,
         log_id,
@@ -89,6 +92,7 @@ async def _insert_single_log(conn: asyncpg.Connection, entry: dict) -> None:
         entry.get("error_type"),
         entry.get("error_message"),
         orjson.dumps(entry.get("extra") or {}).decode(),
+        api_key_id,
     )
 
     # For ERROR / FATAL → upsert an issue

@@ -92,6 +92,8 @@ export interface Log {
   trace_id?: string;
   extra?: Record<string, unknown>;
   ingested_at: string;
+  developer_id?: string;
+  developer_name?: string;
 }
 
 export interface JoinRequest {
@@ -315,7 +317,46 @@ export const getUserProjects = (userId: string) =>
 // ─── Gemini AI Solution ─────────────────────────────────────────────────────
 
 const GEMINI_API_KEY = 'AIzaSyAmmQPAI1TKmcrrUMGG9GkFus-kbjt64hE';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
+async function callGeminiWithRetry(prompt: string, maxRetries = 3): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+  const body = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+  });
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    if (attempt > 0) {
+      // Exponential backoff: 2s, 4s, 8s ...
+      await new Promise((r) => setTimeout(r, 2000 * Math.pow(2, attempt)));
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+
+    if (res.status === 429) {
+      // Rate limited — retry after backoff
+      if (attempt < maxRetries - 1) continue;
+      throw new Error('AI service is busy. Please wait a moment and try again.');
+    }
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error?.message ?? `Gemini API error (${res.status})`);
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text) return text;
+    throw new Error('No response generated. Please try again.');
+  }
+
+  throw new Error('AI service is busy. Please wait a moment and try again.');
+}
 
 export async function getGeminiSolution(log: Log): Promise<string> {
   const prompt = `You are a senior software engineer analyzing a production error log. Provide a detailed, well-formatted solution.
@@ -336,17 +377,7 @@ Provide a detailed response with the following sections:
 3. Prevention Strategy - How to prevent this from happening again
 4. Related Best Practices - Any relevant best practices to follow
 
-Format your response clearly with section headers and bullet points.`;
+Format your response clearly with markdown section headers and bullet points.`;
 
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error?.message ?? 'Gemini API request failed');
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? 'Unable to generate solution. Please try again.';
+  return callGeminiWithRetry(prompt);
 }

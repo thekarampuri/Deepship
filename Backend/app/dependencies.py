@@ -120,16 +120,22 @@ def require_approved_role(*roles: str):
 # API-key validation (for SDK ingestion)
 # ---------------------------------------------------------------------------
 
+@dataclass
+class ApiKeyContext:
+    project_id: str
+    api_key_id: str
+
+
 async def validate_api_key(
     x_api_key: Annotated[str, Header()],
-) -> str:
-    """Hash the incoming key, look it up, return the associated project_id."""
+) -> ApiKeyContext:
+    """Hash the incoming key, look it up, return project_id and api_key_id."""
     key_hash = hashlib.sha256(x_api_key.encode()).hexdigest()
     pool = get_pool()
     row = await pool.fetchrow(
-        "SELECT project_id FROM api_keys WHERE key_hash = $1 AND is_active = TRUE",
+        "SELECT id, project_id FROM api_keys WHERE key_hash = $1 AND is_active = TRUE",
         key_hash,
     )
     if not row:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or inactive API key")
-    return str(row["project_id"])
+    return ApiKeyContext(project_id=str(row["project_id"]), api_key_id=str(row["id"]))

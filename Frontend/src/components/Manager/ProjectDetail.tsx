@@ -670,38 +670,30 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
     if (e.key === 'Enter') fetchLogs(levelFilter, search);
   };
 
-  // Derive unique modules from logs
-  const modules = useMemo(
-    () => [...new Set(logs.map((l) => l.module || 'General'))],
-    [logs],
-  );
-
-  // Map developers to modules (round-robin distribution)
+  // Derive developer → modules mapping from actual log data (via api_key assignment)
   const devModuleMap = useMemo(() => {
-    const map = new Map<string, string[]>();
-    if (developers.length === 0) return map;
-    developers.forEach((dev) => map.set(dev.id, []));
-    modules.forEach((mod, i) => {
-      const devId = developers[i % developers.length].id;
-      const arr = map.get(devId);
-      if (arr) arr.push(mod);
+    const map = new Map<string, Set<string>>();
+    logs.forEach((log) => {
+      if (log.developer_id) {
+        if (!map.has(log.developer_id)) map.set(log.developer_id, new Set());
+        map.get(log.developer_id)!.add(log.module || 'General');
+      }
     });
     return map;
-  }, [developers, modules]);
+  }, [logs]);
 
   const getDevModules = useCallback(
-    (devId: string) => devModuleMap.get(devId) || [],
+    (devId: string): string[] => [...(devModuleMap.get(devId) ?? [])],
     [devModuleMap],
   );
 
-  // Filter logs for selected developer's modules
+  // Filter logs for selected developer (using real developer_id from api_key)
   const filteredLogs = useMemo(() => {
     if (!selectedDevId) return logs;
-    const devMods = getDevModules(selectedDevId);
-    return logs.filter((l) => devMods.includes(l.module || 'General'));
-  }, [logs, selectedDevId, getDevModules]);
+    return logs.filter((l) => l.developer_id === selectedDevId);
+  }, [logs, selectedDevId]);
 
-  // Group filtered logs by module
+  // Group filtered logs by module (hierarchical structure)
   const logsByModule = useMemo(() => {
     const grouped = new Map<string, Log[]>();
     filteredLogs.forEach((log) => {
@@ -766,18 +758,11 @@ const LogsTab: React.FC<LogsTabProps> = ({ projectId, developers, showToast }) =
             {developers.map((dev) => {
               const devMods = getDevModules(dev.id);
               const isSelected = selectedDevId === dev.id;
-              const devLogCount = devMods.reduce(
-                (sum, mod) => sum + (logsByModule.get(mod)?.length ?? logs.filter((l) => (l.module || 'General') === mod).length),
-                0,
-              );
-              const devErrorCount = devMods.reduce(
-                (sum, mod) =>
-                  sum +
-                  (logs
-                    .filter((l) => (l.module || 'General') === mod)
-                    .filter((l) => l.level === 'ERROR' || l.level === 'FATAL').length),
-                0,
-              );
+              const devLogs = logs.filter((l) => l.developer_id === dev.id);
+              const devLogCount = devLogs.length;
+              const devErrorCount = devLogs.filter(
+                (l) => l.level === 'ERROR' || l.level === 'FATAL',
+              ).length;
 
               return (
                 <button

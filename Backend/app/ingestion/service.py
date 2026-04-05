@@ -23,10 +23,10 @@ def parse_batch(raw: bytes) -> list[dict]:
     return data
 
 
-def prepare_for_queue(entries: list[LogEntryIn], project_id: str) -> bytes:
-    """Serialise validated entries + project_id for the RabbitMQ message."""
+def prepare_for_queue(entries: list[LogEntryIn], project_id: str, api_key_id: str | None = None) -> bytes:
+    """Serialise validated entries + project_id + api_key_id for the RabbitMQ message."""
     payload = [
-        {**entry.model_dump(mode="json"), "project_id": project_id}
+        {**entry.model_dump(mode="json"), "project_id": project_id, "api_key_id": api_key_id}
         for entry in entries
     ]
     return orjson.dumps(payload)

@@ -536,21 +536,24 @@ async def get_project_logs(
     limit: int = 100,
     offset: int = 0,
 ):
-    """Get logs for a project with optional level filter and search."""
+    """Get logs for a project with optional level filter and search.
+
+    Includes the developer (assigned_to) info from the api_key used to ingest each log.
+    """
     pool = get_pool()
     await _get_project_or_404(pool, project_id)
 
-    conditions = ["project_id = $1"]
+    conditions = ["l.project_id = $1"]
     params: list = [project_id]
     idx = 2
 
     if level and level != "ALL":
-        conditions.append(f"level = ${idx}::log_level")
+        conditions.append(f"l.level = ${idx}::log_level")
         params.append(level)
         idx += 1
 
     if search:
-        conditions.append(f"(message ILIKE ${idx} OR service ILIKE ${idx} OR error_type ILIKE ${idx})")
+        conditions.append(f"(l.message ILIKE ${idx} OR l.service ILIKE ${idx} OR l.error_type ILIKE ${idx})")
         params.append(f"%{search}%")
         idx += 1
 
@@ -558,12 +561,17 @@ async def get_project_logs(
     params.extend([limit, offset])
 
     rows = await pool.fetch(
-        f"""SELECT id, module, level, message, timestamp, service, environment,
-                  host, error_type, stack_trace, trace_id, extra, ingested_at
-           FROM logs
-           WHERE {where_clause}
-           ORDER BY timestamp DESC
-           LIMIT ${idx} OFFSET ${idx + 1}""",
+        f"""SELECT l.id, l.module, l.level, l.message, l.timestamp, l.service,
+                   l.environment, l.host, l.error_type, l.stack_trace, l.trace_id,
+                   l.extra, l.ingested_at, l.error_message,
+                   ak.assigned_to AS developer_id,
+                   u.full_name    AS developer_name
+            FROM logs l
+            LEFT JOIN api_keys ak ON ak.id = l.api_key_id
+            LEFT JOIN users    u  ON u.id  = ak.assigned_to
+            WHERE {where_clause}
+            ORDER BY l.timestamp DESC
+            LIMIT ${idx} OFFSET ${idx + 1}""",
         *params,
     )
 
@@ -578,10 +586,13 @@ async def get_project_logs(
             "environment": r["environment"],
             "host": r["host"],
             "error_type": r["error_type"],
+            "error_message": r["error_message"],
             "stack_trace": r["stack_trace"],
             "trace_id": r["trace_id"],
             "extra": r["extra"] if isinstance(r["extra"], dict) else None,
             "ingested_at": r["ingested_at"].isoformat(),
+            "developer_id": str(r["developer_id"]) if r["developer_id"] else None,
+            "developer_name": r["developer_name"],
         }
         for r in rows
     ]

@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Request, status
 
-from app.dependencies import validate_api_key
+from app.dependencies import validate_api_key, ApiKeyContext
 from app.ingestion.schemas import IngestResponse, LogEntryIn
 from app.ingestion.service import decompress_body, parse_batch, prepare_for_queue
 from app.queue.publisher import publish_batch
@@ -24,7 +24,7 @@ router = APIRouter()
 )
 async def ingest_logs(
     request: Request,
-    project_id: Annotated[str, Depends(validate_api_key)],
+    api_key_ctx: Annotated[ApiKeyContext, Depends(validate_api_key)],
     content_encoding: Annotated[str | None, Header()] = None,
 ):
     """Receive a batch of logs from the SDK and queue them for processing."""
@@ -35,8 +35,8 @@ async def ingest_logs(
     # Validate each entry through Pydantic
     entries = [LogEntryIn(**e) for e in raw_entries]
 
-    # Prepare payload and publish to RabbitMQ
-    payload = prepare_for_queue(entries, project_id)
+    # Prepare payload and publish to RabbitMQ (include api_key_id for developer tracking)
+    payload = prepare_for_queue(entries, api_key_ctx.project_id, api_key_ctx.api_key_id)
     await publish_batch(payload)
 
     return IngestResponse(accepted=len(entries))
