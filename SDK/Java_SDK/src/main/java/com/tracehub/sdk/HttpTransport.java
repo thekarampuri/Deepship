@@ -44,7 +44,7 @@ public class HttpTransport {
         for (int attempt = 0; attempt <= maxRetries; attempt++) {
             if (attempt > 0) {
                 try {
-                    long backoff = (1L << attempt) * 1000; // 2^attempt seconds
+                    long backoff = (1L << attempt) * 1000;
                     Thread.sleep(backoff);
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
@@ -73,24 +73,24 @@ public class HttpTransport {
 
                 if (statusCode == 200 || statusCode == 202) {
                     consecutiveFailures.set(0);
+                    System.out.println("[TraceHub] Sent " + entries.size() + " entries successfully (" + statusCode + ")");
                     return true;
                 }
 
                 if (statusCode >= 400 && statusCode < 500) {
-                    System.err.println("[TraceHub] Client error " + statusCode + ", saving to DLQ");
+                    System.err.println("[TraceHub] Client error " + statusCode + ": " + response.body());
                     dlq.save(entries);
                     return false;
                 }
 
                 // Server error — retry
+                System.err.println("[TraceHub] Server error " + statusCode + " on attempt " + (attempt + 1) + ": " + response.body());
                 handleFailure(attempt);
 
             } catch (Exception e) {
+                System.err.println("[TraceHub] Transport error on attempt " + (attempt + 1) + "/" + (maxRetries + 1)
+                        + ": " + e.getClass().getName() + ": " + e.getMessage());
                 handleFailure(attempt);
-                if (attempt < maxRetries) {
-                    System.err.println("[TraceHub] Retry " + (attempt + 1) + "/" + maxRetries
-                            + " after error: " + e.getMessage());
-                }
             }
         }
 
@@ -101,6 +101,9 @@ public class HttpTransport {
 
     public void replayDlq() {
         List<List<LogEntry>> batches = dlq.loadAll();
+        if (!batches.isEmpty()) {
+            System.out.println("[TraceHub] Replaying " + batches.size() + " DLQ batches");
+        }
         for (List<LogEntry> batch : batches) {
             try {
                 send(batch);
@@ -121,6 +124,7 @@ public class HttpTransport {
     private void createClient() {
         this.client = HttpClient.newBuilder()
                 .connectTimeout(timeout)
+                .version(HttpClient.Version.HTTP_1_1)
                 .build();
     }
 

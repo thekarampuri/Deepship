@@ -1,0 +1,6 @@
+com\tracehub\sdk\LogEntryTest.class
+com\tracehub\sdk\EnricherTest.class
+com\tracehub\sdk\ExceptionsTest.class
+com\tracehub\sdk\LogLevelTest.class
+com\tracehub\sdk\RingBufferTest.class
+com\tracehub\sdk\SerializerTest.class

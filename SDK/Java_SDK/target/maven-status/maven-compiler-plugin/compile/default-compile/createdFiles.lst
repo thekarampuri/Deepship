@@ -1,0 +1,17 @@
+com\tracehub\sdk\integrations\TraceHubAutoConfiguration.class
+com\tracehub\sdk\TraceHubConfig.class
+com\tracehub\sdk\BatchWorker.class
+com\tracehub\sdk\Serializer$SerializedPayload.class
+com\tracehub\sdk\integrations\TraceHubAutoConfiguration$TraceHubProperties.class
+com\tracehub\sdk\integrations\TraceHubFilter.class
+com\tracehub\sdk\Serializer.class
+com\tracehub\sdk\TraceHubConfigError.class
+com\tracehub\sdk\TraceHubLogger.class
+com\tracehub\sdk\DeadLetterQueue.class
+com\tracehub\sdk\HttpTransport.class
+com\tracehub\sdk\LogLevel.class
+com\tracehub\sdk\TraceHubTransportError.class
+com\tracehub\sdk\Enricher.class
+com\tracehub\sdk\LogEntry.class
+com\tracehub\sdk\RingBuffer.class
+com\tracehub\sdk\TraceHubError.class

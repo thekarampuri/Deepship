@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.HashMap;
 import java.util.Map;
 
-@JsonInclude(JsonInclude.Include.ALWAYS)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class LogEntry {
 
     @JsonProperty("level")
@@ -40,23 +40,19 @@ public class LogEntry {
     private String traceId;
 
     @JsonProperty("module")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String module;
 
     @JsonProperty("stack_trace")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String stackTrace;
 
     @JsonProperty("error_type")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorType;
 
     @JsonProperty("error_message")
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String errorMessage;
 
     @JsonProperty("extra")
-    private Map<String, Object> extra = new HashMap<>();
+    private Map<String, Object> extra;
 
     public LogEntry() {}
 
