@@ -205,6 +205,7 @@ CREATE TABLE IF NOT EXISTS logs (
     trace_id        VARCHAR(64),
     stack_trace     TEXT,
     error_type      VARCHAR(255),
+    error_message   TEXT,
     extra           JSONB,
     ingested_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     -- search vector (auto-populated by trigger)
@@ -237,6 +238,7 @@ CREATE OR REPLACE FUNCTION logs_search_vector_update() RETURNS TRIGGER AS $$
 BEGIN
     NEW.search_vector :=
         setweight(to_tsvector('english', COALESCE(NEW.message, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(NEW.error_message, '')), 'A') ||
         setweight(to_tsvector('english', COALESCE(NEW.error_type, '')), 'B') ||
         setweight(to_tsvector('english', COALESCE(NEW.service, '')), 'C') ||
         setweight(to_tsvector('english', COALESCE(NEW.module, '')), 'C');
@@ -370,6 +372,7 @@ CREATE INDEX IF NOT EXISTS idx_users_skills ON users USING GIN (skills);
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'APPROVED' NOT NULL;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS assigned_to UUID REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS key_value VARCHAR(255);
+ALTER TABLE logs ADD COLUMN IF NOT EXISTS error_message TEXT;
 """
 
 

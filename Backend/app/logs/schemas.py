@@ -48,6 +48,7 @@ class LogOut(BaseModel):
     trace_id: Optional[str]
     stack_trace: Optional[str]
     error_type: Optional[str]
+    error_message: Optional[str]
     extra: dict[str, Any]
     ingested_at: datetime
 

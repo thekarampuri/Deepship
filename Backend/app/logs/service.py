@@ -78,7 +78,7 @@ async def search_logs(
         SELECT id, project_id, module, level, message, timestamp,
                service, environment, host, pid, thread_id,
                sdk_version, trace_id, stack_trace, error_type,
-               extra, ingested_at
+               error_message, extra, ingested_at
         FROM logs
         WHERE {where}
         ORDER BY timestamp DESC
@@ -102,7 +102,7 @@ async def get_log_by_id(
         SELECT id, project_id, module, level, message, timestamp,
                service, environment, host, pid, thread_id,
                sdk_version, trace_id, stack_trace, error_type,
-               extra, ingested_at
+               error_message, extra, ingested_at
         FROM logs
         WHERE id = $1 AND timestamp = $2
         """,
@@ -165,6 +165,7 @@ def _row_to_log(row: asyncpg.Record) -> LogOut:
         trace_id=row["trace_id"],
         stack_trace=row["stack_trace"],
         error_type=row["error_type"],
+        error_message=row["error_message"],
         extra=extra or {},
         ingested_at=row["ingested_at"],
     )

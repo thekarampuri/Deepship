@@ -44,11 +44,11 @@ async def _insert_logs(conn: asyncpg.Connection, entries: list[dict]) -> None:
             INSERT INTO logs (
                 id, project_id, module, level, message, timestamp,
                 service, environment, host, pid, thread_id,
-                sdk_version, trace_id, stack_trace, error_type, extra
+                sdk_version, trace_id, stack_trace, error_type, error_message, extra
             ) VALUES (
                 $1, $2, $3, $4::log_level, $5, $6,
                 $7, $8, $9, $10, $11,
-                $12, $13, $14, $15, $16::jsonb
+                $12, $13, $14, $15, $16, $17::jsonb
             )
             """,
             log_id,
@@ -66,6 +66,7 @@ async def _insert_logs(conn: asyncpg.Connection, entries: list[dict]) -> None:
             entry.get("trace_id") or None,
             entry.get("stack_trace"),
             entry.get("error_type"),
+            entry.get("error_message"),
             orjson.dumps(entry.get("extra") or {}).decode(),
         )
 

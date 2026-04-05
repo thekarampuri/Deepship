@@ -1,10 +1,10 @@
-"""Tests for sentinel_sdk.serializer."""
+"""Tests for tracehub.serializer."""
 
 import gzip
 import json
 
-from sentinel_sdk.models import LogEntry, LogLevel
-from sentinel_sdk.serializer import serialize
+from tracehub.models import LogEntry, LogLevel
+from tracehub.serializer import serialize
 
 
 def _entry(msg: str = "test") -> LogEntry:

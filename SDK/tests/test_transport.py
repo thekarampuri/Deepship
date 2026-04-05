@@ -1,4 +1,4 @@
-"""Tests for sentinel_sdk.transport."""
+"""Tests for tracehub.transport."""
 
 import gzip
 import json
@@ -6,8 +6,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from sentinel_sdk.models import LogEntry, LogLevel
-from sentinel_sdk.transport import DeadLetterQueue, HttpTransport
+from tracehub.models import LogEntry, LogLevel
+from tracehub.transport import DeadLetterQueue, HttpTransport
 
 
 def _entry(msg: str = "test") -> LogEntry:
@@ -110,7 +110,7 @@ class TestHttpTransport:
         with patch.object(
             transport._client, "post", side_effect=[mock_500, mock_500, mock_202]
         ) as mock_post:
-            with patch("sentinel_sdk.transport.time.sleep"):
+            with patch("tracehub.transport.time.sleep"):
                 result = transport.send([_entry()])
                 assert result is True
                 assert mock_post.call_count == 3

@@ -1,6 +1,6 @@
-"""Tests for sentinel_sdk.models."""
+"""Tests for tracehub.models."""
 
-from sentinel_sdk.models import LogEntry, LogLevel
+from tracehub.models import LogEntry, LogLevel
 
 
 class TestLogLevel:

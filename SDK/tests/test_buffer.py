@@ -1,9 +1,9 @@
-"""Tests for sentinel_sdk.buffer."""
+"""Tests for tracehub.buffer."""
 
 import threading
 
-from sentinel_sdk.buffer import RingBuffer
-from sentinel_sdk.models import LogEntry, LogLevel
+from tracehub.buffer import RingBuffer
+from tracehub.models import LogEntry, LogLevel
 
 
 def _entry(msg: str = "test") -> LogEntry:

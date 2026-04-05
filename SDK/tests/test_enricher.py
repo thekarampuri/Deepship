@@ -1,10 +1,10 @@
-"""Tests for sentinel_sdk.enricher."""
+"""Tests for tracehub.enricher."""
 
 import os
 import socket
 
-from sentinel_sdk.enricher import Enricher, clear_trace_id, get_trace_id, set_trace_id
-from sentinel_sdk.models import LogLevel
+from tracehub.enricher import Enricher, clear_trace_id, get_trace_id, set_trace_id
+from tracehub.models import LogLevel
 
 
 class TestTraceId:

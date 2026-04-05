@@ -1,11 +1,11 @@
-"""Tests for sentinel_sdk.batcher."""
+"""Tests for tracehub.batcher."""
 
 import time
 from unittest.mock import MagicMock
 
-from sentinel_sdk.batcher import BatchWorker
-from sentinel_sdk.buffer import RingBuffer
-from sentinel_sdk.models import LogEntry, LogLevel
+from tracehub.batcher import BatchWorker
+from tracehub.buffer import RingBuffer
+from tracehub.models import LogEntry, LogLevel
 
 
 def _entry(msg: str = "test") -> LogEntry:

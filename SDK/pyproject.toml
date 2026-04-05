@@ -3,13 +3,13 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "orchid-sentinel-sdk"
-version = "1.0.0"
-description = "Lightweight, non-blocking Python SDK for Orchid Sentinel log ingestion and error tracking"
+name = "tracehub-logger"
+version = "1.1.0"
+description = "Lightweight, non-blocking Python SDK for TraceHub log ingestion and error tracking"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-keywords = ["logging", "monitoring", "error-tracking", "sentinel", "orchid", "observability"]
+keywords = ["logging", "monitoring", "error-tracking", "tracehub", "observability", "tracing"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -41,11 +41,11 @@ dev = [
 [project.urls]
 Homepage = "http://103.127.146.14"
 Documentation = "http://103.127.146.14/docs"
-Repository = "https://github.com/orchid-sentinel/sdk"
-"Bug Tracker" = "https://github.com/orchid-sentinel/sdk/issues"
+Repository = "https://github.com/tracehub/sdk"
+"Bug Tracker" = "https://github.com/tracehub/sdk/issues"
 
 [tool.setuptools.packages.find]
-include = ["sentinel_sdk*"]
+include = ["tracehub*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

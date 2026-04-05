@@ -30,6 +30,7 @@ class LogEntryIn(BaseModel):
     module: str = ""
     stack_trace: Optional[str] = None
     error_type: Optional[str] = None
+    error_message: Optional[str] = None
     extra: dict[str, Any] = {}
 
 

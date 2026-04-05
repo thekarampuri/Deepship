@@ -1,12 +1,12 @@
-"""Integration test — verifies SDK ➜ API ➜ RabbitMQ pipeline.
+"""Integration test — verifies SDK -> API -> RabbitMQ pipeline.
 
 Requirements:
-    - Orchid backend running at http://103.127.146.14
+    - TraceHub backend running at http://103.127.146.14
     - RabbitMQ running and connected to the backend
-    - A valid API key (set SENTINEL_TEST_API_KEY env var)
+    - A valid API key (set TRACEHUB_TEST_API_KEY env var)
 
 Run:
-    SENTINEL_TEST_API_KEY=th_xxx pytest tests/test_integration_rabbitmq.py -v -s
+    TRACEHUB_TEST_API_KEY=th_xxx pytest tests/test_integration_rabbitmq.py -v -s
 """
 
 import os
@@ -14,20 +14,20 @@ import time
 
 import pytest
 
-from sentinel_sdk import SentinelLogger
+from tracehub import TraceHubLogger
 
-API_KEY = os.environ.get("SENTINEL_TEST_API_KEY", "")
+API_KEY = os.environ.get("TRACEHUB_TEST_API_KEY", "")
 ENDPOINT = "http://103.127.146.14"
 
 pytestmark = pytest.mark.skipif(
     not API_KEY,
-    reason="Set SENTINEL_TEST_API_KEY to run integration tests",
+    reason="Set TRACEHUB_TEST_API_KEY to run integration tests",
 )
 
 
 @pytest.fixture
 def logger():
-    lg = SentinelLogger(
+    lg = TraceHubLogger(
         api_key=API_KEY,
         service="sdk-integration-test",
         environment="test",
@@ -45,7 +45,6 @@ class TestRabbitMQIntegration:
         """Send a single log and verify it's accepted (202)."""
         logger.info("integration test - single log", module="test")
         logger.flush()
-        # If no exception, the batch was accepted by the API
         time.sleep(1)
 
     def test_batch_ingestion(self, logger):
@@ -61,7 +60,7 @@ class TestRabbitMQIntegration:
     def test_error_with_stack_trace(self, logger):
         """Send an error log with stack trace (triggers issue creation via RabbitMQ worker)."""
         try:
-            raise ValueError("SDK integration test error — safe to ignore")
+            raise ValueError("SDK integration test error -- safe to ignore")
         except ValueError:
             logger.error(
                 "Caught test error",

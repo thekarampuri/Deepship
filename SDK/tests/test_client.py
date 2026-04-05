@@ -1,26 +1,26 @@
-"""Tests for sentinel_sdk.client (SentinelLogger)."""
+"""Tests for tracehub.client (TraceHubLogger)."""
 
 import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from sentinel_sdk import DEFAULT_ENDPOINT
-from sentinel_sdk.client import SentinelLogger
-from sentinel_sdk.exceptions import SentinelConfigError
+from tracehub import DEFAULT_ENDPOINT
+from tracehub.client import TraceHubLogger
+from tracehub.exceptions import TraceHubConfigError
 
 
-class TestSentinelLoggerConfig:
+class TestTraceHubLoggerConfig:
     def test_requires_api_key(self):
-        with pytest.raises(SentinelConfigError, match="api_key"):
-            SentinelLogger(api_key="", service="svc", environment="test")
+        with pytest.raises(TraceHubConfigError, match="api_key"):
+            TraceHubLogger(api_key="", service="svc", environment="test")
 
     def test_default_endpoint(self):
-        with patch("sentinel_sdk.client.HttpTransport") as mock_transport:
+        with patch("tracehub.client.HttpTransport") as mock_transport:
             mock_transport.return_value = MagicMock()
-            with patch("sentinel_sdk.client.BatchWorker") as mock_batcher:
+            with patch("tracehub.client.BatchWorker") as mock_batcher:
                 mock_batcher.return_value = MagicMock()
-                logger = SentinelLogger(
+                logger = TraceHubLogger(
                     api_key="test-key",
                     service="svc",
                     environment="test",
@@ -31,11 +31,11 @@ class TestSentinelLoggerConfig:
                 logger.close()
 
     def test_custom_endpoint(self):
-        with patch("sentinel_sdk.client.HttpTransport") as mock_transport:
+        with patch("tracehub.client.HttpTransport") as mock_transport:
             mock_transport.return_value = MagicMock()
-            with patch("sentinel_sdk.client.BatchWorker") as mock_batcher:
+            with patch("tracehub.client.BatchWorker") as mock_batcher:
                 mock_batcher.return_value = MagicMock()
-                logger = SentinelLogger(
+                logger = TraceHubLogger(
                     api_key="test-key",
                     service="svc",
                     environment="test",
@@ -46,12 +46,12 @@ class TestSentinelLoggerConfig:
                 logger.close()
 
 
-class TestSentinelLoggerLogging:
+class TestTraceHubLoggerLogging:
     def setup_method(self):
         self._tmpdir = tempfile.mkdtemp()
 
     def _make_logger(self):
-        return SentinelLogger(
+        return TraceHubLogger(
             api_key="test-key",
             service="test-svc",
             environment="test",
