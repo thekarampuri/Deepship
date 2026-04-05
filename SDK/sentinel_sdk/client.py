@@ -5,6 +5,7 @@ from __future__ import annotations
 import atexit
 from typing import Any, Optional
 
+import sentinel_sdk
 from sentinel_sdk.batcher import BatchWorker
 from sentinel_sdk.buffer import RingBuffer
 from sentinel_sdk.enricher import Enricher
@@ -18,11 +19,12 @@ class SentinelLogger:
 
     Usage::
 
+        from sentinel_sdk import SentinelLogger
+
         logger = SentinelLogger(
-            api_key="proj_abc123",
+            api_key="th_abc123",
             service="auth-service",
             environment="production",
-            endpoint="https://sentinel.yourdomain.com",
         )
 
         logger.info("user logged in", module="auth")
@@ -38,7 +40,7 @@ class SentinelLogger:
         api_key: str,
         service: str,
         environment: str,
-        endpoint: str,
+        endpoint: str = "",
         *,
         batch_size: int = 50,
         flush_interval: float = 5.0,
@@ -50,8 +52,8 @@ class SentinelLogger:
     ) -> None:
         if not api_key:
             raise SentinelConfigError("api_key is required")
-        if not endpoint:
-            raise SentinelConfigError("endpoint is required")
+
+        endpoint = endpoint or sentinel_sdk.DEFAULT_ENDPOINT
 
         self._enricher = Enricher(service=service, environment=environment)
         self._buffer = RingBuffer(capacity=max_buffer)
