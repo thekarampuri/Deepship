@@ -1,4 +1,11 @@
-"""POST /api/v1/ai/solution — proxy AI solution requests through the backend."""
+"""POST /api/v1/ai/solution — proxy AI requests through the backend.
+
+Supports two providers with automatic fallback:
+  1. OpenRouter  (if OPENROUTER_API_KEY is set)
+  2. Google Gemini (if GEMINI_API_KEY is set)
+
+Set the key in .env — the backend picks the first available provider.
+"""
 
 from __future__ import annotations
 
@@ -16,9 +23,7 @@ log = logging.getLogger(__name__)
 
 router = APIRouter()
 
-OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-OPENROUTER_MODEL = "google/gemini-2.0-flash-001"
-
+# ─── Schemas ──────────────────────────────────────────────────────────────────
 
 class SolutionRequest(BaseModel):
     level: str
@@ -34,29 +39,23 @@ class SolutionResponse(BaseModel):
     solution: str
 
 
-@router.post("/ai/solution", response_model=SolutionResponse)
-async def get_ai_solution(
-    body: SolutionRequest,
-    user: Annotated[UserContext, Depends(get_current_user)],
-):
-    """Generate an AI-powered solution for an error log via OpenRouter."""
+# ─── Shared prompt builder ────────────────────────────────────────────────────
 
-    api_key = settings.OPENROUTER_API_KEY
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI service not configured",
-        )
+SYSTEM_MSG = (
+    "You are a concise senior software engineer. "
+    "Give short, actionable answers. Use markdown headers (##) and bullet points. No filler text."
+)
 
+def _build_prompt(body: SolutionRequest) -> str:
     stack_snippet = ""
     if body.stack_trace:
         stack_snippet = "\n".join(body.stack_trace.split("\n")[:6])
 
-    prompt = f"""Analyze this error log and give a concise fix.
+    return f"""Analyze this error log and give a concise fix.
 
 Level: {body.level}
 Message: {body.message}
-Error Type: {body.error_type or 'Unknown'}{f'\nError: {body.error_message}' if body.error_message else ''}
+Error Type: {body.error_type or 'Unknown'}{f'{chr(10)}Error: {body.error_message}' if body.error_message else ''}
 Service: {body.service or 'Unknown'} | Module: {body.module or 'Unknown'}
 Stack (top): {stack_snippet or 'N/A'}
 
@@ -71,53 +70,99 @@ Reply with EXACTLY these 3 sections (keep each short, 2-4 bullets max):
 ## Prevention
 (2-3 bullets to prevent recurrence)"""
 
-    payload = {
-        "model": OPENROUTER_MODEL,
-        "messages": [
-            {
-                "role": "system",
-                "content": "You are a concise senior software engineer. Give short, actionable answers. Use markdown headers (##) and bullet points. No filler text.",
+
+# ─── Provider: OpenRouter ─────────────────────────────────────────────────────
+
+async def _call_openrouter(prompt: str, api_key: str) -> str:
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            json={
+                "model": "google/gemini-2.0-flash-001",
+                "messages": [
+                    {"role": "system", "content": SYSTEM_MSG},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.4,
+                "max_tokens": 700,
             },
-            {"role": "user", "content": prompt},
-        ],
-        "temperature": 0.4,
-        "max_tokens": 700,
-    }
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+    data = resp.json()
+    if resp.status_code != 200:
+        raise RuntimeError(data.get("error", {}).get("message", f"OpenRouter {resp.status_code}"))
+    text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+    if not text:
+        raise RuntimeError("OpenRouter returned empty response")
+    return text
 
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(
-                OPENROUTER_URL,
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-            )
 
-        if resp.status_code == 401:
-            log.error("OpenRouter auth failed — check OPENROUTER_API_KEY")
-            raise HTTPException(status_code=502, detail="AI authentication failed")
+# ─── Provider: Google Gemini ──────────────────────────────────────────────────
 
-        if resp.status_code == 429:
-            raise HTTPException(status_code=429, detail="AI service rate limited. Try again shortly.")
+async def _call_gemini(prompt: str, api_key: str) -> str:
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(
+            url,
+            json={
+                "contents": [{"parts": [{"text": f"{SYSTEM_MSG}\n\n{prompt}"}]}],
+                "generationConfig": {"temperature": 0.4, "maxOutputTokens": 700},
+            },
+            headers={"Content-Type": "application/json"},
+        )
+    data = resp.json()
+    if resp.status_code != 200:
+        msg = data.get("error", {}).get("message", f"Gemini {resp.status_code}")
+        raise RuntimeError(msg)
+    text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+    if not text:
+        raise RuntimeError("Gemini returned empty response")
+    return text
 
-        data = resp.json()
 
-        if resp.status_code >= 400:
-            detail = data.get("error", {}).get("message", f"AI error ({resp.status_code})")
-            raise HTTPException(status_code=502, detail=detail)
+# ─── Endpoint ─────────────────────────────────────────────────────────────────
 
-        text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-        if not text:
-            raise HTTPException(status_code=502, detail="AI returned empty response")
+@router.post("/ai/solution", response_model=SolutionResponse)
+async def get_ai_solution(
+    body: SolutionRequest,
+    user: Annotated[UserContext, Depends(get_current_user)],
+):
+    """Generate an AI-powered solution for an error log.
 
-        return SolutionResponse(solution=text)
+    Tries OpenRouter first, then Gemini. Returns the first successful result.
+    """
+    prompt = _build_prompt(body)
+    errors: list[str] = []
 
-    except httpx.TimeoutException:
-        raise HTTPException(status_code=504, detail="AI service timed out")
-    except HTTPException:
-        raise
-    except Exception:
-        log.exception("AI solution request failed")
-        raise HTTPException(status_code=502, detail="AI service unavailable")
+    # Try OpenRouter
+    if settings.OPENROUTER_API_KEY:
+        try:
+            text = await _call_openrouter(prompt, settings.OPENROUTER_API_KEY)
+            return SolutionResponse(solution=text)
+        except Exception as exc:
+            errors.append(f"OpenRouter: {exc}")
+            log.warning("OpenRouter failed: %s", exc)
+
+    # Try Gemini
+    if settings.GEMINI_API_KEY:
+        try:
+            text = await _call_gemini(prompt, settings.GEMINI_API_KEY)
+            return SolutionResponse(solution=text)
+        except Exception as exc:
+            errors.append(f"Gemini: {exc}")
+            log.warning("Gemini failed: %s", exc)
+
+    # Nothing worked
+    if not settings.OPENROUTER_API_KEY and not settings.GEMINI_API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI not configured. Set OPENROUTER_API_KEY or GEMINI_API_KEY in .env",
+        )
+
+    raise HTTPException(
+        status_code=status.HTTP_502_BAD_GATEWAY,
+        detail=f"All AI providers failed: {'; '.join(errors)}",
+    )

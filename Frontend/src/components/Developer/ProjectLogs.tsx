@@ -202,8 +202,9 @@ const ProjectLogs: React.FC = () => {
     try {
       const solution = await api.getGeminiSolution(log);
       setSolutions((prev) => ({ ...prev, [log.id]: solution }));
-    } catch {
-      setLogsError('Failed to generate AI solution');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'AI service unavailable';
+      setLogsError(msg);
     } finally {
       setSolutionLoading(null);
     }
