@@ -580,7 +580,7 @@ async def get_project_logs(
             "error_type": r["error_type"],
             "stack_trace": r["stack_trace"],
             "trace_id": r["trace_id"],
-            "extra": dict(r["extra"]) if r["extra"] else None,
+            "extra": r["extra"] if isinstance(r["extra"], dict) else None,
             "ingested_at": r["ingested_at"].isoformat(),
         }
         for r in rows
