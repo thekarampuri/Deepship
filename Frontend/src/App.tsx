@@ -1,10 +1,6 @@
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Navbar from './components/LandingPage/Navbar';
 import Hero from './components/LandingPage/Hero';
-import StatsBar from './components/LandingPage/StatsBar';
-import FeaturesGrid from './components/LandingPage/FeaturesGrid';
-import CTASection from './components/LandingPage/CTASection';
-import Footer from './components/LandingPage/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import SignupPage from './components/SignupPage/SignupPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -34,15 +30,9 @@ import ProjectLogs from './components/Developer/ProjectLogs';
 const LandingPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-surface-dim selection:bg-primary-container selection:text-on-primary-container">
+    <div className="landing h-screen flex flex-col overflow-hidden bg-[hsl(var(--lp-bg))] selection:bg-[hsl(var(--lp-accent))] selection:text-white">
       <Navbar onSignIn={() => navigate('/login')} />
-      <main>
-        <Hero onSignUp={() => navigate('/signup')} />
-        <StatsBar />
-        <FeaturesGrid />
-        <CTASection onSignUp={() => navigate('/signup')} />
-      </main>
-      <Footer />
+      <Hero onSignUp={() => navigate('/signup')} />
     </div>
   );
 };

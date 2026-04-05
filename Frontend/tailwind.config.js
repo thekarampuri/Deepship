@@ -66,7 +66,9 @@ export default {
         "headline": ["Inter", "sans-serif"],
         "body": ["Inter", "sans-serif"],
         "label": ["Inter", "sans-serif"],
-        "mono": ["JetBrains Mono", "monospace"]
+        "mono": ["JetBrains Mono", "monospace"],
+        "display": ["'Instrument Serif'", "serif"],
+        "sans": ["Inter", "sans-serif"]
       }
     },
   },

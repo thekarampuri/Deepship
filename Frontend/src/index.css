@@ -9,6 +9,27 @@
   }
 }
 
+/* ── Landing page light-theme tokens ────────────────────────────────────── */
+.landing {
+  --lp-bg: 220 20% 97%;
+  --lp-surface: 0 0% 100%;
+  --lp-text: 220 25% 10%;
+  --lp-text-muted: 220 10% 46%;
+  --lp-border: 220 15% 90%;
+  --lp-accent: 252 56% 57%;
+  --lp-accent-foreground: 0 0% 100%;
+  --lp-ring: 252 56% 57%;
+  --lp-badge-bg: 252 56% 96%;
+  --lp-badge-text: 252 56% 40%;
+  --lp-card: 0 0% 100%;
+  --lp-card-border: 220 15% 92%;
+  --lp-green: 152 60% 42%;
+  --lp-red: 0 72% 51%;
+  --lp-amber: 38 92% 50%;
+  --lp-chart-line: 252 56% 57%;
+  --lp-chart-fill: 252 56% 92%;
+}
+
 @layer components {
   .glass-panel {
     background: rgba(45, 52, 73, 0.8);
@@ -53,6 +74,17 @@
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: #060e20; }
 ::-webkit-scrollbar-thumb { background: #222a3d; border-radius: 10px; }
+
+/* ── Landing page utilities ──────────────────────────────────────────── */
+.shadow-dashboard {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 0 80px -20px hsl(252 56% 57% / 0.12);
+}
+
+.landing ::-webkit-scrollbar { display: none; }
+.landing { scrollbar-width: none; }
 
 ::selection {
   @apply bg-primary-container text-on-primary-container;

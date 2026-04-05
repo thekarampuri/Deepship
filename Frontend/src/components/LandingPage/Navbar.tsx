@@ -1,27 +1,45 @@
+import { Button } from '../ui/button';
+
+const navLinks = [
+  { label: 'Home', href: '#' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'About', href: '#about' },
+  { label: 'Contact', href: '#contact' },
+];
+
 const Navbar = ({ onSignIn }: { onSignIn: () => void }) => {
   return (
-    <header className="w-full top-0 sticky z-50 bg-[#0b1326] border-b border-outline-variant/10 shadow-sm">
-      <nav className="flex justify-between items-center px-8 py-4 max-w-7xl mx-auto font-sans tracking-tight">
-        <div className="flex items-center gap-12">
-          <a className="text-xl font-bold tracking-tighter text-[#c0c1ff]" href="#">TraceHub</a>
-          <div className="hidden md:flex gap-8 items-center">
-            <a className="text-[#c0c1ff] border-b-2 border-[#c0c1ff] pb-1" href="#">Features</a>
-            <a className="text-slate-400 hover:text-slate-200 transition-colors duration-200" href="#">Solutions</a>
-            <a className="text-slate-400 hover:text-slate-200 transition-colors duration-200" href="#">Documentation</a>
-            <a className="text-slate-400 hover:text-slate-200 transition-colors duration-200" href="#">Pricing</a>
-          </div>
+    <header className="w-full z-50 relative">
+      <nav className="flex items-center justify-between px-6 md:px-10 py-4 max-w-7xl mx-auto">
+        {/* Logo */}
+        <a href="#" className="flex items-center gap-1.5 group">
+          <span className="text-[hsl(var(--lp-accent))] text-lg leading-none select-none">&#10022;</span>
+          <span className="text-[hsl(var(--lp-text))] text-lg font-bold tracking-tight">
+            TraceHub
+          </span>
+        </a>
+
+        {/* Nav Links — centered */}
+        <div className="hidden md:flex items-center gap-1 bg-[hsl(var(--lp-surface))] border border-[hsl(var(--lp-border))] rounded-full px-1.5 py-1 shadow-sm">
+          {navLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              className="px-4 py-1.5 text-sm font-medium text-[hsl(var(--lp-text-muted))] hover:text-[hsl(var(--lp-text))] rounded-full transition-colors duration-200"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={onSignIn}
-            className="text-slate-400 hover:text-slate-200 transition-colors duration-200"
-          >
-            Sign In
-          </button>
-          <button className="bg-primary-container text-on-primary-container px-5 py-2.5 rounded-lg font-semibold hover:brightness-110 active:scale-95 duration-150">
-            Contact Sales
-          </button>
-        </div>
+
+        {/* CTA */}
+        <Button
+          size="sm"
+          onClick={onSignIn}
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          Get Started
+        </Button>
       </nav>
     </header>
   );
