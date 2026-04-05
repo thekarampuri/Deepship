@@ -67,6 +67,7 @@ from app.admin.router import router as admin_router                  # noqa: E40
 from app.organizations.router import router as organizations_router  # noqa: E402
 from app.join_requests.router import router as join_requests_router  # noqa: E402
 from app.projects.router import router as projects_router            # noqa: E402
+from app.ai.router import router as ai_router                        # noqa: E402
 
 app.include_router(auth_router, prefix="/auth", tags=["Auth"])
 app.include_router(ingestion_router, prefix="/api/v1", tags=["Ingestion"])
@@ -77,6 +78,7 @@ app.include_router(admin_router, prefix="/api/v1", tags=["Admin"])
 app.include_router(organizations_router, prefix="/api/v1", tags=["Organizations"])
 app.include_router(join_requests_router, prefix="/api/v1", tags=["Join Requests"])
 app.include_router(projects_router, prefix="/api/v1", tags=["Projects"])
+app.include_router(ai_router, prefix="/api/v1", tags=["AI"])
 
 
 @app.get("/health")

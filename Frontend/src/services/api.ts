@@ -314,83 +314,20 @@ export const getMyInvitations = () =>
 export const getUserProjects = (userId: string) =>
   apiFetch<Project[]>(`/api/v1/users/${userId}/projects`);
 
-// ─── AI Solution (OpenRouter) ───────────────────────────────────────────────
-
-const OPENROUTER_API_KEY = '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';
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODEL = 'google/gemini-2.0-flash-001';
-
-async function callOpenRouterWithRetry(prompt: string, maxRetries = 3): Promise<string> {
-  const body = JSON.stringify({
-    model: OPENROUTER_MODEL,
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a concise senior software engineer. Give short, actionable answers. Use markdown headers (##) and bullet points. No filler text.',
-      },
-      { role: 'user', content: prompt },
-    ],
-    temperature: 0.4,
-    max_tokens: 700,
-  });
-
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    if (attempt > 0) {
-      await new Promise((r) => setTimeout(r, 2000 * Math.pow(2, attempt)));
-    }
-
-    const res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': window.location.origin,
-      },
-      body,
-    });
-
-    if (res.status === 429) {
-      if (attempt < maxRetries - 1) continue;
-      throw new Error('AI service is busy. Please wait a moment and try again.');
-    }
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error?.message ?? `AI API error (${res.status})`);
-    }
-
-    const text = data.choices?.[0]?.message?.content;
-    if (text) return text;
-    throw new Error('No response generated. Please try again.');
-  }
-
-  throw new Error('AI service is busy. Please wait a moment and try again.');
-}
+// ─── AI Solution (via backend proxy) ────────────────────────────────────────
 
 export async function getGeminiSolution(log: Log): Promise<string> {
-  const stackSnippet = log.stack_trace
-    ? log.stack_trace.split('\n').slice(0, 6).join('\n')
-    : 'N/A';
-
-  const prompt = `Analyze this error log and give a concise fix.
-
-Level: ${log.level}
-Message: ${log.message}
-Error Type: ${log.error_type || 'Unknown'}${log.error_message ? `\nError: ${log.error_message}` : ''}
-Service: ${log.service || 'Unknown'} | Module: ${log.module || 'Unknown'}
-Stack (top): ${stackSnippet}
-
-Reply with EXACTLY these 3 sections (keep each short, 2-4 bullets max):
-
-## Root Cause
-(What went wrong in 1-2 sentences)
-
-## Fix
-(Step-by-step fix, 2-4 bullets, include a short code snippet if helpful)
-
-## Prevention
-(2-3 bullets to prevent recurrence)`;
-
-  return callOpenRouterWithRetry(prompt);
+  const data = await apiFetch<{ solution: string }>('/api/v1/ai/solution', {
+    method: 'POST',
+    body: JSON.stringify({
+      level: log.level,
+      message: log.message,
+      error_type: log.error_type || null,
+      error_message: log.error_message || null,
+      service: log.service || null,
+      module: log.module || null,
+      stack_trace: log.stack_trace || null,
+    }),
+  });
+  return data.solution;
 }

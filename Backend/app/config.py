@@ -30,5 +30,8 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
 
+    # AI (OpenRouter)
+    OPENROUTER_API_KEY: str = "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"
+
 
 settings = Settings()
