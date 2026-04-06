@@ -6,7 +6,7 @@
 int main() {
     // ---- Initialize the logger (same config as Python SDK) ----
     tracehub::TraceHubConfig config;
-    config.api_key     = "th_54d72cc1511c870f11eb6989daa5ce61fbc25470c0188481ad3bdca3af10597c";
+    config.api_key     = "th_28b22aaa2da3ba22fcb2add22f4af063f7ad9b854ed4c1994b333adcff42c7bb";
     config.service     = "billing-service";
     config.environment = "production";
     // config.endpoint  = "http://103.127.146.14";  // default
