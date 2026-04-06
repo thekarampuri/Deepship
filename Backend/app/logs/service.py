@@ -136,11 +136,12 @@ def _add_rbac_conditions(conditions, args, user, idx_ref):
     idx = idx_ref[0]
     if user.role == "ADMIN":
         return
-    if user.role == "DEVELOPER" and user.module_ids:
+    if user.role == "DEVELOPER":
+        # Developer only sees logs ingested by their own API keys
         conditions.append(
-            f"(module IS NULL OR module IN (SELECT name FROM modules WHERE id = ANY(${idx}::uuid[])))"
+            f"api_key_id IN (SELECT id FROM api_keys WHERE assigned_to = ${idx})"
         )
-        args.append(user.module_ids)
+        args.append(user.id)
         idx += 1
     idx_ref[0] = idx
 

@@ -550,6 +550,17 @@ async def get_project_logs(
     params: list = [project_id]
     idx = 2
 
+    # RBAC: Developers only see logs from their own API keys
+    if user.role == "DEVELOPER":
+        conditions_aliased.append(
+            f"l.api_key_id IN (SELECT id FROM api_keys WHERE project_id = ${1} AND assigned_to = ${idx})"
+        )
+        conditions_plain.append(
+            f"api_key_id IN (SELECT id FROM api_keys WHERE project_id = ${1} AND assigned_to = ${idx})"
+        )
+        params.append(user.id)
+        idx += 1
+
     if level and level != "ALL":
         conditions_aliased.append(f"l.level = ${idx}::log_level")
         conditions_plain.append(f"level = ${idx}::log_level")
