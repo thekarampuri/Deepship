@@ -1,4 +1,12 @@
-# Python
+# ─── Secrets & Environment ─────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.secret
+
+# ─── Python ────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -17,27 +25,6 @@ venv/
 env/
 ENV/
 
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# Logs
-*.log
-logs/
-
-# Database
-*.sqlite3
-*.db
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
-Thumbs.db
-
 # pytest / coverage
 .pytest_cache/
 .coverage
@@ -47,21 +34,73 @@ htmlcov/
 # mypy
 .mypy_cache/
 
-# Node / Frontend
+# ─── Java / Maven ─────────────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.har
+*.sar
+*.zip
+*.tar.gz
+*.rar
+!SDK/**/*.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+hs_err_pid*
+
+# ─── Node / Frontend ──────────────────────────────────────────────
 node_modules/
 dist/
 .next/
 .nuxt/
 *.local
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
-# Nginx (local install, not part of source)
+# ─── IDE ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sw?
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# ─── Database ──────────────────────────────────────────────────────
+*.sqlite3
+*.db
+
+# ─── Logs ──────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── TraceHub DLQ ──────────────────────────────────────────────────
+.tracehub/
+
+# ─── Nginx (local install) ────────────────────────────────────────
 /nginx-1.26.3/
 nginx.zip
 
-# Claude
+# ─── Claude ────────────────────────────────────────────────────────
 .c
 .claude
 
-# Misc
+# ─── Misc ──────────────────────────────────────────────────────────
 *.bak
 *.tmp
+*.original
