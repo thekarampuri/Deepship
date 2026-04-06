@@ -11,6 +11,17 @@
 #include "batcher.h"
 #include "transport.h"
 
+// Windows.h macros conflict with LogLevel enum values — must undef after all includes
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef DEBUG
+#undef DEBUG
+#endif
+#ifdef FATAL
+#undef FATAL
+#endif
+
 namespace tracehub {
 
 static constexpr const char* SDK_VERSION = "1.2.0";

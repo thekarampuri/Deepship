@@ -6,12 +6,31 @@
 #include <iomanip>
 #include <thread>
 #include <cstdlib>
-#include "models.h"
 
 #ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #include <process.h>
-#else
+// Windows.h defines ERROR, DEBUG as macros — kill them immediately
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef DEBUG
+#undef DEBUG
+#endif
+#ifdef FATAL
+#undef FATAL
+#endif
+#endif
+
+#include "models.h"
+
+#ifndef _WIN32
 #include <unistd.h>
 #endif
 

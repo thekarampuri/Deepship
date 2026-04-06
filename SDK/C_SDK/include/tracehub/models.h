@@ -8,6 +8,17 @@
 #include <iomanip>
 #include <nlohmann/json.hpp>
 
+// Windows.h defines ERROR, DEBUG, etc. as macros — undefine them
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef DEBUG
+#undef DEBUG
+#endif
+#ifdef FATAL
+#undef FATAL
+#endif
+
 namespace tracehub {
 
 enum class LogLevel {
@@ -67,10 +78,10 @@ struct LogEntry {
         j["thread_id"] = thread_id;
         j["sdk_version"] = sdk_version;
 
+        // Match Python SDK: only include optional fields if they have values
+        // NEVER send null — server returns HTTP 500 on null values
         if (trace_id.has_value())
             j["trace_id"] = trace_id.value();
-        else
-            j["trace_id"] = nullptr;
 
         if (module.has_value())
             j["module"] = module.value();
@@ -86,8 +97,6 @@ struct LogEntry {
 
         if (!extra.empty())
             j["extra"] = extra;
-        else
-            j["extra"] = nlohmann::json::object();
 
         return j;
     }
